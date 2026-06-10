@@ -32,8 +32,8 @@
             alt="{{ $alt }}"
             loading="{{ $eager ? 'eager' : 'lazy' }}"
             decoding="async"
-            @load="loaded = true"
-            @error="failed = true; loaded = true"
+            x-on:load="loaded = true"
+            x-on:error="failed = true; loaded = true"
             @class([
                 $class,
                 'h-full w-full max-w-full object-cover opacity-0 transition-opacity duration-300',

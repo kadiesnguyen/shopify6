@@ -217,7 +217,7 @@ class DemoDataSeeder extends Seeder
             [
                 'title' => 'Shopefy chính thức ra mắt',
                 'content' => '<p>Nền tảng Shopefy đã sẵn sàng phục vụ thành viên.</p>',
-                'image' => 'news/launch.jpg',
+                'image' => 'images/landing/news/launch.jpg',
                 'excerpt' => 'Shopefy officially launches',
                 'status' => 'published',
                 'published_at' => now()->subDays(5),
@@ -229,7 +229,7 @@ class DemoDataSeeder extends Seeder
             [
                 'title' => '5 mẹo bán hàng hiệu quả',
                 'content' => '<p>Chia sẻ kinh nghiệm bán hàng trực tuyến.</p>',
-                'image' => 'news/seller-tips.jpg',
+                'image' => 'images/landing/news/seller-tips.jpg',
                 'excerpt' => 'Tips for online sellers',
                 'status' => 'published',
                 'published_at' => now()->subDays(2),

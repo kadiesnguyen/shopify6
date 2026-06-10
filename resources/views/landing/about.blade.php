@@ -8,7 +8,7 @@
             {{ $page?->translate('title') ?? __('landing.about.title') }}
         </h1>
 
-        <div class="prose prose-slate mt-8 max-w-none">
+        <div class="prose prose-slate prose-headings:text-brand-dark mt-8 max-w-none">
             @if ($page)
                 {!! $page->translate('content') !!}
             @else

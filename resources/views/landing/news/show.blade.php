@@ -26,6 +26,16 @@
             <h1 class="mt-2 text-3xl font-bold text-slate-900 md:text-4xl">{{ $article->title }}</h1>
         </header>
 
+        @if ($article->imageUrl())
+            <x-ui.lazy-image
+                :src="$article->imageUrl()"
+                :alt="$article->title"
+                class="h-full w-full rounded-2xl object-cover"
+                wrapper-class="mt-8 aspect-video w-full overflow-hidden rounded-2xl"
+                eager
+            />
+        @endif
+
         <div class="prose prose-slate mt-8 max-w-none">
             {!! $article->content !!}
         </div>

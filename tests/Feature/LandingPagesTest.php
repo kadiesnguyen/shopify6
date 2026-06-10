@@ -33,11 +33,15 @@ class LandingPagesTest extends TestCase
             'title' => 'Test Article',
             'slug' => 'test-article',
             'content' => '<p>Body</p>',
+            'image' => 'images/landing/news/launch.jpg',
             'status' => 'published',
             'published_at' => now(),
         ]);
 
-        $this->get('/tin-tuc')->assertOk()->assertSee('Test Article');
+        $this->get('/tin-tuc')
+            ->assertOk()
+            ->assertSee('Test Article')
+            ->assertSee('/images/landing/news/launch.jpg', false);
     }
 
     public function test_news_show_page(): void
@@ -55,7 +59,13 @@ class LandingPagesTest extends TestCase
 
     public function test_about_page(): void
     {
-        $this->get('/gioi-thieu')->assertOk()->assertSee(__('landing.about.title'));
+        $this->seed(\Database\Seeders\CmsSeeder::class);
+
+        $this->get('/gioi-thieu')
+            ->assertOk()
+            ->assertSee(__('landing.about.title'))
+            ->assertSee('Giá trị của chúng tôi')
+            ->assertSee('Thông tin của bạn thuộc về bạn');
     }
 
     public function test_contact_form_submission(): void

@@ -11,6 +11,8 @@ class CmsSeeder extends Seeder
 {
     public function run(): void
     {
+        $aboutContent = require database_path('data/about-page-content.php');
+
         Banner::query()->upsert([
             [
                 'id' => 1,
@@ -37,12 +39,12 @@ class CmsSeeder extends Seeder
                 'slug' => 'gioi-thieu',
                 'type' => 'about',
                 'title' => json_encode(['vi' => 'Giới thiệu', 'en' => 'About us']),
-                'content' => json_encode([
-                    'vi' => '<p>Shopefy là nền tảng thương mại điện tử hỗ trợ bán hàng trực tuyến.</p>',
-                    'en' => '<p>Shopefy is an e-commerce platform for online selling.</p>',
-                ]),
+                'content' => json_encode($aboutContent),
                 'meta_title' => json_encode(['vi' => 'Giới thiệu Shopefy', 'en' => 'About Shopefy']),
-                'meta_description' => json_encode(['vi' => 'Tìm hiểu về Shopefy', 'en' => 'Learn about Shopefy']),
+                'meta_description' => json_encode([
+                    'vi' => 'Giá trị, quyền riêng tư và cam kết bảo vệ thông tin trên nền tảng Shopefy',
+                    'en' => 'Our values, privacy commitments, and how Shopefy protects your information',
+                ]),
                 'status' => 'published',
             ],
             [
@@ -50,8 +52,8 @@ class CmsSeeder extends Seeder
                 'type' => 'contact',
                 'title' => json_encode(['vi' => 'Liên hệ', 'en' => 'Contact']),
                 'content' => json_encode([
-                    'vi' => '<p>Email: support@shopefy.test</p>',
-                    'en' => '<p>Email: support@shopefy.test</p>',
+                    'vi' => '<p>Shopify Inc. 151 O\'Connor Street, Ground floor Ottawa, ON K2P 2L8 Canada</p>',
+                    'en' => '<p>Shopify Inc. 151 O\'Connor Street, Ground floor Ottawa, ON K2P 2L8 Canada</p>',
                 ]),
                 'meta_title' => json_encode(['vi' => 'Liên hệ Shopefy', 'en' => 'Contact Shopefy']),
                 'meta_description' => json_encode(['vi' => 'Liên hệ hỗ trợ', 'en' => 'Contact support']),

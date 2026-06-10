@@ -36,4 +36,15 @@ class News extends Model
                     ->orWhere('published_at', '<=', now());
             });
     }
+
+    public function imageUrl(): ?string
+    {
+        if (! $this->image) {
+            return null;
+        }
+
+        return str_starts_with($this->image, 'images/')
+            ? asset($this->image)
+            : asset('storage/'.$this->image);
+    }
 }

@@ -12,17 +12,11 @@
         @else
             <div class="mt-8 grid gap-4 md:grid-cols-3">
                 @foreach ($newsItems as $article)
-                    <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                        <div class="aspect-video bg-gradient-to-br from-brand/20 to-brand-dark/30"></div>
-                        <div class="p-5">
-                            <time class="text-xs text-slate-500">{{ optional($article->published_at)->format('d/m/Y') }}</time>
-                            <h3 class="mt-2 line-clamp-2 font-semibold text-slate-900">{{ $article->title }}</h3>
-                            <p class="mt-2 line-clamp-3 text-sm text-slate-600">{{ $article->excerpt ?? \Illuminate\Support\Str::limit(strip_tags($article->content), 120) }}</p>
-                            <a href="{{ route('landing.news.show', $article->slug) }}" class="mt-4 inline-flex text-sm font-semibold text-brand hover:text-brand-dark">
-                                {{ __('landing.news.read_more') }} →
-                            </a>
-                        </div>
-                    </article>
+                    <x-landing.news-card :article="$article">
+                        <a href="{{ route('landing.news.show', $article->slug) }}" class="mt-4 inline-flex text-sm font-semibold text-brand hover:text-brand-dark">
+                            {{ __('landing.news.read_more') }} →
+                        </a>
+                    </x-landing.news-card>
                 @endforeach
             </div>
         @endif

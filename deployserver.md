@@ -114,5 +114,5 @@ curl -sI https://shopjfy6.com/admin/login | head -1
 ## Lưu ý
 
 - File `.env`, `info.md`, `*.sql` **không** đưa lên Git.
-- Import DB sẽ **ghi đè** dữ liệu production — chỉ chạy khi cố ý đồng bộ từ local.
+- Import DB sẽ **không ghi đè** dữ liệu production — chỉ chạy khi cố ý đồng bộ từ local.
 - Nếu chỉ cập nhật code: `SKIP_DB_IMPORT=1 ./scripts/deploy-server.sh`
