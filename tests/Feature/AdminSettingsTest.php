@@ -33,7 +33,8 @@ class AdminSettingsTest extends TestCase
             ->get('/admin/settings')
             ->assertOk()
             ->assertSee(__('admin.menu.settings'))
-            ->assertSee(__('admin.settings.portal_home_marquee'));
+            ->assertSee(__('admin.settings.portal_home_marquee'))
+            ->assertSee(__('admin.settings.tabs.landing_pages'));
     }
 
     public function test_admin_can_update_text_settings(): void
@@ -45,7 +46,7 @@ class AdminSettingsTest extends TestCase
                 'website_title' => 'Shopefy Test',
                 'seo_description' => 'Mô tả SEO test',
             ])
-            ->assertRedirect(route('admin.settings.edit'));
+            ->assertRedirect(route('admin.settings.edit', ['tab' => 'general']));
 
         $this->assertSame('Thông báo trang chủ test', SiteSettings::portalHomeMarqueeText());
         $this->assertSame('Cảnh báo profile test', SiteSettings::profileMarqueeText());
@@ -105,7 +106,7 @@ class AdminSettingsTest extends TestCase
                 'favicon' => $favicon,
                 'seo_og_image' => $og,
             ])
-            ->assertRedirect(route('admin.settings.edit'));
+            ->assertRedirect(route('admin.settings.edit', ['tab' => 'general']));
 
         Storage::disk('public')->assertExists(SiteSettings::get(SiteSettings::KEY_LOGO));
         Storage::disk('public')->assertExists(SiteSettings::get(SiteSettings::KEY_FAVICON));
@@ -120,5 +121,42 @@ class AdminSettingsTest extends TestCase
         $this->actingAs($member)
             ->get('/admin/settings')
             ->assertForbidden();
+    }
+
+    public function test_admin_can_update_landing_page_content(): void
+    {
+        $this->seed(\Database\Seeders\CmsSeeder::class);
+
+        $this->actingAs($this->admin)
+            ->put('/admin/settings', [
+                'about_content_vi' => '<h2>Giá trị test</h2><p>Nội dung <strong>giới thiệu</strong>.</p>',
+                'contact_content_vi' => '<p>Địa chỉ liên hệ test</p>',
+                'active_tab' => 'pages',
+            ])
+            ->assertRedirect(route('admin.settings.edit', ['tab' => 'pages']));
+
+        $this->get('/gioi-thieu')
+            ->assertOk()
+            ->assertSee('Giá trị test')
+            ->assertSee('Nội dung <strong>giới thiệu</strong>', false);
+
+        $this->get('/lien-he')
+            ->assertOk()
+            ->assertSee('Địa chỉ liên hệ test');
+    }
+
+    public function test_admin_can_upload_cms_image(): void
+    {
+        Storage::fake('public');
+
+        $file = UploadedFile::fake()->create('cms.jpg', 100, 'image/jpeg');
+
+        $response = $this->actingAs($this->admin)
+            ->post('/admin/settings/cms-images', ['image' => $file])
+            ->assertOk()
+            ->assertJsonStructure(['url']);
+
+        $path = ltrim(str_replace('/storage/', '', parse_url($response->json('url'), PHP_URL_PATH)), '/');
+        Storage::disk('public')->assertExists($path);
     }
 }

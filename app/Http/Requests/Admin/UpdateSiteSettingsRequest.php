@@ -22,6 +22,11 @@ class UpdateSiteSettingsRequest extends FormRequest
             'logo' => ['nullable', 'image', 'max:2048'],
             'favicon' => ['nullable', 'file', 'mimes:ico,png,jpg,jpeg,svg,webp', 'max:1024'],
             'seo_og_image' => ['nullable', 'image', 'max:4096'],
+            'about_content_vi' => ['nullable', 'string', 'max:50000'],
+            'about_content_en' => ['nullable', 'string', 'max:50000'],
+            'contact_content_vi' => ['nullable', 'string', 'max:50000'],
+            'contact_content_en' => ['nullable', 'string', 'max:50000'],
+            'active_tab' => ['nullable', 'string', 'in:general,pages'],
         ];
     }
 }

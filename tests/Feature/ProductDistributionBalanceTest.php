@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Services\Member\ProductDistributionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use RuntimeException;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -26,7 +25,7 @@ class ProductDistributionBalanceTest extends TestCase
     {
         parent::setUp();
 
-        Role::create(['name' => 'shop']);
+        Role::findOrCreate('shop');
 
         $this->shopUser = User::factory()->create(['status' => 'active']);
         $this->shopUser->assignRole('shop');
@@ -63,46 +62,20 @@ class ProductDistributionBalanceTest extends TestCase
         ]);
     }
 
-    public function test_shop_cannot_distribute_without_sufficient_balance(): void
+    public function test_distributing_does_not_deduct_shop_wallet(): void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('insufficient_balance');
-
-        app(ProductDistributionService::class)->distribute($this->shopUser, $this->product);
-    }
-
-    public function test_shop_balance_is_deducted_when_distributing(): void
-    {
-        $this->shopUser->wallet->update(['balance' => 100]);
-
         $distribution = app(ProductDistributionService::class)->distribute($this->shopUser, $this->product);
 
-        $this->assertSame(40.0, (float) $this->shopUser->wallet->fresh()->balance);
+        $this->assertSame(50.0, (float) $this->shopUser->wallet->fresh()->balance);
         $this->assertDatabaseHas('product_distributions', ['id' => $distribution->id]);
-        $this->assertDatabaseHas('transactions', [
+        $this->assertDatabaseMissing('transactions', [
             'user_id' => $this->shopUser->id,
             'type' => Transaction::TYPE_DISTRIBUTION_COST,
-            'amount' => 60,
-            'reference' => 'distribution-'.$distribution->id,
         ]);
     }
 
-    public function test_portal_rejects_distribution_with_insufficient_balance(): void
+    public function test_portal_accepts_distribution_without_balance_requirement(): void
     {
-        $this->actingAs($this->shopUser)
-            ->post(route('member.products.distributions.store'), [
-                'product_id' => $this->product->id,
-            ])
-            ->assertRedirect()
-            ->assertSessionHasErrors('product_id');
-
-        $this->assertDatabaseCount('product_distributions', 0);
-    }
-
-    public function test_portal_accepts_distribution_with_sufficient_balance(): void
-    {
-        $this->shopUser->wallet->update(['balance' => 100]);
-
         $this->actingAs($this->shopUser)
             ->post(route('member.products.distributions.store'), [
                 'product_id' => $this->product->id,
@@ -111,6 +84,19 @@ class ProductDistributionBalanceTest extends TestCase
             ->assertSessionHas('status');
 
         $this->assertDatabaseCount('product_distributions', 1);
-        $this->assertSame(40.0, (float) $this->shopUser->wallet->fresh()->balance);
+        $this->assertSame(50.0, (float) $this->shopUser->wallet->fresh()->balance);
+    }
+
+    public function test_distribution_center_shows_purchase_selling_and_profit(): void
+    {
+        $this->actingAs($this->shopUser)
+            ->get(route('member.products.distributions.index'))
+            ->assertOk()
+            ->assertSee(__('member.products.purchase_price'))
+            ->assertSee(__('member.products.selling_price'))
+            ->assertSee(__('member.products.profit'))
+            ->assertSee('$60.00')
+            ->assertSee('$120.00')
+            ->assertSee('$60.00');
     }
 }

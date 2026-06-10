@@ -20,13 +20,6 @@
         <div class="mb-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ $errors->first() }}</div>
     @endif
 
-    @if ($wallet)
-        <div class="mb-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-            <p class="text-sm text-gray-500">{{ __('member.my.balance') }}</p>
-            <p class="text-lg font-bold text-gray-900">${{ number_format($wallet->balance, 2) }}</p>
-        </div>
-    @endif
-
     <form method="GET" class="mb-4">
         <x-member.search-field name="q" :value="request('q')" :placeholder="__('member.search.products_alt')" icon="search" />
     </form>
@@ -34,55 +27,54 @@
     @if ($products->isEmpty())
         <x-ui.empty-state :title="__('member.no_products')" class="rounded-xl bg-gray-50" />
     @else
-        <section class="space-y-3">
+        <section class="grid gap-4 sm:grid-cols-2">
             @foreach ($products as $product)
-                @php $isDistributed = $distributedIds->contains($product->id); @endphp
-                <article class="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-                    <div class="flex gap-3">
-                        @if ($product->imageUrl())
-                            <img src="{{ $product->imageUrl() }}" alt="" class="size-16 rounded-lg object-cover">
-                        @endif
-                        <div class="min-w-0 flex-1">
-                            <p class="truncate font-semibold text-gray-900">{{ $product->name }}</p>
-                            <p class="mt-1 text-sm text-emerald-600">${{ number_format($product->selling_price, 2) }}</p>
-                            <p class="mt-1 text-xs text-gray-500">
-                                {{ __('member.products.distribution_cost') }}: ${{ number_format($product->purchase_price, 2) }}
-                            </p>
-                            <p class="mt-1 text-xs text-gray-500">{{ __('member.stock') }}: {{ $product->stock }}</p>
+                @php
+                    $isDistributed = $distributedIds->contains($product->id);
+                    $purchasePrice = (float) $product->purchase_price;
+                    $sellingPrice = (float) $product->selling_price;
+                    $profit = max(0, $sellingPrice - $purchasePrice);
+                @endphp
+                <article class="flex flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+                    @if ($product->imageUrl())
+                        <img src="{{ $product->imageUrl() }}" alt="" class="mb-3 aspect-square w-full rounded-xl object-cover">
+                    @endif
+
+                    <h2 class="truncate text-base font-bold uppercase tracking-wide text-gray-900">{{ $product->name }}</h2>
+
+                    <dl class="mt-3 space-y-2 text-sm">
+                        <div class="flex items-center justify-between gap-3">
+                            <dt class="text-gray-500">{{ __('member.products.purchase_price') }}</dt>
+                            <dd class="font-semibold text-amber-600">${{ number_format($purchasePrice, 2) }}</dd>
                         </div>
-                    </div>
-                    <div class="mt-3">
+                        <div class="flex items-center justify-between gap-3">
+                            <dt class="text-gray-500">{{ __('member.products.selling_price') }}</dt>
+                            <dd class="font-semibold text-rose-600">${{ number_format($sellingPrice, 2) }}</dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-3">
+                            <dt class="text-gray-500">{{ __('member.products.profit') }}</dt>
+                            <dd class="font-semibold text-emerald-600">${{ number_format($profit, 2) }}</dd>
+                        </div>
+                    </dl>
+
+                    <div class="mt-4">
                         @if ($isDistributed)
-                            <span class="inline-flex w-full items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
+                            <span class="inline-flex w-full items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-700">
                                 {{ __('member.products.already_distributed') }}
                             </span>
                         @elseif (auth()->user()->canSelfDistribute())
-                            @php
-                                $canAfford = $wallet && (float) $wallet->balance >= (float) $product->purchase_price;
-                            @endphp
                             <form method="POST" action="{{ route('member.products.distributions.store') }}">
                                 @csrf
                                 <input type="hidden" name="product_id" value="{{ $product->id }}">
                                 <button
                                     type="submit"
-                                    @disabled(! $canAfford)
-                                    @class([
-                                        'inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition',
-                                        'bg-emerald-600 text-white hover:bg-emerald-700' => $canAfford,
-                                        'cursor-not-allowed bg-gray-200 text-gray-500' => ! $canAfford,
-                                    ])
+                                    class="inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-3 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
                                 >
-                                    <x-member.icon name="package" class="size-4" />
                                     {{ __('member.products.distribute') }}
                                 </button>
                             </form>
-                            @unless ($canAfford)
-                                <p class="mt-2 text-xs text-rose-600">
-                                    {{ __('member.products.insufficient_balance_distribution', ['amount' => number_format($product->purchase_price, 2)]) }}
-                                </p>
-                            @endunless
                         @else
-                            <span class="inline-flex w-full items-center justify-center rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                            <span class="inline-flex w-full items-center justify-center rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-500">
                                 {{ __('member.products.distribution_locked') }}
                             </span>
                         @endif

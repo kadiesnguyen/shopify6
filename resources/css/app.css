@@ -256,3 +256,22 @@ body {
         }
     }
 }
+
+.admin-rich-editor .ql-toolbar {
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    border-color: rgb(226 232 240);
+    background: rgb(248 250 252);
+}
+
+.admin-rich-editor .ql-container {
+    min-height: 220px;
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+    border-color: rgb(226 232 240);
+    font-size: 0.875rem;
+}
+
+.admin-rich-editor .ql-editor {
+    min-height: 220px;
+}

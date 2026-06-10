@@ -11,7 +11,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use RuntimeException;
 
 class ProductDistributionController extends Controller
 {
@@ -35,9 +34,7 @@ class ProductDistributionController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        $wallet = auth()->user()->wallet;
-
-        return view('member.products.distributions', compact('products', 'distributedIds', 'wallet'));
+        return view('member.products.distributions', compact('products', 'distributedIds'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -58,19 +55,7 @@ class ProductDistributionController extends Controller
             ->where('status', Product::STATUS_ACTIVE)
             ->findOrFail($validated['product_id']);
 
-        try {
-            $this->distributionService->distribute($user, $product);
-        } catch (RuntimeException $exception) {
-            if ($exception->getMessage() === 'insufficient_balance') {
-                return back()->withErrors([
-                    'product_id' => __('member.products.insufficient_balance_distribution', [
-                        'amount' => number_format((float) $product->purchase_price, 2),
-                    ]),
-                ]);
-            }
-
-            throw $exception;
-        }
+        $this->distributionService->distribute($user, $product);
 
         return redirect()
             ->route('member.products.distributions.index')

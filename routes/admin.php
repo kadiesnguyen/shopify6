@@ -96,5 +96,6 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
 
         Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::post('/settings/cms-images', [SettingsController::class, 'uploadCmsImage'])->name('settings.cms-images');
     });
 });

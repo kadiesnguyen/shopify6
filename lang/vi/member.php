@@ -76,10 +76,11 @@ return [
         'distribute' => 'Phân phối',
         'already_distributed' => 'Đã phân phối',
         'distributed_success' => 'Đã phân phối sản phẩm thành công.',
-        'distribution_center_hint' => 'Phân phối sẽ trừ chi phí vốn (giá nhập) khỏi số dư ví. Khi đơn hàng hoàn thành, cửa hàng nhận lại vốn và hoa hồng.',
+        'distribution_center_hint' => 'Phân phối không trừ tiền ví. Khi có đơn hàng, cửa hàng thanh toán vốn cho admin. Sau khi đơn Hoàn thành, cửa hàng nhận giá mua + lợi nhuận vào ví.',
         'distribution_locked' => 'Phân phối đã bị khoá',
-        'distribution_cost' => 'Chi phí phân phối',
-        'insufficient_balance_distribution' => 'Số dư không đủ. Cần ít nhất $:amount để phân phối sản phẩm này.',
+        'purchase_price' => 'Giá mua',
+        'selling_price' => 'Giá bán',
+        'profit' => 'Lợi nhuận',
     ],
 
     'shop_dashboard' => [

@@ -254,11 +254,22 @@ return [
 
     'settings' => [
         'saved' => 'Đã lưu cài đặt.',
+        'tabs' => [
+            'general' => 'Cài đặt chung',
+            'landing_pages' => 'Trang landing',
+        ],
         'sections' => [
             'notifications' => 'Thông báo chạy chữ',
             'branding' => 'Thương hiệu website',
             'seo' => 'SEO & chia sẻ link',
+            'landing_pages' => 'Nội dung trang landing',
         ],
+        'landing_pages_hint' => 'Chỉnh sửa nội dung trang Giới thiệu và Liên hệ trên website công khai.',
+        'about_page' => 'Trang Giới thiệu (/gioi-thieu)',
+        'contact_page' => 'Trang Liên hệ (/lien-he)',
+        'contact_page_hint' => 'Hiển thị bên trái form liên hệ trên trang Liên hệ.',
+        'content_vi' => 'Nội dung tiếng Việt',
+        'content_en' => 'Nội dung tiếng Anh',
         'portal_home_marquee' => 'Thông báo trang chủ portal',
         'portal_home_marquee_hint' => 'Hiển thị dạng chữ chạy trên trang chủ /home',
         'profile_marquee' => 'Thông báo marquee trang Cá nhân',

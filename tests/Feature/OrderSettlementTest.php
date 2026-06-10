@@ -30,9 +30,9 @@ class OrderSettlementTest extends TestCase
     {
         parent::setUp();
 
-        Role::create(['name' => 'admin']);
-        Role::create(['name' => 'member']);
-        Role::create(['name' => 'shop']);
+        Role::findOrCreate('admin');
+        Role::findOrCreate('member');
+        Role::findOrCreate('shop');
 
         $this->buyer = User::factory()->create(['status' => 'active']);
         $this->buyer->assignRole('member');
@@ -115,7 +115,7 @@ class OrderSettlementTest extends TestCase
             Order::STATUS_COMPLETED,
         );
 
-        $this->assertSame($balanceAfterDistribution + 75.0, (float) $this->seller->wallet->fresh()->balance);
+        $this->assertSame($balanceAfterDistribution + 100.0, (float) $this->seller->wallet->fresh()->balance);
         $this->assertDatabaseHas('transactions', [
             'user_id' => $this->seller->id,
             'type' => Transaction::TYPE_PURCHASE_RETURN,
@@ -125,7 +125,7 @@ class OrderSettlementTest extends TestCase
         $this->assertDatabaseHas('transactions', [
             'user_id' => $this->seller->id,
             'type' => Transaction::TYPE_COMMISSION,
-            'amount' => 15,
+            'amount' => 40,
             'reference' => $order->order_no.'-seller-commission',
         ]);
     }
@@ -186,7 +186,7 @@ class OrderSettlementTest extends TestCase
             ->patch('/admin/orders/'.$order->id, ['status' => Order::STATUS_COMPLETED])
             ->assertRedirect();
 
-        $this->assertSame($balanceAfterDistribution + 75.0, (float) $this->seller->wallet->fresh()->balance);
+        $this->assertSame($balanceAfterDistribution + 100.0, (float) $this->seller->wallet->fresh()->balance);
         $this->assertDatabaseHas('orders', [
             'id' => $order->id,
             'status' => Order::STATUS_COMPLETED,

@@ -76,10 +76,11 @@ return [
         'distribute' => 'Distribute',
         'already_distributed' => 'Already distributed',
         'distributed_success' => 'Product distributed successfully.',
-        'distribution_center_hint' => 'Distributing deducts purchase cost from your wallet. When an order completes, you receive cost back plus commission.',
+        'distribution_center_hint' => 'Distributing does not deduct from your wallet. When an order is placed, pay the purchase cost to admin manually. After the order is completed, purchase price + profit is credited to your wallet.',
         'distribution_locked' => 'Distribution is locked',
-        'distribution_cost' => 'Distribution cost',
-        'insufficient_balance_distribution' => 'Insufficient balance. You need at least $:amount to distribute this product.',
+        'purchase_price' => 'Purchase price',
+        'selling_price' => 'Selling price',
+        'profit' => 'Profit',
     ],
 
     'shop_dashboard' => [

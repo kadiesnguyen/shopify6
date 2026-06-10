@@ -206,11 +206,22 @@ return [
 
     'settings' => [
         'saved' => 'Settings saved.',
+        'tabs' => [
+            'general' => 'General',
+            'landing_pages' => 'Landing pages',
+        ],
         'sections' => [
             'notifications' => 'Marquee notifications',
             'branding' => 'Website branding',
             'seo' => 'SEO & link sharing',
+            'landing_pages' => 'Landing page content',
         ],
+        'landing_pages_hint' => 'Edit About and Contact page content on the public website.',
+        'about_page' => 'About page (/gioi-thieu)',
+        'contact_page' => 'Contact page (/lien-he)',
+        'contact_page_hint' => 'Shown on the left side of the contact form.',
+        'content_vi' => 'Vietnamese content',
+        'content_en' => 'English content',
         'portal_home_marquee' => 'Portal home marquee',
         'portal_home_marquee_hint' => 'Scrolling text on member home (/home)',
         'profile_marquee' => 'Profile page marquee',
