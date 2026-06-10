@@ -98,7 +98,7 @@ class User extends Authenticatable
 
     public function isShop(): bool
     {
-        return $this->hasRole('shop') || $this->shop()->exists();
+        return $this->hasRole('shop');
     }
 
     public function isMemberOnly(): bool

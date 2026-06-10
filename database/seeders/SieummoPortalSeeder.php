@@ -47,6 +47,7 @@ class SieummoPortalSeeder extends Seeder
     {
         $admin = User::role('admin')->first();
         $memberRole = Role::findOrCreate('member');
+        $shopRole = Role::findOrCreate('shop');
 
         if (! $admin) {
             return;
@@ -94,7 +95,7 @@ class SieummoPortalSeeder extends Seeder
                     'status' => 'active',
                 ],
             );
-            $owner->syncRoles([$memberRole]);
+            $owner->syncRoles([$memberRole, $shopRole]);
 
             $shop = Shop::query()->updateOrCreate(
                 ['slug' => $shopData['slug']],

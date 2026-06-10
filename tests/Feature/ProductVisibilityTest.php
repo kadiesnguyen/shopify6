@@ -28,8 +28,8 @@ class ProductVisibilityTest extends TestCase
     {
         parent::setUp();
 
-        Role::create(['name' => 'member']);
-        Role::create(['name' => 'shop']);
+        Role::findOrCreate('member');
+        Role::findOrCreate('shop');
 
         $this->member = User::factory()->create(['status' => 'active']);
         $this->member->assignRole('member');
@@ -153,6 +153,44 @@ class ProductVisibilityTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_member_does_not_see_shop_product_menu_links(): void
+    {
+        $this->actingAs($this->member)
+            ->get(route('member.products.index'))
+            ->assertOk()
+            ->assertDontSee(__('member.products.distribution_center'), false)
+            ->assertDontSee(__('member.products.management'), false);
+    }
+
+    public function test_member_with_shop_record_but_no_shop_role_does_not_see_shop_product_menu(): void
+    {
+        Shop::query()->create([
+            'user_id' => $this->member->id,
+            'name' => 'Orphan Shop',
+            'slug' => 'orphan-shop',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.products.index'))
+            ->assertOk()
+            ->assertDontSee(__('member.products.distribution_center'), false)
+            ->assertDontSee(__('member.products.management'), false);
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.products.distributions.index'))
+            ->assertForbidden();
+    }
+
+    public function test_shop_user_sees_product_menu_links(): void
+    {
+        $this->actingAs($this->shopUser)
+            ->get(route('member.products.index'))
+            ->assertOk()
+            ->assertSee(__('member.products.distribution_center'), false)
+            ->assertSee(__('member.products.management'), false);
+    }
+
     private function distributeAsShop(User $shopUser): void
     {
         ProductDistribution::query()->create([
@@ -162,6 +200,7 @@ class ProductVisibilityTest extends TestCase
             'purchase_price' => $this->product->purchase_price,
             'commission' => $this->product->commission,
             'commission_type' => 'fixed',
+            'status' => ProductDistribution::STATUS_AVAILABLE,
         ]);
     }
 }
