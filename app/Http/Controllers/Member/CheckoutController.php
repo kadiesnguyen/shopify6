@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ShippingAddress;
 use App\Services\Member\OrderService;
+use App\Services\Member\ProductBuyableQuery;
 use App\Support\Member\CheckoutGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class CheckoutController extends Controller
 
     public function show(Product $product): View|RedirectResponse
     {
-        abort_unless($product->status === Product::STATUS_ACTIVE && $product->stock > 0, 404);
+        abort_unless(ProductBuyableQuery::isBuyable($product), 404);
 
         $redirect = CheckoutGate::redirectFor(auth()->user(), $product);
 
@@ -40,7 +41,7 @@ class CheckoutController extends Controller
 
     public function store(Request $request, Product $product): RedirectResponse
     {
-        abort_unless($product->status === Product::STATUS_ACTIVE && $product->stock > 0, 404);
+        abort_unless(ProductBuyableQuery::isBuyable($product), 404);
 
         if (! auth()->user()->hasPaymentPassword()) {
             return redirect()->route('member.payment-password.create', [

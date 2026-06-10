@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\RechargeMethod;
 use App\Models\RechargeRequest;
+use App\Models\Shop;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WithdrawalMethod;
@@ -147,10 +148,19 @@ class AdminPagesTest extends TestCase
         $this->assertEquals('approved', $request->fresh()->status);
     }
 
-    public function test_admin_can_manage_user_product_distributions(): void
+    public function test_admin_can_view_and_manage_shop_product_distributions(): void
     {
-        $member = User::factory()->create(['status' => 'active', 'phone' => '0901234567']);
-        $member->assignRole('member');
+        Role::create(['name' => 'shop']);
+
+        $shopOwner = User::factory()->create(['status' => 'active', 'phone' => '0901234567']);
+        $shopOwner->assignRole(['member', 'shop']);
+
+        Shop::query()->create([
+            'user_id' => $shopOwner->id,
+            'name' => 'Distribution Shop',
+            'slug' => 'distribution-shop',
+            'status' => 'active',
+        ]);
 
         $category = Category::query()->create([
             'name' => 'Cat',
@@ -169,27 +179,29 @@ class AdminPagesTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->actingAs($this->admin)
-            ->post(route('admin.users.distributions.store', $member), [
-                'product_id' => $product->id,
-            ])
-            ->assertRedirect();
-
-        $this->assertDatabaseHas('product_distributions', [
-            'user_id' => $member->id,
+        $distribution = \App\Models\ProductDistribution::query()->create([
+            'user_id' => $shopOwner->id,
             'product_id' => $product->id,
+            'selling_price' => $product->selling_price,
+            'purchase_price' => $product->purchase_price,
+            'commission' => $product->commission,
+            'commission_type' => 'fixed',
         ]);
 
-        $distribution = \App\Models\ProductDistribution::query()->first();
+        $this->actingAs($this->admin)
+            ->post(route('admin.users.distributions.store', $shopOwner), [
+                'product_id' => $product->id,
+            ])
+            ->assertForbidden();
 
         $this->actingAs($this->admin)
-            ->get(route('admin.users.index', ['show_distributions' => $member->id]))
+            ->get(route('admin.users.index', ['show_distributions' => $shopOwner->id]))
             ->assertOk()
             ->assertSee(__('admin.users.distributions.title'))
             ->assertSee('Distribution Product');
 
         $this->actingAs($this->admin)
-            ->patch(route('admin.users.distributions.update', [$member, $distribution]), [
+            ->patch(route('admin.users.distributions.update', [$shopOwner, $distribution]), [
                 'selling_price' => 120,
                 'purchase_price' => 55,
                 'commission' => 15,
@@ -201,7 +213,7 @@ class AdminPagesTest extends TestCase
         $this->assertEquals('120.00', $distribution->fresh()->selling_price);
 
         $this->actingAs($this->admin)
-            ->delete(route('admin.users.distributions.destroy', [$member, $distribution]))
+            ->delete(route('admin.users.distributions.destroy', [$shopOwner, $distribution]))
             ->assertRedirect();
 
         $this->assertDatabaseMissing('product_distributions', ['id' => $distribution->id]);

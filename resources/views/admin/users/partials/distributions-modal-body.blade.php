@@ -45,24 +45,6 @@
     </div>
 </form>
 
-@if ($catalogProducts->isNotEmpty())
-    <form method="POST" action="{{ route('admin.users.distributions.store', $modalUser) }}" class="mb-4 flex flex-wrap items-end gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
-        @csrf
-        <div class="min-w-[220px] flex-1">
-            <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('admin.users.distributions.assign') }}</label>
-            <select name="product_id" required class="w-full rounded-lg border-slate-300 text-sm">
-                <option value="">{{ __('admin.users.distributions.select_product') }}</option>
-                @foreach ($catalogProducts as $product)
-                    <option value="{{ $product->id }}">{{ $product->name }} (${{ number_format($product->selling_price, 2) }})</option>
-                @endforeach
-            </select>
-        </div>
-        <button type="submit" class="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand/90">{{ __('admin.users.distributions.assign') }}</button>
-    </form>
-@else
-    <p class="mb-4 text-sm text-slate-500">{{ __('admin.users.distributions.no_catalog') }}</p>
-@endif
-
 <div class="overflow-x-auto rounded-lg border border-slate-200">
     <table class="min-w-full text-sm">
         <thead class="bg-slate-50">

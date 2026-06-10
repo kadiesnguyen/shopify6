@@ -25,6 +25,7 @@ Route::prefix('home')->name('member.')->middleware(['member'])->group(function (
 
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/distributions', [ProductDistributionController::class, 'index'])->name('products.distributions.index');
+    Route::post('/products/distributions', [ProductDistributionController::class, 'store'])->name('products.distributions.store');
     Route::get('/products/manage', [ProductDistributionController::class, 'manage'])->name('products.manage.index');
 
     Route::get('/shop-dashboard', [ShopDashboardController::class, 'index'])->name('shop-dashboard.index');

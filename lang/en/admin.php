@@ -275,6 +275,18 @@ return [
         'status_pending' => 'Pending',
         'status_approved' => 'Approved',
         'status_rejected' => 'Rejected',
+        'detail_title' => 'Application details',
+        'address' => 'Address',
+        'id_number' => 'ID number',
+        'referral' => 'Referral code',
+        'logo' => 'Shop logo',
+        'id_front' => 'ID front',
+        'id_back' => 'ID back',
+        'section_shop_info' => 'Shop information',
+        'section_documents' => 'Images & documents',
+        'view_full_image' => 'View full image',
+        'reject_note_hint' => 'Enter a reason if rejecting...',
+        'close' => 'Close',
     ],
 
     'profile' => [

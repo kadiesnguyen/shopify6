@@ -14,6 +14,7 @@ class RoleAndAdminSeeder extends Seeder
     {
         $adminRole = Role::findOrCreate('admin');
         $memberRole = Role::findOrCreate('member');
+        Role::findOrCreate('shop');
 
         $admin = User::query()->firstOrCreate(
             ['email' => 'admin@shopi.com'],

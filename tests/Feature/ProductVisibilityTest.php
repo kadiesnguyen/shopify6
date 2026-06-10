@@ -1,0 +1,167 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductDistribution;
+use App\Models\Shop;
+use App\Models\User;
+use App\Models\Wallet;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
+
+class ProductVisibilityTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private User $member;
+
+    private User $shopUser;
+
+    private User $otherShopUser;
+
+    private Product $product;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Role::create(['name' => 'member']);
+        Role::create(['name' => 'shop']);
+
+        $this->member = User::factory()->create(['status' => 'active']);
+        $this->member->assignRole('member');
+
+        $this->shopUser = User::factory()->create(['status' => 'active']);
+        $this->shopUser->assignRole(['member', 'shop']);
+
+        $this->otherShopUser = User::factory()->create(['status' => 'active']);
+        $this->otherShopUser->assignRole(['member', 'shop']);
+
+        foreach ([$this->shopUser, $this->otherShopUser] as $user) {
+            Shop::query()->create([
+                'user_id' => $user->id,
+                'name' => 'Shop '.$user->id,
+                'slug' => 'shop-'.$user->id,
+                'status' => 'active',
+            ]);
+        }
+
+        foreach ([$this->member, $this->shopUser, $this->otherShopUser] as $user) {
+            Wallet::query()->create([
+                'user_id' => $user->id,
+                'balance' => 500,
+                'balance_pending' => 0,
+                'balance_frozen' => 0,
+            ]);
+        }
+
+        $category = Category::query()->create([
+            'name' => 'Electronics',
+            'slug' => 'electronics',
+            'status' => 'active',
+        ]);
+
+        $this->product = Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Visible Product',
+            'slug' => 'visible-product',
+            'selling_price' => 25,
+            'purchase_price' => 10,
+            'commission' => 3,
+            'stock' => 10,
+            'status' => 'active',
+        ]);
+    }
+
+    public function test_member_sees_no_products_until_a_shop_distributes(): void
+    {
+        $this->actingAs($this->member)
+            ->get('/home')
+            ->assertOk()
+            ->assertDontSee('Visible Product');
+
+        $this->actingAs($this->member)
+            ->get('/home/products')
+            ->assertOk()
+            ->assertDontSee('Visible Product');
+    }
+
+    public function test_member_sees_products_after_shop_distribution(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+
+        $this->actingAs($this->member)
+            ->get('/home')
+            ->assertOk()
+            ->assertSee('Visible Product');
+    }
+
+    public function test_shop_sees_products_distributed_by_other_shops(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+
+        $this->actingAs($this->otherShopUser)
+            ->get('/home')
+            ->assertOk()
+            ->assertSee('Visible Product');
+    }
+
+    public function test_shop_can_distribute_from_distribution_center(): void
+    {
+        $this->actingAs($this->shopUser)
+            ->get(route('member.products.distributions.index'))
+            ->assertOk()
+            ->assertSee('Visible Product');
+
+        $this->actingAs($this->shopUser)
+            ->post(route('member.products.distributions.store'), [
+                'product_id' => $this->product->id,
+            ])
+            ->assertRedirect(route('member.products.distributions.index'))
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('product_distributions', [
+            'user_id' => $this->shopUser->id,
+            'product_id' => $this->product->id,
+        ]);
+    }
+
+    public function test_checkout_requires_shop_distribution(): void
+    {
+        $this->member->update(['payment_password' => '123456']);
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.checkout.show', $this->product))
+            ->assertNotFound();
+
+        $this->distributeAsShop($this->shopUser);
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.checkout.show', $this->product))
+            ->assertRedirect(route('member.payment-password.create', [
+                'redirect' => route('member.checkout.show', $this->product),
+            ]));
+    }
+
+    public function test_member_cannot_access_distribution_center(): void
+    {
+        $this->actingAs($this->member)
+            ->get(route('member.products.distributions.index'))
+            ->assertForbidden();
+    }
+
+    private function distributeAsShop(User $shopUser): void
+    {
+        ProductDistribution::query()->create([
+            'user_id' => $shopUser->id,
+            'product_id' => $this->product->id,
+            'selling_price' => $this->product->selling_price,
+            'purchase_price' => $this->product->purchase_price,
+            'commission' => $this->product->commission,
+            'commission_type' => 'fixed',
+        ]);
+    }
+}

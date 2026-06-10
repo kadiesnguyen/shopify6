@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UserRequest;
-use App\Models\Product;
 use App\Models\ProductDistribution;
 use App\Models\User;
 use App\Models\Wallet;
@@ -52,7 +51,6 @@ class UserController extends Controller
         $activeModal = $this->resolveActiveModal($request);
 
         $distributions = collect();
-        $catalogProducts = collect();
 
         if ($activeModal === 'distributions' && $modalUser) {
             $distributions = ProductDistribution::query()
@@ -83,19 +81,9 @@ class UserController extends Controller
                 )
                 ->paginate(10)
                 ->withQueryString();
-
-            $assignedIds = ProductDistribution::query()
-                ->where('user_id', $modalUser->id)
-                ->pluck('product_id');
-
-            $catalogProducts = Product::query()
-                ->where('status', Product::STATUS_ACTIVE)
-                ->when($assignedIds->isNotEmpty(), fn ($q) => $q->whereNotIn('id', $assignedIds))
-                ->orderBy('name')
-                ->get(['id', 'name', 'selling_price']);
         }
 
-        return view('admin.users.index', compact('users', 'roles', 'modalUser', 'activeModal', 'distributions', 'catalogProducts'));
+        return view('admin.users.index', compact('users', 'roles', 'modalUser', 'activeModal', 'distributions'));
     }
 
     private function resolveModalUser(Request $request): ?User

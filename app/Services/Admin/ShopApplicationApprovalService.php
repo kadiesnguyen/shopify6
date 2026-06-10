@@ -7,6 +7,7 @@ use App\Models\ShopApplication;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Role;
 
 class ShopApplicationApprovalService
 {
@@ -46,6 +47,9 @@ class ShopApplicationApprovalService
             'reviewed_by' => $reviewer->id,
             'reviewed_at' => now(),
         ]);
+
+        Role::findOrCreate('shop');
+        $application->user->assignRole('shop');
 
         return $shop;
     }

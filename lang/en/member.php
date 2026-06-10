@@ -73,6 +73,13 @@ return [
         'management' => 'Product management',
         'stats' => 'Click: :clicks · Sales :sales',
         'commission' => 'Commission',
+        'distribute' => 'Distribute',
+        'already_distributed' => 'Already distributed',
+        'distributed_success' => 'Product distributed successfully.',
+        'distribution_center_hint' => 'Distributing deducts purchase cost from your wallet. When an order completes, you receive cost back plus commission.',
+        'distribution_locked' => 'Distribution is locked',
+        'distribution_cost' => 'Distribution cost',
+        'insufficient_balance_distribution' => 'Insufficient balance. You need at least $:amount to distribute this product.',
     ],
 
     'shop_dashboard' => [

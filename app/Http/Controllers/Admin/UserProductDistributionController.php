@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
 use App\Models\ProductDistribution;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -14,26 +13,7 @@ class UserProductDistributionController extends Controller
 {
     public function store(Request $request, User $user): RedirectResponse
     {
-        $validated = $request->validate([
-            'product_id' => [
-                'required',
-                'exists:products,id',
-                Rule::unique('product_distributions', 'product_id')->where('user_id', $user->id),
-            ],
-        ]);
-
-        $product = Product::query()->findOrFail($validated['product_id']);
-
-        ProductDistribution::query()->create([
-            'user_id' => $user->id,
-            'product_id' => $product->id,
-            'selling_price' => $product->selling_price,
-            'purchase_price' => $product->purchase_price,
-            'commission' => $product->commission,
-            'commission_type' => ProductDistribution::COMMISSION_FIXED,
-        ]);
-
-        return $this->redirectBack($user, __('admin.users.distributions.assigned'));
+        abort(403);
     }
 
     public function update(Request $request, User $user, ProductDistribution $distribution): RedirectResponse

@@ -38,6 +38,7 @@ Thumbs.db
 
 # Docs & markdown notes (local / not for remote repo)
 *.md
+!deployserver.md
 
 # Database backups & dumps
 /backups/

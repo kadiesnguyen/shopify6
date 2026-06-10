@@ -91,10 +91,12 @@
             <svg class="size-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
             <span class="truncate">{{ __('admin.users.actions.change_payment_password') }}</span>
         </a>
-        <a href="{{ $modalUrl('distributions') }}" class="{{ $itemClass }} text-slate-700 hover:bg-slate-50" role="menuitem">
-            <svg class="size-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-            <span class="truncate">{{ __('admin.users.distribute_products') }}</span>
-        </a>
+        @if ($user->isShop())
+            <a href="{{ $modalUrl('distributions') }}" class="{{ $itemClass }} text-slate-700 hover:bg-slate-50" role="menuitem">
+                <svg class="size-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                <span class="truncate">{{ __('admin.users.distribute_products') }}</span>
+            </a>
+        @endif
 
         @unless ($isSelf)
             <form method="POST" action="{{ route('admin.users.toggle-lock', $user) }}" onsubmit="return confirm(@js($isBanned ? __('admin.users.actions.confirm_unlock_account') : __('admin.users.actions.confirm_lock_account')))">

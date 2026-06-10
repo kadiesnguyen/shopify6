@@ -7,10 +7,13 @@ use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
-use RuntimeException;
 
 class OrderSettlementService
 {
+    public function __construct(
+        private readonly ProductDistributionService $distributionService,
+    ) {}
+
     public function applyStatusChange(Order $order, string $previousStatus, string $newStatus): Order
     {
         if ($previousStatus === $newStatus) {
@@ -18,10 +21,12 @@ class OrderSettlementService
         }
 
         return DB::transaction(function () use ($order, $previousStatus, $newStatus): Order {
-            $order = Order::query()->whereKey($order->id)->lockForUpdate()->with('items')->firstOrFail();
+            $order = Order::query()->whereKey($order->id)->lockForUpdate()->with(['items', 'productDistribution'])->firstOrFail();
 
             if ($newStatus === Order::STATUS_COMPLETED) {
+                $this->creditSellerPurchaseReturn($order);
                 $this->creditSellerCommission($order);
+                $this->releaseDistribution($order);
                 $order->completed_at = now();
             }
 
@@ -36,37 +41,35 @@ class OrderSettlementService
         });
     }
 
-    public function chargeSellerProductCost(Order $order, float $purchaseCost): void
+    public function creditSellerPurchaseReturn(Order $order): void
     {
-        if ($purchaseCost <= 0 || ! $order->seller_id) {
+        $amount = (float) $order->purchase_cost;
+
+        if ($amount <= 0 || ! $order->seller_id) {
             return;
         }
 
-        $reference = $order->order_no.'-seller-cost';
+        $reference = $order->order_no.'-seller-purchase-return';
 
         if ($this->transactionExists($reference)) {
             return;
         }
 
-        $wallet = Wallet::query()
-            ->where('user_id', $order->seller_id)
-            ->lockForUpdate()
-            ->first();
+        $wallet = Wallet::query()->firstOrCreate(
+            ['user_id' => $order->seller_id],
+            ['balance' => 0, 'balance_pending' => 0, 'balance_frozen' => 0],
+        );
 
-        if (! $wallet || (float) $wallet->balance < $purchaseCost) {
-            throw new RuntimeException('insufficient_seller_balance');
-        }
-
-        $wallet->decrement('balance', $purchaseCost);
+        $wallet->increment('balance', $amount);
 
         Transaction::query()->create([
             'user_id' => $order->seller_id,
             'wallet_id' => $wallet->id,
-            'amount' => $purchaseCost,
-            'type' => Transaction::TYPE_PRODUCT_COST,
+            'amount' => $amount,
+            'type' => Transaction::TYPE_PURCHASE_RETURN,
             'status' => Transaction::STATUS_COMPLETED,
             'reference' => $reference,
-            'description' => 'Order product cost '.$order->order_no,
+            'description' => 'Order purchase return '.$order->order_no,
             'processed_at' => now(),
         ]);
     }
@@ -107,15 +110,27 @@ class OrderSettlementService
     private function handleCancellation(Order $order, string $previousStatus): void
     {
         if ($previousStatus === Order::STATUS_COMPLETED) {
+            $this->reverseSellerPurchaseReturn($order);
             $this->reverseSellerCommission($order);
         }
 
-        $this->refundSellerProductCost($order);
         $this->refundBuyerPayment($order);
         $this->restoreStock($order);
+        $this->releaseDistribution($order);
     }
 
-    private function refundSellerProductCost(Order $order): void
+    private function releaseDistribution(Order $order): void
+    {
+        $distribution = $order->productDistribution;
+
+        if (! $distribution) {
+            return;
+        }
+
+        $this->distributionService->release($distribution);
+    }
+
+    private function reverseSellerPurchaseReturn(Order $order): void
     {
         $amount = (float) $order->purchase_cost;
 
@@ -123,31 +138,35 @@ class OrderSettlementService
             return;
         }
 
-        if (! $this->transactionExists($order->order_no.'-seller-cost')) {
+        if (! $this->transactionExists($order->order_no.'-seller-purchase-return')) {
             return;
         }
 
-        $reference = $order->order_no.'-seller-cost-refund';
+        $reference = $order->order_no.'-seller-purchase-return-reversal';
 
         if ($this->transactionExists($reference)) {
             return;
         }
 
-        $wallet = Wallet::query()->firstOrCreate(
-            ['user_id' => $order->seller_id],
-            ['balance' => 0, 'balance_pending' => 0, 'balance_frozen' => 0],
-        );
+        $wallet = Wallet::query()
+            ->where('user_id', $order->seller_id)
+            ->lockForUpdate()
+            ->first();
 
-        $wallet->increment('balance', $amount);
+        if (! $wallet) {
+            return;
+        }
+
+        $wallet->decrement('balance', min((float) $wallet->balance, $amount));
 
         Transaction::query()->create([
             'user_id' => $order->seller_id,
             'wallet_id' => $wallet->id,
             'amount' => $amount,
-            'type' => Transaction::TYPE_REFUND,
+            'type' => Transaction::TYPE_ADJUSTMENT,
             'status' => Transaction::STATUS_COMPLETED,
             'reference' => $reference,
-            'description' => 'Order product cost refund '.$order->order_no,
+            'description' => 'Order purchase return reversal '.$order->order_no,
             'processed_at' => now(),
         ]);
     }

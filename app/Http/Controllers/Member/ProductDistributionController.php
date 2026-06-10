@@ -5,35 +5,83 @@ namespace App\Http\Controllers\Member;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductDistribution;
+use App\Services\Member\ProductBuyableQuery;
+use App\Services\Member\ProductDistributionService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use RuntimeException;
 
 class ProductDistributionController extends Controller
 {
+    public function __construct(
+        private readonly ProductDistributionService $distributionService,
+    ) {}
+
     public function index(Request $request): View
     {
-        abort_unless(auth()->user()->shop, 403);
+        abort_unless(auth()->user()->isShop(), 403);
 
-        $distributions = ProductDistribution::query()
-            ->with(['product.category', 'product.shop'])
+        $distributedIds = ProductDistribution::query()
             ->where('user_id', auth()->id())
-            ->when($request->string('q'), function ($query, $search): void {
-                $query->whereHas('product', fn ($q) => $q->where('name', 'like', "%{$search}%"));
-            })
+            ->pluck('product_id');
+
+        $products = Product::query()
+            ->with(['category', 'shop'])
+            ->where('status', Product::STATUS_ACTIVE)
+            ->when($request->string('q'), fn ($query, $q) => $query->where('name', 'like', "%{$q}%"))
             ->latest()
             ->paginate(12)
             ->withQueryString();
 
-        return view('member.products.distributions', compact('distributions'));
+        $wallet = auth()->user()->wallet;
+
+        return view('member.products.distributions', compact('products', 'distributedIds', 'wallet'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+
+        abort_unless($user->canSelfDistribute(), 403);
+
+        $validated = $request->validate([
+            'product_id' => [
+                'required',
+                'exists:products,id',
+                Rule::unique('product_distributions', 'product_id')->where('user_id', $user->id),
+            ],
+        ]);
+
+        $product = Product::query()
+            ->where('status', Product::STATUS_ACTIVE)
+            ->findOrFail($validated['product_id']);
+
+        try {
+            $this->distributionService->distribute($user, $product);
+        } catch (RuntimeException $exception) {
+            if ($exception->getMessage() === 'insufficient_balance') {
+                return back()->withErrors([
+                    'product_id' => __('member.products.insufficient_balance_distribution', [
+                        'amount' => number_format((float) $product->purchase_price, 2),
+                    ]),
+                ]);
+            }
+
+            throw $exception;
+        }
+
+        return redirect()
+            ->route('member.products.distributions.index')
+            ->with('status', __('member.products.distributed_success'));
     }
 
     public function manage(Request $request): View
     {
-        abort_unless(auth()->user()->shop, 403);
+        abort_unless(auth()->user()->isShop(), 403);
 
-        $products = Product::query()
-            ->with(['category', 'shop'])
-            ->where('user_id', auth()->id())
+        $products = ProductBuyableQuery::forShop(auth()->id())
             ->when($request->string('q'), fn ($query, $q) => $query->where('name', 'like', "%{$q}%"))
             ->latest()
             ->paginate(12)

@@ -96,6 +96,21 @@ class User extends Authenticatable
         return $this->hasRole('admin');
     }
 
+    public function isShop(): bool
+    {
+        return $this->hasRole('shop') || $this->shop()->exists();
+    }
+
+    public function isMemberOnly(): bool
+    {
+        return $this->hasRole('member') && ! $this->isShop();
+    }
+
+    public function canSelfDistribute(): bool
+    {
+        return $this->isShop() && ! $this->distribution_locked;
+    }
+
     public function scopeWithoutAdmins($query)
     {
         return $query->whereDoesntHave('roles', fn ($roleQuery) => $roleQuery->where('name', 'admin'));

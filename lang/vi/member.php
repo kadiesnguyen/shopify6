@@ -73,6 +73,13 @@ return [
         'management' => 'Quản lý sản phẩm',
         'stats' => 'Click: :clicks · Sales :sales',
         'commission' => 'Hoa hồng',
+        'distribute' => 'Phân phối',
+        'already_distributed' => 'Đã phân phối',
+        'distributed_success' => 'Đã phân phối sản phẩm thành công.',
+        'distribution_center_hint' => 'Phân phối sẽ trừ chi phí vốn (giá nhập) khỏi số dư ví. Khi đơn hàng hoàn thành, cửa hàng nhận lại vốn và hoa hồng.',
+        'distribution_locked' => 'Phân phối đã bị khoá',
+        'distribution_cost' => 'Chi phí phân phối',
+        'insufficient_balance_distribution' => 'Số dư không đủ. Cần ít nhất $:amount để phân phối sản phẩm này.',
     ],
 
     'shop_dashboard' => [

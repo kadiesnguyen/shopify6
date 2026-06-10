@@ -17,6 +17,10 @@ class Transaction extends Model
 
     public const TYPE_PRODUCT_COST = 'product_cost';
 
+    public const TYPE_DISTRIBUTION_COST = 'distribution_cost';
+
+    public const TYPE_PURCHASE_RETURN = 'purchase_return';
+
     public const TYPE_REFUND = 'refund';
 
     public const TYPE_ADJUSTMENT = 'adjustment';

@@ -28,6 +28,7 @@ class ShopApplicationTest extends TestCase
 
         Role::create(['name' => 'member']);
         Role::create(['name' => 'admin']);
+        Role::create(['name' => 'shop']);
 
         $this->member = User::factory()->create(['status' => 'active']);
         $this->member->assignRole('member');
@@ -102,6 +103,8 @@ class ShopApplicationTest extends TestCase
             'id' => $application->id,
             'status' => ShopApplication::STATUS_APPROVED,
         ]);
+
+        $this->assertTrue($this->member->fresh()->hasRole('shop'));
     }
 
     public function test_member_with_shop_is_redirected_from_application_form(): void

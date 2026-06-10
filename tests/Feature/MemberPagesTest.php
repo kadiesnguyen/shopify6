@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductDistribution;
 use App\Models\RechargeMethod;
+use App\Models\Shop;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WithdrawalMethod;
@@ -23,6 +25,7 @@ class MemberPagesTest extends TestCase
         parent::setUp();
 
         Role::create(['name' => 'member']);
+        Role::create(['name' => 'shop']);
 
         $this->member = User::factory()->create(['status' => 'active']);
         $this->member->assignRole('member');
@@ -106,6 +109,24 @@ class MemberPagesTest extends TestCase
             'commission' => 1,
             'stock' => 5,
             'status' => 'active',
+        ]);
+
+        $shopOwner = User::factory()->create(['status' => 'active']);
+        $shopOwner->assignRole('shop');
+        Shop::query()->create([
+            'user_id' => $shopOwner->id,
+            'name' => 'Catalog Shop',
+            'slug' => 'catalog-shop',
+            'status' => 'active',
+        ]);
+
+        ProductDistribution::query()->create([
+            'user_id' => $shopOwner->id,
+            'product_id' => $product->id,
+            'selling_price' => $product->selling_price,
+            'purchase_price' => 0,
+            'commission' => 1,
+            'commission_type' => 'fixed',
         ]);
 
         $this->actingAs($this->member)
@@ -241,6 +262,24 @@ class MemberPagesTest extends TestCase
             'commission' => 1,
             'stock' => 5,
             'status' => 'active',
+        ]);
+
+        $shopOwner = User::factory()->create(['status' => 'active']);
+        $shopOwner->assignRole('shop');
+        Shop::query()->create([
+            'user_id' => $shopOwner->id,
+            'name' => 'Gated Shop',
+            'slug' => 'gated-shop',
+            'status' => 'active',
+        ]);
+
+        ProductDistribution::query()->create([
+            'user_id' => $shopOwner->id,
+            'product_id' => $product->id,
+            'selling_price' => $product->selling_price,
+            'purchase_price' => 0,
+            'commission' => 1,
+            'commission_type' => 'fixed',
         ]);
 
         $this->member->update(['payment_password' => '123456']);

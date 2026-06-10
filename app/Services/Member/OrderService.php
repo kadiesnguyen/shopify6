@@ -15,7 +15,7 @@ use RuntimeException;
 class OrderService
 {
     public function __construct(
-        private readonly OrderSettlementService $settlement,
+        private readonly ProductDistributionService $distributionService,
     ) {}
 
     public function placeOrder(User $user, Product $product, int $qty = 1): Order
@@ -28,6 +28,12 @@ class OrderService
 
             abort_unless($product->status === Product::STATUS_ACTIVE, 404);
 
+            $distribution = $this->distributionService->resolveForOrder($product);
+
+            if (! $distribution) {
+                throw new RuntimeException('product_not_distributed');
+            }
+
             $qty = max(1, min($qty, $product->stock));
 
             if ($product->stock < $qty) {
@@ -39,18 +45,22 @@ class OrderService
                 ->lockForUpdate()
                 ->first();
 
-            $subtotal = (float) $product->selling_price * $qty;
-            $commission = (float) $product->commission * $qty;
-            $purchaseCost = (float) $product->purchase_price * $qty;
+            $unitPrice = (float) $distribution->selling_price;
+            $subtotal = $unitPrice * $qty;
+            $purchaseCost = (float) $distribution->purchase_price * $qty;
+            $commission = $this->distributionService->commissionForQuantity($distribution, $qty);
 
             if (! $wallet || (float) $wallet->balance < $subtotal) {
                 throw new RuntimeException('insufficient_balance');
             }
 
+            $seller = User::query()->with('shop')->find($distribution->user_id);
+
             $order = Order::query()->create([
                 'user_id' => $user->id,
-                'shop_id' => $product->shop_id,
-                'seller_id' => $product->user_id,
+                'shop_id' => $seller?->shop?->id ?? $product->shop_id,
+                'seller_id' => $distribution->user_id,
+                'product_distribution_id' => $distribution->id,
                 'order_no' => 'ORD-'.strtoupper(Str::random(10)),
                 'total' => $subtotal,
                 'commission' => $commission,
@@ -66,9 +76,9 @@ class OrderService
                 'product_name' => $product->name,
                 'product_image' => $product->image,
                 'qty' => $qty,
-                'unit_price' => $product->selling_price,
-                'purchase_price' => $product->purchase_price,
-                'commission' => $product->commission,
+                'unit_price' => $unitPrice,
+                'purchase_price' => $distribution->purchase_price,
+                'commission' => $distribution->commission,
                 'subtotal' => $subtotal,
             ]);
 
@@ -86,7 +96,7 @@ class OrderService
                 'processed_at' => now(),
             ]);
 
-            $this->settlement->chargeSellerProductCost($order, $purchaseCost);
+            $this->distributionService->reserve($distribution);
 
             return $order;
         });

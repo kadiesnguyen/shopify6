@@ -9,16 +9,18 @@
     </header>
 
     <div class="mb-4 space-y-3">
-        <x-member.link-card
-            :href="route('member.products.distributions.index')"
-            icon="warehouse"
-            :label="__('member.products.distribution_center')"
-        />
-        <x-member.link-card
-            :href="route('member.products.manage.index')"
-            icon="package"
-            :label="__('member.products.management')"
-        />
+        @if (auth()->user()->isShop())
+            <x-member.link-card
+                :href="route('member.products.distributions.index')"
+                icon="warehouse"
+                :label="__('member.products.distribution_center')"
+            />
+            <x-member.link-card
+                :href="route('member.products.manage.index')"
+                icon="package"
+                :label="__('member.products.management')"
+            />
+        @endif
     </div>
 
     <form method="GET" class="mb-4 space-y-3">

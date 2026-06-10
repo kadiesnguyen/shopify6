@@ -79,6 +79,11 @@ class DemoDataSeeder extends Seeder
             ],
         );
 
+        \Spatie\Permission\Models\Role::findOrCreate('shop');
+        if (! $member->hasRole('shop')) {
+            $member->assignRole('shop');
+        }
+
         $products = [
             ['name' => 'Wireless Earbuds', 'slug' => 'wireless-earbuds', 'category' => 'electronics', 'image' => 'images/portal/products/earring.jpeg', 'selling_price' => 49.99, 'purchase_price' => 25.00, 'commission' => 5.00, 'stock' => 120],
             ['name' => 'Smart Watch', 'slug' => 'smart-watch', 'category' => 'electronics', 'image' => 'images/portal/products/mopping-robot.jpeg', 'selling_price' => 129.99, 'purchase_price' => 80.00, 'commission' => 12.00, 'stock' => 45],
@@ -104,23 +109,6 @@ class DemoDataSeeder extends Seeder
                     'commission' => $item['commission'],
                     'stock' => $item['stock'],
                     'status' => 'active',
-                ],
-            );
-        }
-
-        $catalogProduct = Product::query()->where('slug', 'smart-watch')->first();
-
-        if ($catalogProduct) {
-            \App\Models\ProductDistribution::query()->updateOrCreate(
-                [
-                    'user_id' => $member->id,
-                    'product_id' => $catalogProduct->id,
-                ],
-                [
-                    'selling_price' => $catalogProduct->selling_price,
-                    'purchase_price' => $catalogProduct->purchase_price,
-                    'commission' => $catalogProduct->commission,
-                    'commission_type' => 'fixed',
                 ],
             );
         }

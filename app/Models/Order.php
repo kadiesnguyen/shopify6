@@ -36,6 +36,7 @@ class Order extends Model
         'user_id',
         'shop_id',
         'seller_id',
+        'product_distribution_id',
         'order_no',
         'total',
         'commission',
@@ -75,6 +76,11 @@ class Order extends Model
     public function shop(): BelongsTo
     {
         return $this->belongsTo(Shop::class);
+    }
+
+    public function productDistribution(): BelongsTo
+    {
+        return $this->belongsTo(ProductDistribution::class);
     }
 
     public function items(): HasMany

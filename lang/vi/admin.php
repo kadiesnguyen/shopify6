@@ -334,6 +334,11 @@ return [
         'logo' => 'Logo cửa hàng',
         'id_front' => 'Mặt trước CMND/CCCD',
         'id_back' => 'Mặt sau CMND/CCCD',
+        'section_shop_info' => 'Thông tin cửa hàng',
+        'section_documents' => 'Hình ảnh & giấy tờ',
+        'view_full_image' => 'Xem ảnh gốc',
+        'reject_note_hint' => 'Nhập lý do nếu từ chối đơn...',
+        'close' => 'Đóng',
     ],
 
     'profile' => [
