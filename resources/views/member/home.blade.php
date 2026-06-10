@@ -31,7 +31,7 @@
         @if ($products->isEmpty())
             <x-ui.empty-state :title="__('member.no_products')" class="rounded-xl bg-gray-50" />
         @else
-            <div class="grid grid-cols-2 gap-3">
+            <div class="ui-content-grid">
                 @foreach ($products as $product)
                     <x-member.product-card :product="$product" />
                 @endforeach

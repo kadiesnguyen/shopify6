@@ -1,9 +1,14 @@
 @props(['product'])
 
-<article class="flex gap-3 rounded-xl bg-white p-3 shadow-sm">
+<article class="flex min-w-0 gap-3 rounded-xl bg-white p-3 shadow-sm">
     <div class="size-20 shrink-0 overflow-hidden rounded-lg bg-gray-100">
         @if ($product->imageUrl())
-            <img src="{{ $product->imageUrl() }}" alt="{{ $product->category?->name ?? $product->name }}" class="h-full w-full object-cover">
+            <x-ui.lazy-image
+                :src="$product->imageUrl()"
+                :alt="$product->category?->name ?? $product->name"
+                class="h-full w-full object-cover"
+                wrapper-class="size-20"
+            />
         @endif
     </div>
 
@@ -12,9 +17,14 @@
             <p class="truncate font-medium text-gray-900">{{ $product->name }}</p>
 
             @if ($product->shop)
-                <div class="mb-1 mt-1.5 flex items-center gap-2 rounded-lg bg-gray-50 px-1 py-1.5">
+                <div class="mb-1 mt-1.5 flex min-w-0 items-center gap-2 rounded-lg bg-gray-50 px-1 py-1.5">
                     @if ($product->shop->logoUrl())
-                        <img src="{{ $product->shop->logoUrl() }}" alt="" class="size-6 shrink-0 rounded-full bg-gray-100 object-cover">
+                        <x-ui.lazy-image
+                            :src="$product->shop->logoUrl()"
+                            alt=""
+                            class="size-6 rounded-full object-cover"
+                            wrapper-class="size-6 shrink-0 rounded-full"
+                        />
                     @endif
                     <span class="truncate text-xs font-medium text-gray-700">{{ $product->shop->name }}</span>
                 </div>

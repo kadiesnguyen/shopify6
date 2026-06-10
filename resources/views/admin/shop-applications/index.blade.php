@@ -23,9 +23,9 @@
             <button type="submit" class="rounded-lg bg-brand px-3 py-2 text-sm text-white">{{ __('admin.actions.search') }}</button>
         </form>
 
-        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <x-ui.responsive-table>
+            <table class="min-w-full text-sm">
                     <thead class="bg-slate-50">
                         <tr>
                             <th class="px-4 py-3 text-left">{{ __('admin.shop_applications.user') }}</th>
@@ -79,11 +79,11 @@
                                 <td colspan="8" class="px-4 py-12 text-center text-slate-500">{{ __('admin.shop_applications.empty') }}</td>
                             </tr>
                         @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="border-t border-slate-100 px-4 py-3">{{ $applications->links() }}</div>
-        </div>
+            </tbody>
+        </table>
+        </x-ui.responsive-table>
+        <div class="border-t border-slate-100 px-4 py-3">{{ $applications->links() }}</div>
+    </div>
 
         @foreach ($applications as $item)
             @include('admin.shop-applications.partials.review-modal', ['item' => $item])

@@ -69,7 +69,7 @@
     </div>
 
     <div class="hidden overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm md:block">
-        <div class="overflow-x-auto">
+        <x-ui.responsive-table>
             <table class="min-w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50">
                     <tr>
@@ -116,7 +116,7 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
+        </x-ui.responsive-table>
         <div class="border-t border-slate-100 px-4 py-3">{{ $users->links() }}</div>
     </div>
 

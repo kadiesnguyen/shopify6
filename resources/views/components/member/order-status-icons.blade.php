@@ -10,7 +10,7 @@
     ];
 @endphp
 
-<div class="flex gap-2 overflow-x-auto px-3 py-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+<div class="portal-scroll-x flex gap-2 px-3 py-4">
     @foreach ($items as $item)
         @php $count = (int) ($statusCounts[$item['key']] ?? 0); @endphp
         <a

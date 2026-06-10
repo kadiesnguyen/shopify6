@@ -7,8 +7,8 @@
     <title>@yield('title', __('messages.admin_portal')) — {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-slate-100 text-slate-900 antialiased" x-data="{ sidebarOpen: false }" @admin-sidebar-close.window="sidebarOpen = false">
-    <div class="flex min-h-screen">
+<body class="app-layout-root overflow-x-hidden bg-slate-100 text-slate-900 antialiased" x-data="{ sidebarOpen: false }" @admin-sidebar-close.window="sidebarOpen = false">
+    <div class="flex min-h-screen min-w-0 max-w-full overflow-x-hidden">
         <div
             class="fixed inset-0 z-30 bg-black/50 transition-opacity md:hidden"
             x-show="sidebarOpen"
@@ -59,6 +59,16 @@
             ])>
                 @if (session('status'))
                     <x-ui.alert type="success" :message="session('status')" class="mb-4 !max-w-none" />
+                @endif
+
+                @if ($errors->any())
+                    <x-ui.error-state class="mb-4 text-left">
+                        <ul class="mt-2 list-inside list-disc space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </x-ui.error-state>
                 @endif
 
                 @yield('content')

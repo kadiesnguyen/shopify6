@@ -7,7 +7,7 @@
     <title>@yield('title', __('messages.login')) — {{ config('landing.brand_name', 'Shopify') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex min-h-dvh flex-col bg-white text-slate-900 antialiased" x-data>
+<body class="app-layout-root flex min-h-dvh flex-col overflow-x-hidden bg-white text-slate-900 antialiased" x-data>
     <x-auth.portal-header />
 
     <main class="flex flex-1 flex-col items-center px-4 py-8 sm:py-12">

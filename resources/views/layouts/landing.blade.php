@@ -19,13 +19,25 @@
     @stack('meta')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-white text-slate-900 antialiased">
+<body class="app-layout-root overflow-x-hidden bg-white text-slate-900 antialiased">
     <x-landing.header />
 
-    <main>
+    <main class="min-w-0 max-w-full overflow-x-hidden">
         @if (session('status'))
             <div class="mx-auto max-w-6xl px-4 pt-4">
                 <x-ui.alert type="success" :message="session('status')" />
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="mx-auto max-w-6xl px-4 pt-4">
+                <x-ui.error-state class="text-left">
+                    <ul class="mt-2 list-inside list-disc space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </x-ui.error-state>
             </div>
         @endif
 

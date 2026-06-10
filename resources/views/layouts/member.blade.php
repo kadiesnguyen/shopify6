@@ -18,8 +18,8 @@
     />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="portal-app bg-gray-100 text-base text-gray-900 antialiased">
-    <div class="portal-shell mx-auto min-h-dvh w-full bg-white md:max-w-[420px] md:shadow-xl md:ring-1 md:ring-gray-200">
+<body class="portal-app app-layout-root overflow-x-hidden bg-gray-100 text-base text-gray-900 antialiased">
+    <div class="portal-shell mx-auto min-h-dvh w-full min-w-0 max-w-full overflow-x-hidden bg-white md:max-w-[420px] md:shadow-xl md:ring-1 md:ring-gray-200">
         @unless(View::hasSection('hide_portal_header'))
             <x-member.header />
         @endunless
@@ -46,7 +46,17 @@
                 'flex min-h-0 flex-1 flex-col' => View::hasSection('portal_chat_page'),
             ])>
                 @if (session('status'))
-                    <x-ui.alert type="success" :message="session('status')" class="mb-4" />
+                    <x-ui.alert type="success" :message="session('status')" class="mb-4 !max-w-none" />
+                @endif
+
+                @if ($errors->any())
+                    <x-ui.error-state class="mb-4 text-left">
+                        <ul class="mt-2 list-inside list-disc space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </x-ui.error-state>
                 @endif
 
                 {{ $slot ?? '' }}

@@ -36,7 +36,9 @@
                 <img
                     src="{{ $slide['image'] }}"
                     alt="{{ $slide['alt'] }}"
-                    class="absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-500"
+                    loading="{{ $index === 0 ? 'eager' : 'lazy' }}"
+                    decoding="async"
+                    class="absolute inset-0 h-full w-full max-w-none object-cover object-center transition-opacity duration-500"
                     x-show="current === {{ $index }}"
                     @if ($index) x-cloak @endif
                 >
