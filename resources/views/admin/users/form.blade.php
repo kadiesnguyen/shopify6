@@ -1,0 +1,50 @@
+@extends('layouts.admin')
+
+@section('title', $user->exists ? __('admin.actions.edit') : __('admin.actions.add'))
+
+@section('content')
+    <x-admin.page-header :title="$user->exists ? __('admin.actions.edit') : __('admin.actions.add')" />
+
+    <form method="POST" action="{{ $user->exists ? route('admin.users.update', $user) : route('admin.users.store') }}" class="max-w-xl space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        @csrf
+        @if ($user->exists) @method('PUT') @endif
+
+        @foreach (['username', 'user_code', 'name', 'email', 'phone'] as $field)
+            <div>
+                <label class="mb-1 block text-sm font-medium">{{ ucfirst($field) }}</label>
+                <input name="{{ $field }}" value="{{ old($field, $user->$field) }}" @if(in_array($field, ['username','name','email'])) required @endif class="w-full rounded-lg border-slate-300">
+                @error($field)<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
+        @endforeach
+
+        <div>
+            <label class="mb-1 block text-sm font-medium">Password</label>
+            <input type="password" name="password" @if(! $user->exists) required @endif class="w-full rounded-lg border-slate-300">
+            @error('password')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="mb-1 block text-sm font-medium">Role</label>
+                <select name="role" class="w-full rounded-lg border-slate-300">
+                    @foreach ($roles as $role)
+                        <option value="{{ $role }}" @selected(old('role', $user->roles->first()?->name) === $role)>{{ $role }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="mb-1 block text-sm font-medium">Status</label>
+                <select name="status" class="w-full rounded-lg border-slate-300">
+                    @foreach (['active', 'inactive', 'banned'] as $st)
+                        <option value="{{ $st }}" @selected(old('status', $user->status ?? 'active') === $st)>{{ $st }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit" class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white">{{ __('admin.actions.save') }}</button>
+            <a href="{{ route('admin.users.index') }}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">{{ __('admin.actions.cancel') }}</a>
+        </div>
+    </form>
+@endsection

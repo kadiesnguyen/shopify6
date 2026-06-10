@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin
+Disallow: /home
+Disallow: /api
+Disallow: /dang-nhap
+Disallow: /dang-ky
+
+Sitemap: /sitemap.xml

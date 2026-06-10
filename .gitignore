@@ -1,0 +1,55 @@
+# Dependencies
+/node_modules
+/vendor
+
+# Frontend build (generate on server/CI with npm run build)
+/public/build
+/public/hot
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Laravel runtime
+/bootstrap/cache/*.php
+!/bootstrap/cache/.gitignore
+/storage/*.key
+/storage/pail
+
+# Logs & test cache
+*.log
+.phpunit.result.cache
+
+# IDE, Cursor, local tooling
+/.cursor/
+/.cursor-run-cmds.out
+/.cursor-run-cmds.sh
+/.cursor-run-output.txt
+.cursorignore
+.codegraph/
+.idea/
+.vscode/
+.fleet/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Docs & markdown notes (local / not for remote repo)
+*.md
+
+# Database backups & dumps
+/backups/
+*.sql
+*.sql.gz
+*.dump
+
+# Agent / progress artifacts
+feature_list.json
+progress.md
+
+# Misc build output
+/dist/
+/build/
+.next/

@@ -1,0 +1,204 @@
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../../node_modules/flowbite/**/*.js';
+
+@theme {
+    --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-brand: #00a651;
+    --color-brand-dark: #007a3d;
+    --color-brand-marquee: #004d2e;
+    --color-header-bg: #f5f5f5;
+    --color-admin-sidebar: #0f172a;
+    --color-admin-accent: #22d3ee;
+}
+
+html,
+body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+@layer base {
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    .auth-field {
+        @apply w-full rounded-lg border border-slate-200 bg-white py-2.5 px-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-brand/70 focus:ring-1 focus:ring-brand/20;
+    }
+
+    .portal-search-field input[type='search'] {
+        @apply border-0 shadow-none ring-0;
+    }
+
+    .portal-sort-select select {
+        @apply border-0;
+    }
+
+    .portal-app {
+        font-family: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    .portal-shell {
+        @apply relative min-w-0;
+    }
+
+    .portal-bottom-nav {
+        font-family: inherit;
+        font-size: 16px;
+    }
+
+    .portal-bottom-nav__label {
+        font-size: 16px;
+        line-height: 1.25;
+    }
+
+    .admin-chat-shell {
+        @apply flex min-h-0 flex-1 flex-col overflow-hidden;
+        max-height: 100%;
+    }
+
+    .portal-chat-shell {
+        @apply flex min-h-0 flex-1 flex-col overflow-hidden bg-gray-50;
+        height: calc(100dvh - (4.5rem + env(safe-area-inset-bottom, 0px)));
+        max-height: calc(100dvh - (4.5rem + env(safe-area-inset-bottom, 0px)));
+    }
+
+    .portal-chat-thread {
+        @apply min-h-0 flex-1 overflow-y-auto overscroll-y-contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .portal-chat-composer {
+        @apply shrink-0 border-t border-gray-200 bg-white;
+    }
+
+    .admin-chat-thread {
+        @apply min-h-0 flex-1 overflow-y-auto overscroll-y-contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-chat-composer {
+        @apply shrink-0 border-t border-slate-100 bg-white;
+    }
+
+    .checkout-airmail {
+        height: 4px;
+        background: repeating-linear-gradient(
+            -45deg,
+            #ef4444,
+            #ef4444 8px,
+            #ffffff 8px,
+            #ffffff 16px,
+            #3b82f6 16px,
+            #3b82f6 24px
+        );
+    }
+
+    .checkout-cta {
+        background: linear-gradient(90deg, rgb(255, 140, 66) 0%, rgb(255, 77, 79) 100%);
+    }
+
+    .portal-checkout-dock {
+        @apply fixed inset-x-0 z-40 flex items-center gap-3 border-t border-gray-100 bg-white px-4 py-3 md:left-1/2 md:right-auto md:w-full md:max-w-[420px] md:-translate-x-1/2;
+        bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .portal-checkout-shell {
+        padding-bottom: calc(9rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .portal-scroll-x {
+        @apply w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .portal-scroll-x::-webkit-scrollbar {
+        display: none;
+    }
+
+    .portal-order-tabs-wrap {
+        @apply relative w-full min-w-0 max-w-full;
+    }
+
+    .portal-order-tabs-wrap::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0.75rem;
+        width: 1.5rem;
+        pointer-events: none;
+        background: linear-gradient(to left, rgb(255 255 255 / 1), rgb(255 255 255 / 0));
+    }
+
+    .portal-order-tabs {
+        display: flex;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        gap: 0.5rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.75rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .portal-order-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .portal-order-tabs__tab {
+        flex: 0 0 auto;
+        cursor: grab;
+    }
+
+    .portal-order-tabs.is-dragging .portal-order-tabs__tab {
+        cursor: grabbing;
+    }
+}
+
+@layer utilities {
+    .animate-marquee {
+        animation: marquee 28s linear infinite;
+    }
+
+    .landing-opportunity-track {
+        animation: landing-opportunity-scroll 35s linear infinite;
+    }
+
+    .landing-opportunity-track:hover {
+        animation-play-state: paused;
+    }
+
+    @keyframes marquee {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+
+    @keyframes landing-opportunity-scroll {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+}

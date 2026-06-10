@@ -1,0 +1,50 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shopefy
+      MYSQL_USER: shopefy
+      MYSQL_PASSWORD: shopefy
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:8000"
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: shopefy
+      DB_USERNAME: shopefy
+      DB_PASSWORD: shopefy
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      DB_AUTO_BOOTSTRAP: "true"
+      APP_LOCALE: vi
+      APP_FALLBACK_LOCALE: en
+      SESSION_DRIVER: database
+      SESSION_LIFETIME: "1440"
+      AUTH_REMEMBER_MINUTES: "1440"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: ["sh", "docker/entrypoint-dev.sh"]
+
+volumes:
+  mysql_data:
