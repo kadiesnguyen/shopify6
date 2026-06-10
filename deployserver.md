@@ -26,6 +26,8 @@ Script sẽ:
 2. `git push origin main`
 3. SSH: `git pull`, `composer install`, `npm ci && npm run build`, `php artisan migrate --force`, cache
 4. Upload file SQL và import vào MySQL trên server (đọc `DB_*` từ `.env` server)
+5. `php artisan db:ensure-ready` — đảm bảo admin/member và role tồn tại sau import
+6. `php artisan shops:sync-roles` — đồng bộ role `shop` theo bảng shops
 
 ## Biến môi trường tùy chọn
 
@@ -87,6 +89,8 @@ cd /www/wwwroot/shopjfy6.com
 source .env  # hoặc đọc tay DB_DATABASE, DB_USERNAME, DB_PASSWORD
 mysql -u"$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" < /tmp/import.sql
 rm /tmp/import.sql
+php artisan db:ensure-ready --no-interaction
+php artisan shops:sync-roles --no-interaction
 ```
 
 ## Thông tin server
@@ -114,6 +118,53 @@ curl -sI https://shopjfy6.com/admin/login | head -1
 ## Lưu ý
 
 - File `.env`, `info.md`, `*.sql` **không** đưa lên Git.
-- **Ghi đè toàn bọ database trên local lên server**
+- **Import ghi đè toàn bộ DB production bằng bản export local** — mọi user/order trên server bị thay thế.
+- Trước khi deploy, đảm bảo DB local Docker đã seed (`php artisan db:ensure-ready` hoặc `db:seed`) để export không rỗng/thiếu role.
 - Nếu chỉ cập nhật code: `SKIP_DB_IMPORT=1 ./scripts/deploy-server.sh`
+
+## Sự cố đã gặp: Admin không đăng nhập được sau deploy
+
+**Ngày:** 2026-06-10 · **Site:** https://shopjfy6.com/admin/login
+
+### Triệu chứng
+
+- Tài khoản demo `admin@shopi.com` / `Abc@123123` không đăng nhập được ngay sau khi chạy `./scripts/deploy-server.sh`.
+- Site vẫn trả HTTP 200 (`/up`, trang login hiển thị bình thường).
+
+### Nguyên nhân
+
+1. Script deploy **import dump MySQL local lên production**, ghi đè toàn bộ bảng `users`, `roles`, …
+2. DB local (Docker `shopefy-mysql-1`) lúc đó **0 user** hoặc thiếu role `admin` — chỉ có role `shop`.
+3. Sau import, production không còn admin → login thất bại.
+4. Trước khi sửa, script **không** chạy bước khôi phục tài khoản sau import.
+
+### Khắc phục tức thì (trên server)
+
+```bash
+ssh ServerSand
+cd /www/wwwroot/shopjfy6.com
+php artisan db:seed --class=Database\\Seeders\\RoleAndAdminSeeder --force
+# hoặc
+php artisan db:ensure-ready --no-interaction
+```
+
+Kiểm tra:
+
+```bash
+php artisan tinker --execute="echo App\Models\User::role('admin')->count();"
+```
+
+### Khắc phục lâu dài (trong repo)
+
+| Thay đổi | Mục đích |
+|----------|----------|
+| `scripts/deploy-server.sh` — sau import chạy `db:ensure-ready` + `shops:sync-roles` | Luôn có admin/member và role shop sau mỗi deploy |
+| `RoleAndAdminSeeder` — luôn gán lại mật khẩu `Abc@123123` cho admin | Mật khẩu demo ổn định sau seed idempotent |
+| Seed DB local trước khi export | Dump không còn rỗng/thiếu role |
+
+### Phòng tránh
+
+- **Trước deploy:** `docker compose exec app php artisan db:ensure-ready` (hoặc seed local).
+- **Deploy chỉ code** (giữ data production): `SKIP_DB_IMPORT=1 ./scripts/deploy-server.sh`.
+- **Sau deploy:** thử login admin + kiểm tra `/up` (mục *Kiểm tra sau deploy*).
 b

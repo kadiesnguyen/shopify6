@@ -32,6 +32,7 @@ class RoleAndAdminSeeder extends Seeder
             'user_code' => 'U000001',
             'name' => 'Admin',
             'status' => 'active',
+            'password' => Hash::make('Abc@123123'),
         ])->save();
         $admin->syncRoles([$adminRole]);
 
