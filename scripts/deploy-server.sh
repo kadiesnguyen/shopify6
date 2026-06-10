@@ -78,11 +78,10 @@ remote_pull_and_build() {
     ssh -o BatchMode=yes "$SSH_HOST" "REMOTE_PATH='$REMOTE_PATH' GIT_BRANCH='$GIT_BRANCH' bash -s" <<'REMOTE'
 set -euo pipefail
 cd "$REMOTE_PATH"
-GIT="-c safe.directory=$REMOTE_PATH git"
 
-$GIT fetch origin "$GIT_BRANCH"
-$GIT checkout "$GIT_BRANCH"
-$GIT pull origin "$GIT_BRANCH"
+git -c "safe.directory=$REMOTE_PATH" fetch origin "$GIT_BRANCH"
+git -c "safe.directory=$REMOTE_PATH" checkout "$GIT_BRANCH"
+git -c "safe.directory=$REMOTE_PATH" pull origin "$GIT_BRANCH"
 
 composer install --no-dev --optimize-autoloader --no-interaction
 npm ci
@@ -97,7 +96,7 @@ php artisan view:cache
 chown -R www:www storage bootstrap/cache 2>/dev/null || true
 chmod -R ug+rwx storage bootstrap/cache 2>/dev/null || true
 
-echo "Remote app updated at $(pwd) @ $($GIT rev-parse --short HEAD)"
+echo "Remote app updated at $(pwd) @ $(git -c safe.directory=$REMOTE_PATH rev-parse --short HEAD)"
 REMOTE
 }
 
