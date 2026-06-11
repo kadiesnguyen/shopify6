@@ -5,11 +5,11 @@ namespace App\Services\Admin;
 use App\Models\ShippingAddress;
 use App\Models\Shop;
 use App\Models\User;
+use App\Support\Storage\PublicUploadStorage;
 use App\Support\Storage\ShopDocumentStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
@@ -152,18 +152,7 @@ class AdminUserUpdateService
             return ShopDocumentStorage::store($file, $user->id, $type);
         }
 
-        $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg';
-        $filename = now()->format('YmdHis').'-'.Str::lower(Str::random(8)).'.'.$extension;
-        $relativeDir = 'uploads/shops/'.$user->id.'/'.$type;
-        $absoluteDir = public_path($relativeDir);
-
-        if (! is_dir($absoluteDir)) {
-            mkdir($absoluteDir, 0755, true);
-        }
-
-        $file->move($absoluteDir, $filename);
-
-        return $relativeDir.'/'.$filename;
+        return PublicUploadStorage::store($file, 'shops/'.$user->id.'/'.$type);
     }
 
     private function deleteStoredImage(?string $path): void
@@ -178,17 +167,7 @@ class AdminUserUpdateService
             return;
         }
 
-        if (str_starts_with($path, 'uploads/')) {
-            $fullPath = public_path($path);
-
-            if (is_file($fullPath)) {
-                unlink($fullPath);
-            }
-
-            return;
-        }
-
-        Storage::disk('public')->delete($path);
+        PublicUploadStorage::delete($path);
     }
 
     private function uniqueShopSlug(string $name): string

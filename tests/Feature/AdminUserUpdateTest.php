@@ -19,6 +19,7 @@ class AdminUserUpdateTest extends TestCase
     {
         parent::setUp();
 
+        Storage::fake('public');
         Storage::fake(ShopDocumentStorage::DISK);
 
         foreach (['admin', 'member', 'shop'] as $role) {
@@ -89,10 +90,10 @@ class AdminUserUpdateTest extends TestCase
         $this->assertSame(9, $shop->display_completed_orders);
         $this->assertSame('1500.50', $shop->display_total_income);
         $this->assertSame('1000000.00', $shop->display_balance);
-        $this->assertStringStartsWith('uploads/shops/', $shop->logo);
+        $this->assertStringStartsWith('shops/', $shop->logo);
         $this->assertStringStartsWith('private/shops/', $shop->id_front);
         $this->assertStringStartsWith('private/shops/', $shop->id_back);
-        $this->assertFileExists(public_path($shop->logo));
+        Storage::disk('public')->assertExists($shop->logo);
         Storage::disk(ShopDocumentStorage::DISK)->assertExists($shop->id_front);
         Storage::disk(ShopDocumentStorage::DISK)->assertExists($shop->id_back);
         $this->assertStringContainsString(

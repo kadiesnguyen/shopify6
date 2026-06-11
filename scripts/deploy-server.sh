@@ -87,13 +87,27 @@ npm run build
 
 php artisan migrate --force
 php artisan storage:link 2>/dev/null || true
+
+mkdir -p \
+  storage/app/public/avatars \
+  storage/app/public/shops \
+  storage/app/public/chat \
+  storage/app/public/products \
+  storage/app/public/cms/pages \
+  storage/app/public/site-settings \
+  storage/app/public/shop-applications/logos \
+  storage/app/public/shop-applications/id \
+  storage/app/private/private/shops \
+  storage/app/backups/database \
+  public/uploads/avatars \
+  public/uploads/shops
+
+chown -R www:www storage bootstrap/cache public/uploads 2>/dev/null || true
+chmod -R ug+rwx storage bootstrap/cache public/uploads 2>/dev/null || true
+
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-
-mkdir -p public/uploads/avatars
-chown -R www:www storage bootstrap/cache public/uploads 2>/dev/null || true
-chmod -R ug+rwx storage bootstrap/cache public/uploads 2>/dev/null || true
 
 echo "Remote app updated at $(pwd) @ $(git -c safe.directory=$REMOTE_PATH rev-parse --short HEAD)"
 REMOTE

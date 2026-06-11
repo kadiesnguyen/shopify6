@@ -8,10 +8,9 @@ use App\Http\Requests\Member\MemberProfileAvatarRequest;
 use App\Http\Requests\Member\MemberProfileEmailRequest;
 use App\Http\Requests\Member\MemberProfileNameRequest;
 use App\Http\Requests\Member\MemberProfilePhoneRequest;
+use App\Support\Storage\PublicUploadStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -27,18 +26,16 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $file = $request->file('avatar');
-        $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg';
-        $filename = now()->format('YmdHis').'-'.Str::lower(Str::random(8)).'.'.$extension;
         $directory = 'avatars/'.$user->id;
 
-        $this->deleteAvatarFile($user->avatar);
+        PublicUploadStorage::delete($user->avatar);
 
-        $avatarPath = Storage::disk('public')->putFileAs($directory, $file, $filename);
+        $avatarPath = PublicUploadStorage::store($file, $directory);
 
         $user->update(['avatar' => $avatarPath]);
 
         if ($user->shop) {
-            $this->deleteAvatarFile($user->shop->logo);
+            PublicUploadStorage::delete($user->shop->logo);
             $user->shop->update(['logo' => $avatarPath]);
         }
 
@@ -95,23 +92,5 @@ class ProfileController extends Controller
         return redirect()
             ->route('member.profile.show')
             ->with('status', __('member.profile.login_password_updated'));
-    }
-
-    private function deleteAvatarFile(?string $avatar): void
-    {
-        if (! filled($avatar) || str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://')) {
-            return;
-        }
-
-        if (str_starts_with($avatar, 'uploads/')) {
-            $path = public_path($avatar);
-            if (is_file($path)) {
-                unlink($path);
-            }
-
-            return;
-        }
-
-        Storage::disk('public')->delete($avatar);
     }
 }
