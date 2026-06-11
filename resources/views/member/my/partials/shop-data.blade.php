@@ -1,5 +1,9 @@
 @props(['stats'])
 
+@push('vite')
+    @vite(['resources/js/member-charts.js'])
+@endpush
+
 <div class="mt-4 px-4">
     <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
         <h2 class="text-left text-sm font-semibold text-gray-900">{{ __('member.shop_dashboard.store_data') }}</h2>

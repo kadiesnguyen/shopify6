@@ -17,7 +17,7 @@
         :url="url()->current()"
     />
     @stack('meta')
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/landing.js'])
 </head>
 <body class="app-layout-root overflow-x-hidden bg-white text-slate-900 antialiased">
     <x-landing.header />

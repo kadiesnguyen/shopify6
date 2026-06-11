@@ -50,6 +50,7 @@
                     class="h-full w-full object-cover object-center"
                     loading="{{ $index === 0 ? 'eager' : 'lazy' }}"
                     decoding="async"
+                    @if($index === 0) fetchpriority="high" @endif
                 >
             </div>
         @endforeach

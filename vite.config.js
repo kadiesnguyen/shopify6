@@ -9,6 +9,10 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
+                'resources/js/landing.js',
+                'resources/js/member-portal.js',
+                'resources/js/member-charts.js',
+                'resources/js/member-chat-bundle.js',
                 'resources/js/admin-rich-editor.js',
             ],
             refresh: true,

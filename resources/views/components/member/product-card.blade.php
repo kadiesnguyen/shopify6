@@ -1,9 +1,10 @@
-@props(['product', 'detailFrom' => 'home'])
+@props(['product', 'detailFrom' => 'home', 'imageEager' => false])
 
 @php
     $displayShopId = $product->getAttribute('display_shop_id');
     $displayShopName = $product->getAttribute('display_shop_name') ?: $product->shop?->name;
     $displayShopLogo = $product->getAttribute('display_shop_logo') ?: $product->shop?->displayLogoUrl();
+    $productImageUrl = $product->imageUrl();
     $detailParams = array_filter([
         'product' => $product,
         'from' => $detailFrom,
@@ -14,10 +15,12 @@
 
 <article class="flex h-full min-w-0 flex-col overflow-hidden rounded-xl bg-white shadow-sm">
     <a href="{{ $detailUrl }}" class="relative block aspect-square min-w-0 overflow-hidden bg-gray-100">
-        @if ($product->imageUrl())
+        @if ($productImageUrl)
             <x-ui.lazy-image
-                :src="$product->imageUrl()"
-                :alt="$product->category?->name ?? $product->name"
+                :src="$productImageUrl"
+                :alt="$product->name"
+                :eager="$imageEager"
+                :high-priority="$imageEager"
                 class="h-full w-full object-cover"
                 wrapper-class="h-full w-full"
             />

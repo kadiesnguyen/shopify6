@@ -4,6 +4,7 @@
     'wrapperClass' => '',
     'class' => '',
     'eager' => false,
+    'highPriority' => false,
 ])
 
 @if ($src)
@@ -21,6 +22,7 @@
             alt="{{ $alt }}"
             loading="{{ $eager ? 'eager' : 'lazy' }}"
             decoding="async"
+            @if ($highPriority) fetchpriority="high" @endif
             onload="this.classList.add('!opacity-100'); this.closest('.ui-lazy-image')?.classList.add('ui-lazy-image--loaded')"
             onerror="this.closest('.ui-lazy-image')?.classList.add('ui-lazy-image--loaded', 'ui-lazy-image--failed')"
             @class([

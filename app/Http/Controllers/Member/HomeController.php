@@ -8,10 +8,15 @@ use App\Models\Shop;
 use App\Services\Member\PortalProductDisplayService;
 use App\Services\Member\ProductBuyableQuery;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
+    private const HOME_PRODUCT_LIMIT = 12;
+
+    private const BANNER_CACHE_SECONDS = 300;
+
     public function __construct(private readonly PortalProductDisplayService $portalProductDisplay) {}
 
     public function index(Request $request): View
@@ -22,31 +27,41 @@ class HomeController extends Controller
         $shopFilter = $this->resolveShopFilter($shopId, $shopKeyword);
         $shopUserIds = $shopFilter['user_ids'];
         $selectedShop = $shopFilter['selected_shop'];
+        $hasSearchFilters = $keyword !== '' || $shopKeyword !== '' || $shopId > 0;
 
-        $productQuery = ProductBuyableQuery::forPortal()
-            ->when($keyword !== '', fn ($query) => $query->where('name', 'like', "%{$keyword}%"))
-            ->when($shopUserIds !== [], function ($query) use ($shopUserIds): void {
-                $query->whereHas('distributions', function ($distributionQuery) use ($shopUserIds): void {
-                    $distributionQuery
-                        ->available()
-                        ->whereIn('user_id', $shopUserIds);
+        if (! $hasSearchFilters) {
+            $products = ProductBuyableQuery::portalHomeProducts(self::HOME_PRODUCT_LIMIT);
+            $this->portalProductDisplay->applyShopLabels($products);
+        } else {
+            $productQuery = ProductBuyableQuery::forPortal()
+                ->when($keyword !== '', fn ($query) => $query->where('name', 'like', "%{$keyword}%"))
+                ->when($shopUserIds !== [], function ($query) use ($shopUserIds): void {
+                    $query->whereHas('distributions', function ($distributionQuery) use ($shopUserIds): void {
+                        $distributionQuery
+                            ->available()
+                            ->whereIn('user_id', $shopUserIds);
+                    });
+                })
+                ->when($shopKeyword !== '' && $shopUserIds === [], function ($query): void {
+                    $query->whereRaw('1 = 0');
                 });
-            })
-            ->when($shopKeyword !== '' && $shopUserIds === [], function ($query): void {
-                $query->whereRaw('1 = 0');
-            });
 
-        $products = ProductBuyableQuery::orderByLatestDistribution($productQuery, $shopUserIds)
-            ->limit(12)
-            ->get();
+            $products = ProductBuyableQuery::orderByLatestDistribution($productQuery, $shopUserIds)
+                ->limit(self::HOME_PRODUCT_LIMIT)
+                ->get();
 
-        $this->portalProductDisplay->applyShopLabels($products, $shopUserIds, $selectedShop);
+            $this->portalProductDisplay->applyShopLabels($products, $shopUserIds, $selectedShop);
+        }
 
-        $banners = Banner::query()
-            ->where('status', Banner::STATUS_ACTIVE)
-            ->orderBy('sort_order')
-            ->limit(4)
-            ->get();
+        $banners = Cache::remember(
+            'member.home.banners',
+            self::BANNER_CACHE_SECONDS,
+            fn () => Banner::query()
+                ->where('status', Banner::STATUS_ACTIVE)
+                ->orderBy('sort_order')
+                ->limit(4)
+                ->get(),
+        );
 
         return view('member.home', compact('products', 'banners'));
     }
@@ -91,5 +106,4 @@ class HomeController extends Controller
             'selected_shop' => $shops->count() === 1 ? $shops->first() : null,
         ];
     }
-
 }

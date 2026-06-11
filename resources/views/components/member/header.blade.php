@@ -1,13 +1,10 @@
 @php
+    use App\Support\Member\BellNotificationCache;
     use App\Support\SiteSettings;
     use Illuminate\Support\Str;
 
     $user = auth()->user();
-    $unreadCount = \App\Models\Notification::query()
-        ->where('user_id', $user->id)
-        ->bellVisible()
-        ->whereNull('read_at')
-        ->count();
+    $unreadCount = BellNotificationCache::unreadCount($user->id);
     $locales = config('landing.locales', []);
     $currentLocale = app()->getLocale();
     $logo = SiteSettings::logoUrl();
@@ -21,7 +18,7 @@
 <header class="portal-header fixed inset-x-0 top-0 z-40 flex shrink-0 items-center justify-between bg-emerald-600 px-4 py-3 text-white md:left-1/2 md:right-auto md:w-full md:max-w-[420px] md:-translate-x-1/2">
     <div class="flex min-w-0 flex-1 items-center gap-2">
         <a href="{{ route('member.home') }}" class="flex min-w-0 flex-1 items-center gap-2">
-            <img src="{{ $logo }}" alt="{{ $brandName }}" class="h-8 w-auto shrink-0 rounded object-contain" width="79" height="32">
+            <img src="{{ $logo }}" alt="{{ $brandName }}" class="h-8 w-auto shrink-0 rounded object-contain" width="79" height="32" decoding="async" fetchpriority="high">
         </a>
     </div>
 

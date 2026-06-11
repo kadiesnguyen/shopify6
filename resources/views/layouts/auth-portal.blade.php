@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=overlays-content">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', __('messages.login')) — {{ config('landing.brand_name', 'Shopify') }}</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/member-portal.js', 'resources/js/member-chat-bundle.js'])
 </head>
 <body class="auth-portal-layout app-layout-root flex min-h-[var(--app-height,100dvh)] flex-col overflow-x-hidden bg-white text-base text-slate-900 antialiased" x-data>
     <x-auth.portal-header />

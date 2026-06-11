@@ -4,6 +4,10 @@
 @section('hide_portal_header', '1')
 @section('full_bleed', '1')
 
+@push('vite')
+    @vite(['resources/js/member-charts.js'])
+@endpush
+
 @section('content')
     <div class="min-h-screen bg-gray-50 pb-24">
         <header class="sticky top-0 z-10 flex items-center justify-between bg-black px-4 py-3 text-white">

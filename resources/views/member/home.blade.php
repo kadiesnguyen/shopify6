@@ -40,8 +40,8 @@
             <x-ui.empty-state :title="__('member.no_products')" class="rounded-xl bg-gray-50" />
         @else
             <div class="ui-content-grid">
-                @foreach ($products as $product)
-                    <x-member.product-card :product="$product" />
+                @foreach ($products as $index => $product)
+                    <x-member.product-card :product="$product" :image-eager="$index < 4" />
                 @endforeach
             </div>
         @endif

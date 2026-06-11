@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use App\Support\Member\BellNotificationCache;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -26,6 +27,7 @@ class NotificationController extends Controller
         abort_unless(in_array($notification->type, Notification::bellTypes(), true), 404);
 
         $notification->update(['read_at' => now()]);
+        BellNotificationCache::forget((int) auth()->id());
 
         return back()->with('status', __('member.notifications.mark_read'));
     }

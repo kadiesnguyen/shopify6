@@ -5,6 +5,10 @@
 @section('full_bleed', '1')
 @section('portal_chat_page', '1')
 
+@push('vite')
+    @vite(['resources/js/member-chat-bundle.js'])
+@endpush
+
 @section('content')
     <x-member.chat-panel
         :messages-url="route('member.chat.messages.index')"

@@ -38,6 +38,7 @@
                     alt="{{ $slide['alt'] }}"
                     loading="{{ $index === 0 ? 'eager' : 'lazy' }}"
                     decoding="async"
+                    @if ($index === 0) fetchpriority="high" @endif
                     class="absolute inset-0 h-full w-full max-w-none object-cover object-center transition-opacity duration-500"
                     x-show="current === {{ $index }}"
                     @if ($index) x-cloak @endif

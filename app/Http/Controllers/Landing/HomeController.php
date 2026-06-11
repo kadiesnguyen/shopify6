@@ -5,21 +5,32 @@ namespace App\Http\Controllers\Landing;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\Faq;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
+    private const CACHE_SECONDS = 300;
+
     public function index(): View
     {
         return view('landing.home', [
-            'banners' => Banner::query()
-                ->where('status', Banner::STATUS_ACTIVE)
-                ->orderBy('sort_order')
-                ->get(),
-            'faqs' => Faq::query()
-                ->where('status', Faq::STATUS_ACTIVE)
-                ->orderBy('sort_order')
-                ->get(),
+            'banners' => Cache::remember(
+                'landing.home.banners',
+                self::CACHE_SECONDS,
+                fn () => Banner::query()
+                    ->where('status', Banner::STATUS_ACTIVE)
+                    ->orderBy('sort_order')
+                    ->get(),
+            ),
+            'faqs' => Cache::remember(
+                'landing.home.faqs',
+                self::CACHE_SECONDS,
+                fn () => Faq::query()
+                    ->where('status', Faq::STATUS_ACTIVE)
+                    ->orderBy('sort_order')
+                    ->get(),
+            ),
         ]);
     }
 }

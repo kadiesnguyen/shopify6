@@ -30,14 +30,23 @@
             <div class="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-white to-transparent"></div>
 
             <div class="landing-opportunity-track flex w-max gap-0 py-2">
-                @foreach ($trackCards as $card)
-                    <article class="mx-[15px] w-[280px] shrink-0 overflow-hidden rounded-xl bg-white shadow-lg transition duration-300 hover:-translate-y-2 hover:shadow-xl sm:w-[320px] md:w-[350px]">
+                @foreach ($trackCards as $index => $card)
+                    @php
+                        $isDuplicate = $index >= $cards->count();
+                    @endphp
+                    <article
+                        @class([
+                            'mx-[15px] w-[280px] shrink-0 overflow-hidden rounded-xl bg-white shadow-lg transition duration-300 hover:-translate-y-2 hover:shadow-xl sm:w-[320px] md:w-[350px]',
+                        ])
+                        @if($isDuplicate) aria-hidden="true" @endif
+                    >
                         <img
                             src="{{ $card['image'] }}"
-                            alt="{{ $card['title'] }}"
+                            alt="{{ $isDuplicate ? '' : $card['title'] }}"
                             class="h-[200px] w-full object-cover transition duration-500 group-hover:scale-105"
                             loading="lazy"
                             decoding="async"
+                            fetchpriority="low"
                         >
                         <div class="p-5">
                             <span class="inline-block rounded-full bg-brand px-2.5 py-1 text-xs font-medium text-white">{{ $card['tag'] }}</span>

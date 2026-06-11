@@ -16,7 +16,8 @@
         :image="\App\Support\SiteSettings::seoOgImageUrl()"
         :url="url()->current()"
     />
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/member-portal.js'])
+    @stack('vite')
 </head>
 <body class="portal-app app-layout-root overflow-x-hidden bg-gray-100 text-base text-gray-900 antialiased">
     <div class="portal-shell portal-app-shell mx-auto min-h-[var(--app-height,100dvh)] w-full min-w-0 max-w-full overflow-x-hidden bg-white md:max-w-[420px] md:shadow-xl md:ring-1 md:ring-gray-200">

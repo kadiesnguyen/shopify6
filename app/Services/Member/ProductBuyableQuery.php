@@ -5,9 +5,29 @@ namespace App\Services\Member;
 use App\Models\Product;
 use App\Models\ProductDistribution;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class ProductBuyableQuery
 {
+    /** @param  array<int>  $shopUserIds */
+    public static function portalHomeProducts(int $limit = 12, array $shopUserIds = []): Collection
+    {
+        $distributionSub = ProductDistribution::query()
+            ->available()
+            ->when($shopUserIds !== [], fn (Builder $query) => $query->whereIn('user_id', $shopUserIds))
+            ->selectRaw('product_id, MAX(created_at) as latest_distribution_at')
+            ->groupBy('product_id');
+
+        return Product::query()
+            ->with(['shop:id,user_id,name,logo'])
+            ->where('products.status', Product::STATUS_ACTIVE)
+            ->joinSub($distributionSub, 'portal_pd', 'portal_pd.product_id', '=', 'products.id')
+            ->orderByDesc('portal_pd.latest_distribution_at')
+            ->orderByDesc('products.id')
+            ->select('products.*')
+            ->limit($limit)
+            ->get();
+    }
     public static function forPortal(): Builder
     {
         return Product::query()
