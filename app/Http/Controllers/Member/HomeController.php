@@ -56,6 +56,7 @@ class HomeController extends Controller
         $banners = CachedModelCollection::remember(
             'member.home.banners',
             self::BANNER_CACHE_SECONDS,
+            Banner::class,
             fn () => Banner::query()
                 ->where('status', Banner::STATUS_ACTIVE)
                 ->orderBy('sort_order')

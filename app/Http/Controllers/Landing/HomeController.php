@@ -18,6 +18,7 @@ class HomeController extends Controller
             'banners' => CachedModelCollection::remember(
                 'landing.home.banners',
                 self::CACHE_SECONDS,
+                Banner::class,
                 fn () => Banner::query()
                     ->where('status', Banner::STATUS_ACTIVE)
                     ->orderBy('sort_order')
@@ -26,6 +27,7 @@ class HomeController extends Controller
             'faqs' => CachedModelCollection::remember(
                 'landing.home.faqs',
                 self::CACHE_SECONDS,
+                Faq::class,
                 fn () => Faq::query()
                     ->where('status', Faq::STATUS_ACTIVE)
                     ->orderBy('sort_order')
