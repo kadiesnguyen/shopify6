@@ -7,8 +7,8 @@ use App\Models\Banner;
 use App\Models\Shop;
 use App\Services\Member\PortalProductDisplayService;
 use App\Services\Member\ProductBuyableQuery;
+use App\Support\Cache\CachedModelCollection;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -53,7 +53,7 @@ class HomeController extends Controller
             $this->portalProductDisplay->applyShopLabels($products, $shopUserIds, $selectedShop);
         }
 
-        $banners = Cache::remember(
+        $banners = CachedModelCollection::remember(
             'member.home.banners',
             self::BANNER_CACHE_SECONDS,
             fn () => Banner::query()

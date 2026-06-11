@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Landing;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\Faq;
-use Illuminate\Support\Facades\Cache;
+use App\Support\Cache\CachedModelCollection;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -15,7 +15,7 @@ class HomeController extends Controller
     public function index(): View
     {
         return view('landing.home', [
-            'banners' => Cache::remember(
+            'banners' => CachedModelCollection::remember(
                 'landing.home.banners',
                 self::CACHE_SECONDS,
                 fn () => Banner::query()
@@ -23,7 +23,7 @@ class HomeController extends Controller
                     ->orderBy('sort_order')
                     ->get(),
             ),
-            'faqs' => Cache::remember(
+            'faqs' => CachedModelCollection::remember(
                 'landing.home.faqs',
                 self::CACHE_SECONDS,
                 fn () => Faq::query()
