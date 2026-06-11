@@ -26,5 +26,8 @@ fi
 echo "[entrypoint] Ensuring database is ready..."
 php artisan db:ensure-ready
 
+echo "[entrypoint] Ensuring public storage link..."
+php artisan storage:link 2>/dev/null || true
+
 echo "[entrypoint] Starting development server..."
 exec php artisan serve --host=0.0.0.0 --port=8000

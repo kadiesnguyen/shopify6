@@ -7,6 +7,8 @@ use Illuminate\Support\Str;
 
 class MemberCredentials
 {
+    public const PLACEHOLDER_EMAIL_DOMAIN = '@member.shopefy.local';
+
     public static function isEmail(string $value): bool
     {
         return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
@@ -45,6 +47,15 @@ class MemberCredentials
     public static function loginField(string $login): string
     {
         return self::isEmail($login) ? 'email' : 'phone';
+    }
+
+    public static function isPlaceholderEmail(?string $email): bool
+    {
+        if (! filled($email)) {
+            return true;
+        }
+
+        return str_ends_with(strtolower($email), self::PLACEHOLDER_EMAIL_DOMAIN);
     }
 
     public static function loginExists(string $login): bool

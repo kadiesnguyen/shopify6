@@ -3,6 +3,7 @@
     'indexRoute',
     'destroyRoute',
     'showSort' => true,
+    'toggleRoute' => null,
 ])
 
 <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -14,7 +15,7 @@
                     @if ($showSort)
                         <th class="px-4 py-3 text-left">{{ __('admin.methods.sort_order') }}</th>
                     @endif
-                    <th class="px-4 py-3 text-left">{{ __('admin.methods.enabled') }}</th>
+                    <th class="px-4 py-3 text-center">{{ __('admin.methods.enabled') }}</th>
                     <th class="px-4 py-3 text-left">{{ __('admin.columns.actions') }}</th>
                 </tr>
             </thead>
@@ -25,8 +26,13 @@
                         @if ($showSort)
                             <td class="px-4 py-3">{{ $method->sort_order ?? 0 }}</td>
                         @endif
-                        <td class="px-4 py-3">
-                            @if ($method->status === 'active')
+                        <td class="px-4 py-3 text-center">
+                            @if ($toggleRoute)
+                                <x-admin.power-toggle
+                                    :enabled="$method->status === 'active'"
+                                    :action="route($toggleRoute, $method)"
+                                />
+                            @elseif ($method->status === 'active')
                                 <span class="text-emerald-600">{{ __('admin.methods.yes') }}</span>
                             @else
                                 <span class="text-slate-400">{{ __('admin.methods.no') }}</span>

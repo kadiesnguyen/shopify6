@@ -4,7 +4,7 @@
 
 @section('content')
     <header class="mb-4">
-        <a href="{{ route('member.shop-dashboard.index') }}" class="mb-2 inline-flex items-center gap-1 text-sm text-gray-600 no-underline hover:text-emerald-600">
+        <a href="{{ route('member.my.index') }}" class="mb-2 inline-flex items-center gap-1 text-sm text-gray-600 no-underline hover:text-emerald-600">
             <x-member.icon name="chevron-left" class="size-4" />
             {{ __('member.back') }}
         </a>
@@ -12,7 +12,15 @@
     </header>
 
     <form method="GET" class="mb-4">
-        <x-member.search-field name="q" :value="request('q')" :placeholder="__('member.search.products_alt')" icon="search" />
+        <x-member.search-field
+            name="q"
+            :value="request('q')"
+            :placeholder="__('member.search.products_alt')"
+            :autocomplete="true"
+            suggest-target="product"
+            suggest-context="manage"
+            icon="search"
+        />
     </form>
 
     @if ($products->isEmpty())
@@ -20,7 +28,7 @@
     @else
         <section class="space-y-3">
             @foreach ($products as $product)
-                <x-member.product-list-item :product="$product" />
+                <x-member.product-list-item :product="$product" detail-from="manage" />
             @endforeach
         </section>
         <div class="mt-4">{{ $products->links() }}</div>

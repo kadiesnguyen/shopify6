@@ -8,7 +8,14 @@
         <h1 class="text-lg font-bold text-gray-900">{{ __('member.orders.title') }}</h1>
     </div>
 
-    <x-member.order-tabs :status="$status" :status-counts="$statusCounts" />
+    <x-member.order-type-tabs :active="$scope === 'all' ? 'all' : 'buyer'" />
+
+    <x-member.order-tabs
+        :status="$status"
+        :status-counts="$statusCounts"
+        :show-pending-payment="$scope !== 'buyer'"
+        :query="['scope' => $scope === 'all' ? 'all' : null]"
+    />
 
     <x-member.filter-toolbar
         class="px-4 pb-3"
@@ -20,9 +27,14 @@
             'old' => __('member.orders.sort_oldest'),
         ]"
     >
-        @if (request('status'))
+        @if (request('status') || $scope === 'all')
             <x-slot:hidden>
-                <input type="hidden" name="status" value="{{ request('status') }}">
+                @if (request('status'))
+                    <input type="hidden" name="status" value="{{ request('status') }}">
+                @endif
+                @if ($scope === 'all')
+                    <input type="hidden" name="scope" value="all">
+                @endif
             </x-slot:hidden>
         @endif
     </x-member.filter-toolbar>

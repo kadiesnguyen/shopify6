@@ -41,4 +41,35 @@ class WithdrawalRequest extends Model
     {
         return $this->belongsTo(WithdrawalMethod::class);
     }
+
+    public function formattedPayoutDetails(): string
+    {
+        $payout = $this->payout_details ?? [];
+
+        if ($payout === []) {
+            return '—';
+        }
+
+        if (filled($payout['details'] ?? null) && blank($payout['address'] ?? null)) {
+            return (string) $payout['details'];
+        }
+
+        $lines = [];
+
+        if (filled($payout['address'] ?? null)) {
+            $lines[] = (string) $payout['address'];
+        }
+
+        if (($payout['type'] ?? null) === WithdrawalMethod::TYPE_CRYPTO) {
+            if (filled($payout['network'] ?? null)) {
+                $lines[] = (string) $payout['network'];
+            }
+
+            if (filled($payout['currency'] ?? null)) {
+                $lines[] = (string) $payout['currency'];
+            }
+        }
+
+        return $lines !== [] ? implode("\n", $lines) : '—';
+    }
 }

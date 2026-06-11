@@ -10,7 +10,7 @@ GIT_BRANCH="${GIT_BRANCH:-main}"
 MYSQL_CONTAINER="${MYSQL_CONTAINER:-shopefy-mysql-1}"
 SKIP_GIT_PUSH="${SKIP_GIT_PUSH:-0}"
 SKIP_DB_EXPORT="${SKIP_DB_EXPORT:-0}"
-SKIP_DB_IMPORT="${SKIP_DB_IMPORT:-0}"
+SKIP_DB_IMPORT="${SKIP_DB_IMPORT:-1}"
 DUMP_FILE=""
 
 mkdir -p "$BACKUP_DIR"
@@ -32,7 +32,6 @@ export_local_db() {
         docker exec "$MYSQL_CONTAINER" mysqldump \
             -ushopefy -pshopefy \
             --single-transaction --routines --triggers \
-            --set-gtid-purged=OFF \
             shopefy 2>/dev/null | sed '/^mysqldump:/d' > "$dump"
     elif command -v mysqldump >/dev/null 2>&1 && [[ -f "$ROOT/.env" ]]; then
         log "Export DB from local mysqldump + .env"
@@ -41,7 +40,6 @@ export_local_db() {
         mysqldump -h"${DB_HOST:-127.0.0.1}" -P"${DB_PORT:-3306}" \
             -u"$DB_USERNAME" -p"$DB_PASSWORD" \
             --single-transaction --routines --triggers \
-            --set-gtid-purged=OFF \
             "$DB_DATABASE" 2>/dev/null | sed '/^mysqldump:/d' > "$dump"
     else
         log "WARN: No Docker MySQL and no local mysqldump — skipping export"
@@ -102,7 +100,7 @@ REMOTE
 
 import_db_on_server() {
     if [[ "$SKIP_DB_IMPORT" == "1" ]]; then
-        log "Skip DB import (SKIP_DB_IMPORT=1)"
+        log "Skip DB import (default — production data preserved). Set SKIP_DB_IMPORT=0 to overwrite."
         return
     fi
 
@@ -110,6 +108,22 @@ import_db_on_server() {
         log "WARN: No dump file — skipping import"
         return
     fi
+
+    log "Backup production DB before import"
+    ssh -o BatchMode=yes "$SSH_HOST" "REMOTE_PATH='$REMOTE_PATH' bash -s" <<'REMOTE'
+set -euo pipefail
+cd "$REMOTE_PATH"
+mkdir -p storage/app/backups/database
+DB_DATABASE=$(grep -E '^DB_DATABASE=' .env | cut -d= -f2- | tr -d '"'"'"' ')
+DB_USERNAME=$(grep -E '^DB_USERNAME=' .env | cut -d= -f2- | tr -d '"'"'"' ')
+DB_PASSWORD=$(grep -E '^DB_PASSWORD=' .env | cut -d= -f2- | tr -d '"'"'"' ')
+STAMP=$(date +%Y%m%d_%H%M%S)
+BACKUP="storage/app/backups/database/shopefy_pre_deploy_${STAMP}.sql"
+MYSQL_PWD="$DB_PASSWORD" mysqldump -u"$DB_USERNAME" \
+  --single-transaction --routines --triggers \
+  "$DB_DATABASE" > "$BACKUP"
+echo "Production backup: $BACKUP ($(du -h "$BACKUP" | awk '{print $1}'))"
+REMOTE
 
     local remote_dump="/tmp/shopefy_import_$(date +%s).sql"
     log "Upload dump → $SSH_HOST:$remote_dump"

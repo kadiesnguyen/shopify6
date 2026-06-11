@@ -17,6 +17,7 @@
         'methods' => $methods,
         'indexRoute' => 'admin.recharge-methods.index',
         'destroyRoute' => 'admin.recharge-methods.destroy',
+        'toggleRoute' => 'admin.recharge-methods.toggle-status',
     ])
 
     @if ($showMethodModal ?? false)

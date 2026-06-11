@@ -45,6 +45,9 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withCommands([
         \App\Console\Commands\MigrateFreshCommand::class,
+        \App\Console\Commands\SeedCommand::class,
+        \App\Console\Commands\DbBackupCommand::class,
+        \App\Console\Commands\DbGuardCommand::class,
         \App\Console\Commands\DatabaseUpgradeCommand::class,
         \App\Console\Commands\EnsureDatabaseReadyCommand::class,
     ])

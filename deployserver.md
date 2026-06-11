@@ -45,7 +45,8 @@ Bỏ qua bước:
 |------|---------|
 | `SKIP_GIT_PUSH=1` | Không push Git |
 | `SKIP_DB_EXPORT=1` | Không export DB local |
-| `SKIP_DB_IMPORT=1` | Không import DB lên server (chỉ code + migrate) |
+| `SKIP_DB_IMPORT=1` | **Mặc định** — không import DB (giữ data production) |
+| `SKIP_DB_IMPORT=0` | Import DB local lên server (**ghi đè toàn bộ**) |
 
 ## Thủ công từng bước
 
@@ -54,7 +55,7 @@ Bỏ qua bước:
 ```bash
 mkdir -p ../backups
 docker exec shopefy-mysql-1 mysqldump -ushopefy -pshopefy \
-  --single-transaction --set-gtid-purged=OFF shopefy \
+  --single-transaction shopefy \
   | sed '/^mysqldump:/d' > ../backups/shopefy_$(date +%Y%m%d_%H%M%S).sql
 ```
 
@@ -115,6 +116,45 @@ curl -sI https://shopjfy6.com/up | head -1
 curl -sI https://shopjfy6.com/admin/login | head -1
 ```
 
+## Bảo toàn dữ liệu (user, giao dịch, sản phẩm)
+
+### Nguyên nhân mất data trước đây
+
+| Lệnh / thao tác | Rủi ro |
+|-----------------|--------|
+| `php artisan db:seed` trên DB đã có user | Chạy lại demo seeder, vô hiệu hóa sản phẩm |
+| `php artisan migrate:fresh` | Xóa toàn bộ bảng |
+| `docker compose down -v` | Xóa volume MySQL |
+| Deploy + import DB local rỗng | Ghi đè production bằng DB trống |
+
+### Cơ chế bảo vệ (trong repo)
+
+- **`php artisan db:seed`** — bị chặn nếu DB đã có user/sản phẩm/đơn/giao dịch. Chỉ baseline an toàn: `php artisan db:seed --class=Database\\Seeders\\BaselineDatabaseSeeder`. Buộc reseed: thêm `--allow-data-loss`.
+- **`php artisan migrate:fresh`** — bị chặn khi có user (trừ `--allow-user-loss` hoặc trong PHPUnit).
+- **`php artisan db:upgrade`** — chỉ `migrate` + baseline seeder, không wipe.
+- **`php artisan db:backup`** — export `.sql` vào `storage/app/backups/database/` (hoặc `--path=`).
+- **`./scripts/backup-database.sh`** — backup nhanh từ Docker/local.
+- **Deploy** — backup production trước khi import; dùng `SKIP_DB_IMPORT=1` khi chỉ cập nhật code.
+- **Docker** — volume `shopefy_mysql_data` giữ data MySQL giữa các lần restart.
+
+### Quy trình khuyên dùng
+
+```bash
+# Backup trước khi migrate/seed/deploy
+./scripts/backup-database.sh
+
+# Chỉ migrate, không seed demo
+php artisan migrate
+
+# Cập nhật code production, giữ DB server
+SKIP_DB_IMPORT=1 ./scripts/deploy-server.sh
+
+# Import lại catalog Sieummo (không xóa user/đơn)
+./scripts/import-sieummo-products.sh
+```
+
+**Không chạy:** `migrate:fresh`, `docker compose down -v`, `db:seed` trên DB production trừ khi đã backup và cố ý dùng `--allow-data-loss`.
+
 ## Lưu ý
 
 - File `.env`, `info.md`, `*.sql` **không** đưa lên Git.
@@ -165,6 +205,7 @@ php artisan tinker --execute="echo App\Models\User::role('admin')->count();"
 ### Phòng tránh
 
 - **Trước deploy:** `docker compose exec app php artisan db:ensure-ready` (hoặc seed local).
-- **Deploy chỉ code** (giữ data production): `SKIP_DB_IMPORT=1 ./scripts/deploy-server.sh`.
+- **Deploy chỉ code** (giữ data production): `./scripts/deploy-server.sh` (mặc định)
+- **Deploy + ghi đè DB** (nguy hiểm): `SKIP_DB_IMPORT=0 ./scripts/deploy-server.sh`.
 - **Sau deploy:** thử login admin + kiểm tra `/up` (mục *Kiểm tra sau deploy*).
 b

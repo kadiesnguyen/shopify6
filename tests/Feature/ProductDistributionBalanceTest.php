@@ -99,4 +99,35 @@ class ProductDistributionBalanceTest extends TestCase
             ->assertSee('$120.00')
             ->assertSee('$60.00');
     }
+
+    public function test_distribution_center_returns_json_for_infinite_scroll(): void
+    {
+        $categoryId = (int) $this->product->category_id;
+
+        for ($i = 0; $i < 14; $i++) {
+            Product::query()->create([
+                'category_id' => $categoryId,
+                'name' => 'Extra Product '.$i,
+                'slug' => 'extra-product-'.$i,
+                'selling_price' => 120 + $i,
+                'purchase_price' => 60 + $i,
+                'commission' => 12,
+                'stock' => 5,
+                'status' => 'active',
+            ]);
+        }
+
+        $this->actingAs($this->shopUser)
+            ->getJson(route('member.products.distributions.index', ['page' => 2]))
+            ->assertOk()
+            ->assertJsonStructure([
+                'html',
+                'has_more',
+                'next_page',
+            ])
+            ->assertJson([
+                'has_more' => false,
+                'next_page' => 3,
+            ]);
+    }
 }

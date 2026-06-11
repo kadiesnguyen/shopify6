@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=overlays-content">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
         $siteTitle = \App\Support\SiteSettings::websiteTitle();
@@ -19,14 +19,14 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="portal-app app-layout-root overflow-x-hidden bg-gray-100 text-base text-gray-900 antialiased">
-    <div class="portal-shell mx-auto min-h-dvh w-full min-w-0 max-w-full overflow-x-hidden bg-white md:max-w-[420px] md:shadow-xl md:ring-1 md:ring-gray-200">
+    <div class="portal-shell portal-app-shell mx-auto min-h-[var(--app-height,100dvh)] w-full min-w-0 max-w-full overflow-x-hidden bg-white md:max-w-[420px] md:shadow-xl md:ring-1 md:ring-gray-200">
         @unless(View::hasSection('hide_portal_header'))
             <x-member.header />
         @endunless
 
         <main @class([
             'min-w-0 flex flex-col',
-            'min-h-[calc(100dvh-4.5rem)] pb-[calc(4.5rem+env(safe-area-inset-bottom))]' => ! View::hasSection('portal_chat_page'),
+            'min-h-[calc(var(--app-height,100dvh)-4.5rem)] pb-[calc(4.5rem+env(safe-area-inset-bottom))]' => ! View::hasSection('portal_chat_page'),
             'h-dvh max-h-dvh overflow-hidden pb-0' => View::hasSection('portal_chat_page'),
             'pt-[3.75rem]' => ! View::hasSection('hide_portal_header'),
             'bg-gray-50' => View::hasSection('portal_gray_bg') || View::hasSection('portal_chat_page'),
@@ -65,7 +65,11 @@
         </main>
     </div>
 
-    <x-member.bottom-nav />
+    @stack('product_buy_bar')
+
+    @unless(View::hasSection('hide_bottom_nav'))
+        <x-member.bottom-nav />
+    @endunless
 
     @stack('scripts')
 </body>

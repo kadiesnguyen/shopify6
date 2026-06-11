@@ -1,12 +1,14 @@
 @props(['product', 'detailFrom' => 'products'])
 
 @php
+    $displayShopId = $product->getAttribute('display_shop_id');
     $displayShopName = $product->getAttribute('display_shop_name') ?: $product->shop?->name;
     $displayShopLogo = $product->getAttribute('display_shop_logo') ?: $product->shop?->displayLogoUrl();
-@endphp
-
-@php
-    $detailUrl = route('member.products.show', ['product' => $product, 'from' => $detailFrom]);
+    $detailUrl = route('member.products.show', array_filter([
+        'product' => $product,
+        'from' => $detailFrom,
+        'shop_id' => $displayShopId,
+    ]));
 @endphp
 
 <article class="flex min-w-0 gap-3 rounded-xl bg-white p-3 shadow-sm">

@@ -15,12 +15,20 @@
             name="q"
             :value="request('q')"
             :placeholder="__('member.search.products')"
+            :autocomplete="true"
+            suggest-target="product"
+            suggest-context="portal"
             icon="search"
         />
         <x-member.search-field
             name="shop"
             :value="request('shop')"
             :placeholder="__('member.search.shops')"
+            :autocomplete="true"
+            suggest-target="shop"
+            suggest-context="portal"
+            hidden-field-name="shop_id"
+            :hidden-field-value="request('shop_id')"
             icon="store"
         />
     </form>

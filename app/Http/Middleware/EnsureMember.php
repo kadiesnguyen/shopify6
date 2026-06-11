@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Support\Auth\AuthenticatedUserResolver;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureMember
@@ -31,6 +32,8 @@ class EnsureMember
                 'email' => __('auth.inactive'),
             ]);
         }
+
+        Paginator::defaultView('vendor.pagination.member');
 
         return $next($request);
     }

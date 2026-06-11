@@ -47,6 +47,13 @@ class OrderController extends Controller
         return response()->json(['data' => new OrderResource($order->load(['buyer', 'shop', 'items']))]);
     }
 
+    public function destroy(Order $order): JsonResponse
+    {
+        $this->settlement->removeOrder($order);
+
+        return response()->json(['message' => 'Order deleted.']);
+    }
+
     public function bulk(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -57,7 +64,9 @@ class OrderController extends Controller
         ]);
 
         if ($data['action'] === 'delete') {
-            Order::query()->whereIn('id', $data['ids'])->delete();
+            Order::query()->whereIn('id', $data['ids'])->get()->each(function (Order $order): void {
+                $this->settlement->removeOrder($order);
+            });
 
             return response()->json(['message' => 'Orders deleted.']);
         }

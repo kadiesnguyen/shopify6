@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
+use App\Support\Database\DatabaseGuard;
 use Illuminate\Database\Console\Migrations\FreshCommand;
 
 class MigrateFreshCommand extends FreshCommand
@@ -21,19 +21,20 @@ class MigrateFreshCommand extends FreshCommand
                 {--seed : Indicates if the seed task should be re-run}
                 {--seeder= : The class name of the root seeder}
                 {--step : Force the migrations to be run so they can be rolled back individually}
-                {--allow-user-loss : Allow wiping existing users (destructive)}';
+                {--allow-user-loss : Allow wiping existing users (destructive)}
+                {--allow-data-loss : Alias for --allow-user-loss}';
 
     public function handle(): int
     {
         if ($this->shouldBlockDestructiveFresh()) {
-            $count = User::query()->count();
-
-            $this->components->error("Blocked migrate:fresh: database has {$count} user(s).");
-            $this->line('  Users are preserved by default.');
+            $this->components->error('Blocked migrate:fresh: database already has live data.');
+            foreach (DatabaseGuard::summaryLines() as $line) {
+                $this->line('  '.$line);
+            }
             $this->line('  • Run migrations only:  php artisan migrate');
-            $this->line('  • Add demo data safely:  php artisan db:seed');
-            $this->line('  • Restore after wipe:    php artisan db:ensure-ready');
-            $this->line('  • Force full wipe:       php artisan migrate:fresh --allow-user-loss [--seed]');
+            $this->line('  • Safe baseline seed:   php artisan db:seed --class=Database\\\\Seeders\\\\BaselineDatabaseSeeder');
+            $this->line('  • Backup first:         php artisan db:backup');
+            $this->line('  • Force full wipe:      php artisan migrate:fresh --allow-data-loss [--seed]');
 
             return self::FAILURE;
         }
@@ -43,14 +44,15 @@ class MigrateFreshCommand extends FreshCommand
 
     private function shouldBlockDestructiveFresh(): bool
     {
-        if ($this->option('allow-user-loss')) {
+        if ($this->option('allow-user-loss') || $this->option('allow-data-loss')) {
             return false;
         }
 
-        if ($this->laravel->runningUnitTests()) {
+        if ($this->laravel->runningUnitTests()
+            && config('database.default') !== 'mysql') {
             return false;
         }
 
-        return User::query()->exists();
+        return DatabaseGuard::hasPreservedData();
     }
 }

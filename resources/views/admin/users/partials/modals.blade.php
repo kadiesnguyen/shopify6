@@ -1,15 +1,16 @@
 @php
     $listQuery = request()->only(['q', 'role', 'shop_application']);
     $closeUrl = route('admin.users.index', $listQuery);
-    $userLabel = $modalUser->phone ?: ($modalUser->user_code ?: $modalUser->email);
+    $userLabel = $modalUser->loginIdentifier() ?: ($modalUser->user_code ?: '—');
     $defaultAddress = $modalUser->shippingAddresses->sortByDesc('is_default')->first();
-    $idNumber = $modalUser->shopApplications->sortByDesc('created_at')->first()?->id_number ?? '—';
+    $idNumber = $modalUser->shop?->id_number ?? $modalUser->shopApplications->sortByDesc('created_at')->first()?->id_number ?? '—';
 @endphp
 
 <div class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-2 sm:items-center sm:p-4">
     <div @class([
         'flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:rounded-xl',
-        'max-w-lg' => $activeModal !== 'distributions',
+        'max-w-lg' => ! in_array($activeModal, ['distributions', 'edit'], true),
+        'max-w-3xl' => $activeModal === 'edit',
         'max-w-5xl' => $activeModal === 'distributions',
     ])>
         <div class="flex items-start justify-between border-b border-slate-100 px-5 py-4">
@@ -31,6 +32,8 @@
                 @elseif ($activeModal === 'distributions')
                     <h3 class="text-lg font-semibold text-slate-900">{{ __('admin.users.distributions.title') }}</h3>
                     <p class="mt-0.5 text-sm text-slate-500">{{ __('admin.users.distributions.subtitle', ['user' => $userLabel]) }}</p>
+                @elseif ($activeModal === 'edit')
+                    <h3 class="text-lg font-semibold text-slate-900">{{ __('admin.users.actions.edit_title') }}</h3>
                 @endif
             </div>
             <a href="{{ $closeUrl }}" class="text-2xl leading-none text-slate-400 hover:text-slate-600" aria-label="{{ __('admin.users.distributions.close') }}">×</a>
@@ -43,10 +46,9 @@
                         ['Email', $modalUser->email ?: '—'],
                         [__('admin.columns.user_code'), $modalUser->user_code ?: '—'],
                         [__('admin.users.actions.real_name'), $modalUser->name ?: '—'],
-                        [__('admin.columns.role'), ucfirst($modalUser->roles->first()?->name ?? '—')],
                         [__('admin.users.actions.shop_name'), $modalUser->shop?->name ?? '—'],
-                        [__('admin.users.actions.shop_followers'), '0'],
-                        [__('admin.users.actions.credit_score'), '0'],
+                        [__('admin.users.actions.shop_followers'), number_format($modalUser->shop?->followers ?? 0)],
+                        [__('admin.users.actions.credit_score'), number_format($modalUser->shop?->credit_score ?? 0)],
                         [__('admin.shop_applications.phone'), $modalUser->phone ?: '—'],
                         [__('admin.users.actions.id_number'), $idNumber],
                         [__('admin.users.actions.address'), $defaultAddress?->address_line ?? '—'],
@@ -63,6 +65,10 @@
                             <dd class="font-medium text-slate-900">{{ $value }}</dd>
                         </div>
                     @endforeach
+                    <div>
+                        <dt class="text-slate-500">{{ __('admin.columns.role') }}</dt>
+                        <dd><x-admin.role-badge :role="$modalUser->roles->first()?->name" /></dd>
+                    </div>
                 </dl>
             @elseif ($activeModal === 'balance')
                 <form method="POST" action="{{ route('admin.users.balance.update', $modalUser) }}" class="space-y-4">
@@ -79,11 +85,32 @@
                     </div>
                 </form>
             @elseif ($activeModal === 'deposit')
+                @php($currentBalance = (float) ($modalUser->wallet?->balance ?? 0))
                 <form method="POST" action="{{ route('admin.users.deposit', $modalUser) }}" class="space-y-4">
                     @csrf
+                    <div class="grid gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                        <div class="flex items-center justify-between">
+                            <span>{{ __('admin.users.actions.current_balance') }}</span>
+                            <span class="font-semibold" data-deposit-current-balance>${{ number_format($currentBalance, 2) }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span>{{ __('admin.users.actions.balance_after_deposit') }}</span>
+                            <span class="font-semibold text-emerald-700" data-deposit-next-balance>${{ number_format($currentBalance, 2) }}</span>
+                        </div>
+                    </div>
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('admin.users.actions.amount') }}</label>
-                        <input type="number" step="0.01" min="0.01" name="amount" value="{{ old('amount') }}" required class="w-full rounded-lg border-slate-300 text-sm">
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0.01"
+                            name="amount"
+                            value="{{ old('amount') }}"
+                            required
+                            class="w-full rounded-lg border-slate-300 text-sm"
+                            data-deposit-amount
+                            data-current-balance="{{ $currentBalance }}"
+                        >
                     </div>
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('admin.users.actions.note') }}</label>
@@ -128,6 +155,8 @@
                 </form>
             @elseif ($activeModal === 'distributions')
                 @include('admin.users.partials.distributions-modal-body')
+            @elseif ($activeModal === 'edit')
+                @include('admin.users.partials.edit-modal-body')
             @endif
         </div>
 
@@ -138,3 +167,31 @@
         @endif
     </div>
 </div>
+
+@if ($activeModal === 'deposit')
+    <script>
+        (() => {
+            const amountInput = document.querySelector('[data-deposit-amount]');
+            const nextBalanceEl = document.querySelector('[data-deposit-next-balance]');
+
+            if (!amountInput || !nextBalanceEl) {
+                return;
+            }
+
+            const currentBalance = Number.parseFloat(amountInput.dataset.currentBalance || '0') || 0;
+
+            const formatMoney = (value) => `$${value.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            })}`;
+
+            const updateNextBalance = () => {
+                const amount = Number.parseFloat(amountInput.value || '0') || 0;
+                nextBalanceEl.textContent = formatMoney(currentBalance + Math.max(amount, 0));
+            };
+
+            amountInput.addEventListener('input', updateNextBalance);
+            updateNextBalance();
+        })();
+    </script>
+@endif

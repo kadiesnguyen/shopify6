@@ -39,6 +39,7 @@ class DashboardController extends Controller
             'products' => ProductResource::collection($products),
             'unread_notifications' => Notification::query()
                 ->where('user_id', $user->id)
+                ->bellVisible()
                 ->whereNull('read_at')
                 ->count(),
         ]);

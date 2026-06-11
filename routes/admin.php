@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\RechargeMethodController;
 use App\Http\Controllers\Admin\RechargeRequestController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\ShopDocumentController;
 use App\Http\Controllers\Admin\ShopApplicationController;
 use App\Http\Controllers\Admin\UserActionController;
 use App\Http\Controllers\Admin\UserController;
@@ -33,6 +34,9 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::post('/logout', [AdminLoginController::class, 'destroy'])->name('logout');
 
         Route::resource('users', UserController::class)->except(['show']);
+        Route::get('users/{user}/documents/{document}', [ShopDocumentController::class, 'show'])
+            ->whereIn('document', ['id_front', 'id_back'])
+            ->name('users.documents.show');
         Route::post('users/{user}/distributions', [UserProductDistributionController::class, 'store'])->name('users.distributions.store');
         Route::patch('users/{user}/distributions/{distribution}', [UserProductDistributionController::class, 'update'])->name('users.distributions.update');
         Route::delete('users/{user}/distributions/{distribution}', [UserProductDistributionController::class, 'destroy'])->name('users.distributions.destroy');
@@ -48,6 +52,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
 
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::patch('/orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+        Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
 
         Route::get('/invite-codes', [InviteCodeController::class, 'index'])->name('invite-codes.index');
         Route::post('/invite-codes', [InviteCodeController::class, 'store'])->name('invite-codes.store');
@@ -61,11 +66,13 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/recharge-methods', [RechargeMethodController::class, 'index'])->name('recharge-methods.index');
         Route::post('/recharge-methods', [RechargeMethodController::class, 'store'])->name('recharge-methods.store');
         Route::patch('/recharge-methods/{rechargeMethod}', [RechargeMethodController::class, 'update'])->name('recharge-methods.update');
+        Route::patch('/recharge-methods/{rechargeMethod}/toggle-status', [RechargeMethodController::class, 'toggleStatus'])->name('recharge-methods.toggle-status');
         Route::delete('/recharge-methods/{rechargeMethod}', [RechargeMethodController::class, 'destroy'])->name('recharge-methods.destroy');
 
         Route::get('/withdrawal-methods', [WithdrawalMethodController::class, 'index'])->name('withdrawal-methods.index');
         Route::post('/withdrawal-methods', [WithdrawalMethodController::class, 'store'])->name('withdrawal-methods.store');
         Route::patch('/withdrawal-methods/{withdrawalMethod}', [WithdrawalMethodController::class, 'update'])->name('withdrawal-methods.update');
+        Route::patch('/withdrawal-methods/{withdrawalMethod}/toggle-status', [WithdrawalMethodController::class, 'toggleStatus'])->name('withdrawal-methods.toggle-status');
         Route::delete('/withdrawal-methods/{withdrawalMethod}', [WithdrawalMethodController::class, 'destroy'])->name('withdrawal-methods.destroy');
 
         Route::get('/shop-applications', [ShopApplicationController::class, 'index'])->name('shop-applications.index');

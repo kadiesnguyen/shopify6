@@ -13,6 +13,7 @@ class NotificationController extends Controller
     {
         $notifications = Notification::query()
             ->where('user_id', auth()->id())
+            ->bellVisible()
             ->latest()
             ->paginate(15);
 
@@ -22,6 +23,7 @@ class NotificationController extends Controller
     public function markRead(Notification $notification): RedirectResponse
     {
         abort_unless($notification->user_id === auth()->id(), 403);
+        abort_unless(in_array($notification->type, Notification::bellTypes(), true), 404);
 
         $notification->update(['read_at' => now()]);
 

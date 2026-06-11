@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Support\Database\Concerns\SkipsWhenDataExists;
 use App\Models\Category;
 use App\Models\InviteCode;
 use App\Models\News;
-use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PaymentMethod;
@@ -21,8 +21,14 @@ use Illuminate\Database\Seeder;
 
 class DemoDataSeeder extends Seeder
 {
+    use SkipsWhenDataExists;
+
     public function run(): void
     {
+        if ($this->skipWhenPreservedDataExists('DemoDataSeeder')) {
+            return;
+        }
+
         $this->seedPaymentMethods();
         $this->seedCategoriesAndProducts();
         $this->seedMemberCommerce();
@@ -32,20 +38,93 @@ class DemoDataSeeder extends Seeder
 
     private function seedPaymentMethods(): void
     {
+        $blockchainNetworks = config('wallet_data.blockchain_networks', []);
+        $vietnamBanks = config('wallet_data.vietnam_banks', []);
+
         PaymentMethod::query()->upsert([
             ['name' => 'Wallet Balance', 'code' => 'wallet', 'config' => null, 'status' => 'active', 'sort_order' => 1],
             ['name' => 'Bank Transfer', 'code' => 'bank_transfer', 'config' => null, 'status' => 'active', 'sort_order' => 2],
         ], ['code'], ['name', 'config', 'status', 'sort_order']);
 
         RechargeMethod::query()->upsert([
-            ['name' => 'Chain Recharge', 'type' => 'crypto', 'config' => json_encode(['network' => 'USDT-TRC20']), 'status' => 'active', 'sort_order' => 1],
-            ['name' => 'Bank Recharge', 'type' => 'bank', 'config' => json_encode(['bank' => 'Demo Bank']), 'status' => 'active', 'sort_order' => 2],
+            [
+                'name' => 'Blockchain (ví tiền điện tử)',
+                'type' => 'crypto',
+                'config' => json_encode([
+                    'currencies' => ['USDT', 'BTC', 'ETH'],
+                    'networks' => $this->demoRechargeNetworks($blockchainNetworks),
+                ]),
+                'status' => 'active',
+                'sort_order' => 1,
+            ],
+            [
+                'name' => 'Tài khoản ngân hàng',
+                'type' => 'bank',
+                'config' => json_encode([
+                    'bank_account_name' => 'SHOPEFY DEMO',
+                    'bank_name' => 'Vietcombank',
+                    'bank_account_number' => '0123456789',
+                    'banks' => $vietnamBanks,
+                ]),
+                'status' => 'active',
+                'sort_order' => 2,
+            ],
         ], ['name'], ['type', 'config', 'status', 'sort_order']);
 
-        WithdrawalMethod::query()->upsert([
-            ['name' => 'Bank Withdrawal', 'type' => 'bank', 'config' => json_encode(['bank' => 'Demo Bank']), 'status' => 'active', 'sort_order' => 1],
-            ['name' => 'Crypto Withdrawal', 'type' => 'crypto', 'config' => json_encode(['network' => 'USDT-TRC20']), 'status' => 'active', 'sort_order' => 2],
-        ], ['name'], ['type', 'config', 'status', 'sort_order']);
+        foreach (config('wallet_data.sieummo_withdrawal_methods', []) as $method) {
+            WithdrawalMethod::query()->updateOrCreate(
+                [
+                    'type' => 'crypto',
+                    'name' => $method['name'],
+                    'sort_order' => $method['sort_order'],
+                ],
+                [
+                    'config' => [
+                        'fee_percent' => 0,
+                        'currencies' => [$method['currency']],
+                        'networks' => [[
+                            'label' => $method['network'],
+                            'fee' => 0,
+                        ]],
+                        'network_or_bank' => $method['network'],
+                    ],
+                    'status' => 'active',
+                ],
+            );
+        }
+
+        WithdrawalMethod::query()->updateOrCreate(
+            [
+                'type' => 'bank',
+                'name' => 'Tài khoản ngân hàng',
+            ],
+            [
+                'config' => [
+                    'fee_percent' => 0,
+                    'currency' => 'VND',
+                    'banks' => $vietnamBanks,
+                ],
+                'status' => 'active',
+                'sort_order' => 50,
+            ],
+        );
+    }
+
+    /** @param list<string> $networks */
+    private function demoRechargeNetworks(array $networks): array
+    {
+        return array_map(function (string $label): array {
+            $wallet = match (strtolower($label)) {
+                'trc20', 'usdc-trc20' => 'TShopefyDemoTrc20WalletAddress',
+                'bitcoin' => 'bc1shopefydemobtcwallet',
+                default => '0xShopefyDemoEvmWalletAddress',
+            };
+
+            return [
+                'label' => $label,
+                'wallet_address' => $wallet,
+            ];
+        }, $networks);
     }
 
     private function seedCategoriesAndProducts(): void
@@ -161,7 +240,7 @@ class DemoDataSeeder extends Seeder
         $shop = Shop::query()->where('user_id', $member->id)->first();
 
         if ($product && $shop) {
-            $order = Order::query()->updateOrCreate(
+            $order = Order::query()->firstOrCreate(
                 ['order_no' => 'ORD-DEMO-001'],
                 [
                     'user_id' => $member->id,
@@ -169,10 +248,20 @@ class DemoDataSeeder extends Seeder
                     'seller_id' => $member->id,
                     'total' => $product->selling_price,
                     'commission' => $product->commission,
+                    'purchase_cost' => $product->purchase_price,
                     'status' => Order::STATUS_PENDING_PAYMENT,
                     'payment_method' => 'wallet',
                 ],
             );
+
+            if ((float) $order->purchase_cost <= 0) {
+                $order->update(['purchase_cost' => $product->purchase_price]);
+            }
+
+            if ($order->wasRecentlyCreated) {
+                app(\App\Services\Member\MemberNotificationService::class)
+                    ->notifyOrderNeedsPayment($order);
+            }
 
             OrderItem::query()->updateOrCreate(
                 ['order_id' => $order->id, 'product_id' => $product->id],
@@ -199,15 +288,6 @@ class DemoDataSeeder extends Seeder
                 ],
             );
         }
-
-        Notification::query()->updateOrCreate(
-            ['user_id' => $member->id, 'title' => 'Welcome to Shopefy'],
-            [
-                'body' => 'Your account is ready. Start exploring products!',
-                'type' => 'info',
-                'read_at' => null,
-            ],
-        );
     }
 
     private function seedNews(): void

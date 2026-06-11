@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\WalletController as AdminWalletController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Member\DashboardController as MemberDashboardController;
+use App\Http\Controllers\Api\Member\ProductController as MemberProductController;
 use App\Http\Controllers\Api\Member\NotificationController as MemberNotificationController;
 use App\Http\Controllers\Api\Member\OrderController as MemberOrderController;
 use App\Http\Controllers\Api\Member\PromotionController as MemberPromotionController;
@@ -33,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::middleware('member.api')->prefix('member')->name('api.member.')->group(function (): void {
         Route::get('/dashboard', [MemberDashboardController::class, 'index']);
+        Route::get('/products/{product}', [MemberProductController::class, 'show'])->name('products.show');
         Route::get('/wallet', [MemberWalletController::class, 'show']);
         Route::post('/wallet/recharge', [MemberWalletController::class, 'recharge']);
         Route::get('/orders', [MemberOrderController::class, 'index']);
@@ -60,6 +62,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/orders', [AdminOrderController::class, 'index']);
         Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
         Route::put('/orders/{order}', [AdminOrderController::class, 'update']);
+        Route::delete('/orders/{order}', [AdminOrderController::class, 'destroy']);
 
         Route::get('/wallets', [AdminWalletController::class, 'index']);
         Route::get('/transactions/export', [AdminTransactionController::class, 'export']);

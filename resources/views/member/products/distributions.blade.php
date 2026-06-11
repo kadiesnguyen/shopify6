@@ -1,87 +1,136 @@
 @extends('layouts.member')
 
 @section('title', __('member.products.distribution_center'))
+@section('hide_portal_header', '1')
+@section('full_bleed', '1')
 
 @section('content')
-    <header class="mb-4">
-        <a href="{{ route('member.products.index') }}" class="mb-2 inline-flex items-center gap-1 text-sm text-gray-600 no-underline hover:text-emerald-600">
-            <x-member.icon name="chevron-left" class="size-4" />
-            {{ __('member.back') }}
-        </a>
-        <h1 class="text-lg font-semibold text-gray-900">{{ __('member.products.distribution_center') }}</h1>
-        <p class="mt-0.5 text-sm text-gray-500">{{ __('member.products.distribution_center_hint') }}</p>
-    </header>
+    <div class="min-h-[var(--app-height,100dvh)] bg-gray-50 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+        <header class="sticky top-0 z-10 bg-black text-white">
+            <div class="relative flex items-center justify-between px-4 py-3">
+                <a href="{{ route('member.products.index') }}" class="relative z-10 flex shrink-0 items-center gap-1.5 text-white/90 no-underline">
+                    <x-member.icon name="chevron-left" class="size-5" />
+                    <span class="text-sm font-medium">{{ __('member.back') }}</span>
+                </a>
+                <span class="pointer-events-none absolute left-1/2 max-w-[55%] -translate-x-1/2 truncate text-center text-base font-semibold">{{ __('member.products.distribution_center') }}</span>
+                <span class="shrink-0 text-sm font-medium opacity-0" aria-hidden="true">{{ __('member.back') }}</span>
+            </div>
+        </header>
 
-    @if (session('status'))
-        <div class="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('status') }}</div>
-    @endif
+        <div class="space-y-3 p-4">
+            @if ($errors->any())
+                <div class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800">{{ $errors->first() }}</div>
+            @endif
 
-    @if ($errors->any())
-        <div class="mb-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-800">{{ $errors->first() }}</div>
-    @endif
+            <section class="flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-100">
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600">
+                    <x-member.icon name="wallet" class="size-5" />
+                </span>
+                <span class="text-sm text-gray-900">{{ __('member.wallet.current_balance') }}:</span>
+                <span class="ml-auto text-base font-bold text-red-600">${{ number_format($balance, 2) }}</span>
+            </section>
 
-    <form method="GET" class="mb-4">
-        <x-member.search-field name="q" :value="request('q')" :placeholder="__('member.search.products_alt')" icon="search" />
-    </form>
+            <x-member.filter-toolbar
+                :search-value="request('q')"
+                :search-placeholder="__('member.products.distribution_search')"
+                :search-autocomplete="true"
+                search-suggest-target="product"
+                search-suggest-context="distribution"
+                :sort-value="$sort"
+                :sort-options="[
+                    'best' => __('member.products.sort_best'),
+                    'new' => __('member.orders.sort_newest'),
+                    'old' => __('member.orders.sort_oldest'),
+                ]"
+            />
 
-    @if ($products->isEmpty())
-        <x-ui.empty-state :title="__('member.no_products')" class="rounded-xl bg-gray-50" />
-    @else
-        <section class="grid gap-4 sm:grid-cols-2">
-            @foreach ($products as $product)
-                @php
-                    $isDistributed = $distributedIds->contains($product->id);
-                    $purchasePrice = (float) $product->purchase_price;
-                    $sellingPrice = (float) $product->selling_price;
-                    $profit = max(0, $sellingPrice - $purchasePrice);
-                @endphp
-                <article class="flex flex-col rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-                    @if ($product->imageUrl())
-                        <img src="{{ $product->imageUrl() }}" alt="" class="mb-3 aspect-square w-full rounded-xl object-cover">
-                    @endif
-
-                    <h2 class="truncate text-base font-bold uppercase tracking-wide text-gray-900">{{ $product->name }}</h2>
-
-                    <dl class="mt-3 space-y-2 text-sm">
-                        <div class="flex items-center justify-between gap-3">
-                            <dt class="text-gray-500">{{ __('member.products.purchase_price') }}</dt>
-                            <dd class="font-semibold text-amber-600">${{ number_format($purchasePrice, 2) }}</dd>
-                        </div>
-                        <div class="flex items-center justify-between gap-3">
-                            <dt class="text-gray-500">{{ __('member.products.selling_price') }}</dt>
-                            <dd class="font-semibold text-rose-600">${{ number_format($sellingPrice, 2) }}</dd>
-                        </div>
-                        <div class="flex items-center justify-between gap-3">
-                            <dt class="text-gray-500">{{ __('member.products.profit') }}</dt>
-                            <dd class="font-semibold text-emerald-600">${{ number_format($profit, 2) }}</dd>
-                        </div>
-                    </dl>
-
-                    <div class="mt-4">
-                        @if ($isDistributed)
-                            <span class="inline-flex w-full items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-700">
-                                {{ __('member.products.already_distributed') }}
-                            </span>
-                        @elseif (auth()->user()->canSelfDistribute())
-                            <form method="POST" action="{{ route('member.products.distributions.store') }}">
-                                @csrf
-                                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                                <button
-                                    type="submit"
-                                    class="inline-flex w-full items-center justify-center rounded-xl bg-gray-900 px-3 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
-                                >
-                                    {{ __('member.products.distribute') }}
-                                </button>
-                            </form>
-                        @else
-                            <span class="inline-flex w-full items-center justify-center rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm text-gray-500">
-                                {{ __('member.products.distribution_locked') }}
-                            </span>
-                        @endif
-                    </div>
-                </article>
-            @endforeach
-        </section>
-        <div class="mt-4">{{ $products->links() }}</div>
-    @endif
+            @if ($products->isEmpty())
+                <x-ui.empty-state :title="__('member.no_products')" class="rounded-xl bg-white" />
+            @else
+                <section
+                    id="distribution-grid"
+                    class="grid grid-cols-2 gap-3"
+                    data-next-page="{{ $products->currentPage() + 1 }}"
+                    data-has-more="{{ $products->hasMorePages() ? '1' : '0' }}"
+                >
+                    @include('member.products.partials.distribution-cards', ['products' => $products, 'distributedIds' => $distributedIds])
+                </section>
+                <div id="distribution-loader" class="hidden py-2 text-center text-xs text-gray-500">{{ __('ui.loading') }}</div>
+                <div id="distribution-trigger" class="h-1"></div>
+            @endif
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const grid = document.getElementById('distribution-grid');
+            const trigger = document.getElementById('distribution-trigger');
+            const loader = document.getElementById('distribution-loader');
+
+            if (!grid || !trigger || !loader) {
+                return;
+            }
+
+            let nextPage = Number(grid.dataset.nextPage || '2');
+            let hasMore = grid.dataset.hasMore === '1';
+            let loading = false;
+
+            const observer = new IntersectionObserver((entries) => {
+                if (!entries.some((entry) => entry.isIntersecting)) {
+                    return;
+                }
+
+                loadMore();
+            }, { rootMargin: '280px 0px' });
+
+            if (hasMore) {
+                observer.observe(trigger);
+            }
+
+            async function loadMore() {
+                if (loading || !hasMore) {
+                    return;
+                }
+
+                loading = true;
+                loader.classList.remove('hidden');
+
+                try {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('page', String(nextPage));
+
+                    const response = await fetch(url.toString(), {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('load failed');
+                    }
+
+                    const payload = await response.json();
+
+                    if (payload?.html) {
+                        grid.insertAdjacentHTML('beforeend', payload.html);
+                    }
+
+                    hasMore = Boolean(payload?.has_more);
+                    nextPage = Number(payload?.next_page || (nextPage + 1));
+
+                    if (!hasMore) {
+                        observer.disconnect();
+                    }
+                } catch (_) {
+                    observer.disconnect();
+                } finally {
+                    loading = false;
+                    loader.classList.add('hidden');
+                }
+            }
+        })();
+    </script>
+@endpush

@@ -4,6 +4,7 @@ use App\Http\Controllers\Member\ChatController;
 use App\Http\Controllers\Member\CheckoutController;
 use App\Http\Controllers\Member\ContractController;
 use App\Http\Controllers\Member\CustomerController;
+use App\Http\Controllers\Member\FinancialReportController;
 use App\Http\Controllers\Member\HomeController;
 use App\Http\Controllers\Member\MyController;
 use App\Http\Controllers\Member\NotificationController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Member\OrderController;
 use App\Http\Controllers\Member\PaymentPasswordController;
 use App\Http\Controllers\Member\ProductController;
 use App\Http\Controllers\Member\ProductDistributionController;
+use App\Http\Controllers\Member\ProductSearchSuggestionController;
 use App\Http\Controllers\Member\SellerOrderController;
 use App\Http\Controllers\Member\ShopDashboardController;
 use App\Http\Controllers\Member\ProfileController;
@@ -27,6 +29,8 @@ Route::prefix('home')->name('member.')->middleware(['member'])->group(function (
     Route::get('/products/distributions', [ProductDistributionController::class, 'index'])->name('products.distributions.index');
     Route::post('/products/distributions', [ProductDistributionController::class, 'store'])->name('products.distributions.store');
     Route::get('/products/manage', [ProductDistributionController::class, 'manage'])->name('products.manage.index');
+    Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+    Route::get('/search/suggestions', ProductSearchSuggestionController::class)->name('search.suggestions');
 
     Route::get('/shop-dashboard', [ShopDashboardController::class, 'index'])->name('shop-dashboard.index');
     Route::get('/seller/orders', [SellerOrderController::class, 'index'])->name('seller.orders.index');
@@ -42,6 +46,12 @@ Route::prefix('home')->name('member.')->middleware(['member'])->group(function (
 
     Route::get('/my', [MyController::class, 'index'])->name('my.index');
     Route::get('/my/personal', [ProfileController::class, 'show'])->name('profile.show');
+    Route::post('/my/personal/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::put('/my/personal/name', [ProfileController::class, 'updateName'])->name('profile.name.update');
+    Route::put('/my/personal/phone', [ProfileController::class, 'updatePhone'])->name('profile.phone.update');
+    Route::put('/my/personal/email', [ProfileController::class, 'updateEmail'])->name('profile.email.update');
+    Route::get('/my/personal/change-password', [ProfileController::class, 'editPassword'])->name('profile.password.edit');
+    Route::put('/my/personal/change-password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     Route::get('/my/shipping-address', [ShippingAddressController::class, 'index'])->name('shipping.index');
     Route::get('/my/shipping-address/add', [ShippingAddressController::class, 'create'])->name('shipping.create');
     Route::post('/my/shipping-address', [ShippingAddressController::class, 'store'])->name('shipping.store');
@@ -50,12 +60,16 @@ Route::prefix('home')->name('member.')->middleware(['member'])->group(function (
 
     Route::get('/my/set-payment-password', [PaymentPasswordController::class, 'create'])->name('payment-password.create');
     Route::post('/my/set-payment-password', [PaymentPasswordController::class, 'store'])->name('payment-password.store');
+    Route::get('/my/change-payment-password', [PaymentPasswordController::class, 'edit'])->name('payment-password.edit');
+    Route::put('/my/change-payment-password', [PaymentPasswordController::class, 'update'])->name('payment-password.update');
 
     Route::get('/recharge', [WalletController::class, 'recharge'])->name('wallet.recharge');
     Route::post('/recharge', [WalletController::class, 'storeRecharge'])->name('wallet.recharge.store');
     Route::get('/withdrawal', [WalletController::class, 'withdrawal'])->name('wallet.withdrawal');
     Route::post('/withdrawal', [WalletController::class, 'storeWithdrawal'])->name('wallet.withdrawal.store');
+    Route::get('/withdrawal-records', [WalletController::class, 'withdrawalRecords'])->name('wallet.withdrawal-records');
     Route::get('/fund-records', [WalletController::class, 'fundRecords'])->name('wallet.fund-records');
+    Route::get('/my/financial-report', [FinancialReportController::class, 'index'])->name('financial-report.index');
 
     Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions.index');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

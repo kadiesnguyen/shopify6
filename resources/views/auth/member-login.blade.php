@@ -7,7 +7,7 @@
 
     <h1 class="mb-6 text-center text-2xl font-bold text-slate-900 sm:mb-8">{{ __('auth_portal.login_title') }}</h1>
 
-    <form method="POST" action="{{ route('auth.login') }}" class="space-y-5">
+    <form method="POST" action="{{ route('auth.login') }}" class="portal-wallet-form space-y-5">
         @csrf
 
         <div>

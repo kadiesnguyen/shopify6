@@ -37,15 +37,23 @@
                         <td class="px-3 py-3 text-xs text-slate-600">${{ number_format($order->buyer?->wallet?->balance ?? 0, 2) }}</td>
                         <td class="px-3 py-3">{{ __('member.orders.'.$order->status) }}</td>
                         <td class="px-3 py-3">
-                            <form method="POST" action="{{ route('admin.orders.update', $order) }}" class="flex gap-1">
-                                @csrf @method('PATCH')
-                                <select name="status" class="rounded border-slate-300 text-xs">
-                                    @foreach (\App\Models\Order::STATUSES as $s)
-                                        <option value="{{ $s }}" @selected($order->status === $s)>{{ __('member.orders.'.$s) }}</option>
-                                    @endforeach
-                                </select>
-                                <button class="rounded bg-brand px-2 py-1 text-xs text-white">{{ __('admin.orders.save') }}</button>
-                            </form>
+                            <div class="flex flex-col gap-2">
+                                <form method="POST" action="{{ route('admin.orders.update', $order) }}" class="flex gap-1">
+                                    @csrf @method('PATCH')
+                                    <select name="status" class="rounded border-slate-300 text-xs">
+                                        @foreach (\App\Models\Order::STATUSES as $s)
+                                            <option value="{{ $s }}" @selected($order->status === $s)>{{ __('member.orders.'.$s) }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button class="rounded bg-brand px-2 py-1 text-xs text-white">{{ __('admin.orders.save') }}</button>
+                                </form>
+                                <form method="POST" action="{{ route('admin.orders.destroy', $order) }}" onsubmit="return confirm(@js(__('admin.orders.confirm_delete')))">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50">
+                                        {{ __('admin.actions.delete') }}
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty

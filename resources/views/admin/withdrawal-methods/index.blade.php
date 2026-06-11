@@ -17,6 +17,7 @@
         'methods' => $methods,
         'indexRoute' => 'admin.withdrawal-methods.index',
         'destroyRoute' => 'admin.withdrawal-methods.destroy',
+        'toggleRoute' => 'admin.withdrawal-methods.toggle-status',
     ])
 
     @if ($showMethodModal ?? false)

@@ -11,7 +11,7 @@ class SellerOrderController extends Controller
 {
     public function index(Request $request): View
     {
-        abort_unless(auth()->user()->shop, 403);
+        abort_unless(auth()->user()->isShop(), 403);
 
         $status = $request->string('status')->toString();
         $sort = $request->string('sort')->toString() ?: 'new';

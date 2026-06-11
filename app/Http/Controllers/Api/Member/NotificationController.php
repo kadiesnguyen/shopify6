@@ -13,7 +13,7 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $items = $this->paginateQuery(
-            Notification::query()->where('user_id', auth()->id()),
+            Notification::query()->where('user_id', auth()->id())->bellVisible(),
             $request,
             searchColumns: ['title', 'body'],
             filterable: ['type'],
@@ -27,6 +27,7 @@ class NotificationController extends Controller
     {
         $model = Notification::query()->findOrFail($notification);
         abort_unless($model->user_id === auth()->id(), 403);
+        abort_unless(in_array($model->type, Notification::bellTypes(), true), 404);
         $model->update(['read_at' => now()]);
 
         return response()->json(['message' => 'Marked as read.']);

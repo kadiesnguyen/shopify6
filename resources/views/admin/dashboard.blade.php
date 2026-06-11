@@ -3,81 +3,146 @@
 @section('title', __('admin.menu.overview'))
 
 @section('content')
-    <x-admin.page-header :title="__('admin.menu.overview')" />
+    <div class="space-y-6">
+        <p class="text-gray-600">
+            {!! __('admin.dashboard.welcome_html', ['email' => e(auth()->user()->email)]) !!}
+        </p>
 
-    <p class="mb-4 text-sm text-slate-600">{{ __('admin.dashboard.welcome', ['email' => auth()->user()->email]) }}</p>
-
-    <form method="GET" class="mb-4 flex flex-wrap items-end gap-3">
-        <div>
-            <label class="text-xs text-slate-500">{{ __('admin.dashboard.period') }}</label>
-            <select name="period" class="rounded-lg border-slate-300 text-sm">
-                @foreach (['day' => __('admin.dashboard.period_day'), 'week' => __('admin.dashboard.period_week'), 'month' => __('admin.dashboard.period_month'), 'year' => __('admin.dashboard.period_year')] as $value => $label)
-                    <option value="{{ $value }}" @selected($periodKey === $value)>{{ $label }}</option>
-                @endforeach
-            </select>
+        <div class="rounded-lg bg-white ring-1 ring-gray-200">
+            <form method="GET" class="p-4 sm:px-6">
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="font-medium text-gray-900">{{ __('admin.dashboard.filter_stats') }}</span>
+                    <select
+                        name="period"
+                        onchange="this.form.submit()"
+                        class="w-40 rounded-md bg-white px-2.5 py-1.5 text-sm ring-1 ring-inset ring-gray-300 outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                        @foreach (['day' => __('admin.dashboard.period_day'), 'week' => __('admin.dashboard.period_week'), 'month' => __('admin.dashboard.period_month'), 'year' => __('admin.dashboard.period_year')] as $value => $label)
+                            <option value="{{ $value }}" @selected($periodKey === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="inline-flex items-center rounded-md px-2.5 py-1.5 text-xs text-emerald-600 ring-1 ring-inset ring-emerald-500/50 transition-colors hover:bg-emerald-50">
+                        {{ __('admin.dashboard.refresh') }}
+                    </button>
+                </div>
+            </form>
         </div>
-        <button type="submit" class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white">{{ __('admin.dashboard.refresh') }}</button>
-    </form>
 
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <x-admin.stat-card :label="__('admin.dashboard.total_deposit')" :value="'$'.number_format($stats['total_deposit'], 2)" />
-        <x-admin.stat-card :label="__('admin.dashboard.total_withdrawal')" :value="'$'.number_format($stats['total_withdrawal'], 2)" />
-        <x-admin.stat-card :label="__('admin.dashboard.total_users')" :value="$stats['total_users']" />
-        <x-admin.stat-card :label="__('admin.dashboard.new_users')" :value="$stats['new_users']" />
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <x-admin.stat-card
+                :label="__('admin.dashboard.total_deposit')"
+                :value="'$'.number_format($stats['total_deposit'], 2)"
+                icon="arrow-down-circle"
+                icon-bg="bg-emerald-100"
+                icon-color="text-emerald-600"
+            />
+            <x-admin.stat-card
+                :label="__('admin.dashboard.total_withdrawal')"
+                :value="'$'.number_format($stats['total_withdrawal'], 2)"
+                icon="arrow-up-circle"
+                icon-bg="bg-rose-100"
+                icon-color="text-rose-600"
+            />
+            <x-admin.stat-card
+                :label="__('admin.dashboard.total_users')"
+                :value="number_format($stats['total_users'])"
+                icon="users"
+                icon-bg="bg-cyan-100"
+                icon-color="text-cyan-600"
+            />
+            <x-admin.stat-card
+                :label="__('admin.dashboard.new_users')"
+                :value="number_format($stats['new_users'])"
+                icon="user-plus"
+                icon-bg="bg-violet-100"
+                icon-color="text-violet-600"
+            />
+        </div>
+
+        <div class="grid gap-4 lg:grid-cols-2">
+            <div class="overflow-hidden rounded-lg bg-white ring-1 ring-gray-200">
+                <div class="border-b border-gray-100 p-4 sm:px-6">
+                    <span class="font-medium text-gray-900">{{ __('admin.dashboard.deposit_vs_withdrawal') }}</span>
+                </div>
+                <div class="p-4 sm:p-6">
+                    @if ($chartDeposits->isEmpty() && $chartWithdrawals->isEmpty())
+                        <div class="flex h-64 items-center justify-center text-sm text-gray-400">{{ __('admin.dashboard.no_chart_data') }}</div>
+                    @else
+                        <canvas id="depositChart" height="180"></canvas>
+                    @endif
+                </div>
+            </div>
+            <div class="overflow-hidden rounded-lg bg-white ring-1 ring-gray-200">
+                <div class="border-b border-gray-100 p-4 sm:px-6">
+                    <span class="font-medium text-gray-900">{{ __('admin.dashboard.users_by_role') }}</span>
+                </div>
+                <div class="p-4 sm:p-6">
+                    <x-admin.role-pie-chart :data="$usersByRole" />
+                </div>
+            </div>
+        </div>
+
+        <div class="grid gap-4 lg:grid-cols-3">
+            <div class="lg:col-span-1">
+                <div class="overflow-hidden rounded-lg bg-white ring-1 ring-gray-200">
+                    <div class="border-b border-gray-100 p-4 sm:px-6">
+                        <span class="font-medium text-gray-900">{{ __('admin.dashboard.quick_links') }}</span>
+                    </div>
+                    <div class="p-4 sm:p-6">
+                        <div class="space-y-2">
+                            @foreach ([
+                                ['route' => 'admin.users.index', 'label' => __('admin.menu.users'), 'icon' => 'users', 'color' => 'text-cyan-600'],
+                                ['route' => 'admin.invite-codes.index', 'label' => __('admin.menu.invite_codes'), 'icon' => 'ticket', 'color' => 'text-violet-600'],
+                                ['route' => 'admin.products.index', 'label' => __('admin.menu.products'), 'icon' => 'package', 'color' => 'text-amber-600'],
+                                ['route' => 'admin.promotions.index', 'label' => __('admin.menu.promotions'), 'icon' => 'megaphone', 'color' => 'text-rose-600'],
+                                ['route' => 'admin.recharge-requests.index', 'label' => __('admin.menu.recharge_requests'), 'icon' => 'circle-plus', 'color' => 'text-emerald-600'],
+                                ['route' => 'admin.withdrawal-requests.index', 'label' => __('admin.menu.withdrawal_requests'), 'icon' => 'circle-arrow-out', 'color' => 'text-orange-600'],
+                            ] as $link)
+                                <a href="{{ route($link['route']) }}" class="flex items-center gap-2 rounded-lg p-2 text-sm text-gray-700 no-underline hover:bg-gray-50">
+                                    <x-admin.dashboard-icon :name="$link['icon']" @class(['size-5', $link['color']]) />
+                                    <span>{{ $link['label'] }} →</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="lg:col-span-2">
+                <div class="overflow-hidden rounded-lg bg-white ring-1 ring-gray-200">
+                    <div class="border-b border-gray-100 p-4 sm:px-6">
+                        <span class="font-medium text-gray-900">{{ __('admin.dashboard.recent_activity') }}</span>
+                    </div>
+                    <div class="p-4 sm:p-6">
+                        @if ($recentRequests->isEmpty())
+                            <x-ui.empty-state :title="__('admin.requests.empty')" />
+                        @else
+                            <div class="max-h-96 space-y-2 overflow-y-auto">
+                                @foreach ($recentRequests as $item)
+                                    <div class="flex flex-col gap-1 rounded-lg border border-gray-200 p-3 text-sm">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-xs text-white">
+                                                {{ __('admin.dashboard.activity_recharge') }}
+                                            </span>
+                                            <span class="font-medium">${{ number_format($item->amount, 2) }}</span>
+                                            <span @class([
+                                                'rounded-md px-2 py-0.5 text-xs font-medium',
+                                                'bg-amber-50 text-amber-700' => $item->status === 'pending',
+                                                'bg-emerald-50 text-emerald-700' => $item->status === 'approved',
+                                                'bg-rose-50 text-rose-700' => $item->status === 'rejected',
+                                            ])>{{ $item->status }}</span>
+                                        </div>
+                                        <p class="text-xs text-gray-400">
+                                            {{ $item->user?->email ?? '—' }} · {{ $item->created_at->format('Y-m-d H:i:s') }}
+                                        </p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="mt-6 grid gap-4 lg:grid-cols-2">
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 class="mb-4 font-semibold">{{ __('admin.dashboard.deposit_vs_withdrawal') }}</h2>
-            @if ($chartDeposits->isEmpty() && $chartWithdrawals->isEmpty())
-                <x-ui.empty-state :title="__('admin.dashboard.no_chart_data')" />
-            @else
-                <canvas id="depositChart" height="180"></canvas>
-            @endif
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 class="mb-4 font-semibold">{{ __('admin.dashboard.users_by_role') }}</h2>
-            <ul class="space-y-2 text-sm">
-                @forelse ($usersByRole as $role => $count)
-                    <li class="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
-                        <span class="capitalize">{{ $role }}</span>
-                        <span class="font-semibold">{{ $count }}</span>
-                    </li>
-                @empty
-                    <x-ui.empty-state :title="__('admin.dashboard.no_chart_data')" />
-                @endforelse
-            </ul>
-        </div>
-    </div>
-
-    <section class="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 class="mb-4 font-semibold">{{ __('admin.dashboard.recent_activity') }}</h2>
-        @if ($recentRequests->isEmpty())
-            <x-ui.empty-state :title="__('admin.requests.empty')" />
-        @else
-            <ul class="divide-y divide-slate-100 text-sm">
-                @foreach ($recentRequests as $item)
-                    <li class="flex flex-wrap items-center justify-between gap-2 py-3">
-                        <span>{{ $item->user?->email }} · ${{ number_format($item->amount, 2) }} · {{ $item->status }}</span>
-                        <span class="text-xs text-slate-500">{{ $item->created_at->format('d/m/Y H:i') }}</span>
-                    </li>
-                @endforeach
-            </ul>
-        @endif
-    </section>
-
-    <section class="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 class="mb-3 font-semibold">{{ __('admin.dashboard.quick_links') }}</h2>
-        <div class="flex flex-wrap gap-2 text-sm">
-            <a href="{{ route('admin.users.index') }}" class="rounded-lg bg-slate-100 px-3 py-2 hover:bg-slate-200">{{ __('admin.menu.users') }} →</a>
-            <a href="{{ route('admin.invite-codes.index') }}" class="rounded-lg bg-slate-100 px-3 py-2 hover:bg-slate-200">{{ __('admin.menu.invite_codes') }} →</a>
-            <a href="{{ route('admin.products.index') }}" class="rounded-lg bg-slate-100 px-3 py-2 hover:bg-slate-200">{{ __('admin.menu.products') }} →</a>
-            <a href="{{ route('admin.promotions.index') }}" class="rounded-lg bg-slate-100 px-3 py-2 hover:bg-slate-200">{{ __('admin.menu.promotions') }} →</a>
-            <a href="{{ route('admin.recharge-requests.index') }}" class="rounded-lg bg-slate-100 px-3 py-2 hover:bg-slate-200">{{ __('admin.menu.recharge_requests') }} →</a>
-            <a href="{{ route('admin.withdrawal-requests.index') }}" class="rounded-lg bg-slate-100 px-3 py-2 hover:bg-slate-200">{{ __('admin.menu.withdrawal_requests') }} →</a>
-            <a href="{{ route('admin.shop-applications.index', ['status' => 'pending']) }}" class="rounded-lg bg-slate-100 px-3 py-2 hover:bg-slate-200">{{ __('admin.menu.shop_applications') }} →</a>
-        </div>
-    </section>
 @endsection
 
 @push('scripts')
@@ -92,8 +157,8 @@
         data: {
             labels,
             datasets: [
-                { label: 'Deposit', data: labels.map(l => depositData[l] ?? 0), backgroundColor: '#00a651' },
-                { label: 'Withdrawal', data: labels.map(l => withdrawalData[l] ?? 0), backgroundColor: '#004d2e' },
+                { label: @js(__('admin.dashboard.total_deposit')), data: labels.map(l => depositData[l] ?? 0), backgroundColor: '#10b981' },
+                { label: @js(__('admin.dashboard.total_withdrawal')), data: labels.map(l => withdrawalData[l] ?? 0), backgroundColor: '#f43f5e' },
             ],
         },
         options: { responsive: true, scales: { y: { beginAtZero: true } } },

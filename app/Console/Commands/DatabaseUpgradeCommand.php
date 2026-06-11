@@ -19,9 +19,12 @@ class DatabaseUpgradeCommand extends Command
         }
 
         if ($this->option('seed')) {
-            $this->components->info('Seeding database (upsert only, no user deletion)...');
+            $this->components->info('Seeding baseline data only (users/products preserved)...');
 
-            if ($this->call('db:seed', ['--force' => true]) !== self::SUCCESS) {
+            if ($this->call('db:seed', [
+                '--class' => 'Database\\Seeders\\BaselineDatabaseSeeder',
+                '--force' => true,
+            ]) !== self::SUCCESS) {
                 return self::FAILURE;
             }
         }

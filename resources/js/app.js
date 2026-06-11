@@ -1,4 +1,6 @@
 import './bootstrap';
+import './mobile-keyboard';
+import './member-search-suggest';
 import './member-chat';
 import './admin-chat';
 import Alpine from 'alpinejs';

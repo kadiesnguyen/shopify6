@@ -8,6 +8,8 @@
         <h1 class="text-lg font-bold text-gray-900">{{ __('member.my.order_management') }}</h1>
     </div>
 
+    <x-member.order-type-tabs active="seller" />
+
     <x-member.order-tabs :status="$status" :status-counts="$statusCounts" route-name="member.seller.orders.index" />
 
     <x-member.filter-toolbar

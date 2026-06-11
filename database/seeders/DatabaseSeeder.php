@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Support\Database\DatabaseGuard;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -11,11 +12,13 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        $this->call(BaselineDatabaseSeeder::class);
+
+        if (DatabaseGuard::hasCommerceData()) {
+            return;
+        }
+
         $this->call([
-            RoleAndAdminSeeder::class,
-            LanguageSeeder::class,
-            CmsSeeder::class,
-            SiteSettingsSeeder::class,
             DemoDataSeeder::class,
             SieummoPortalSeeder::class,
         ]);

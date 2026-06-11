@@ -48,8 +48,216 @@ body {
 }
 
 @layer components {
+    .portal-plain-input {
+        @apply min-w-0 w-full border-0 bg-transparent p-0 text-base text-gray-900 shadow-none outline-none ring-0 ring-offset-0;
+        @apply placeholder:text-gray-400;
+        @apply focus:border-0 focus:shadow-none focus:outline-none focus:ring-0 focus:ring-offset-0;
+    }
+
+    .portal-plain-input:focus {
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    .portal-wallet-form input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']),
+    .portal-wallet-form textarea,
+    .portal-wallet-form select,
+    .portal-form-field input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']),
+    .portal-form-field textarea,
+    .portal-form-field select {
+        border: 0 !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        outline: none !important;
+        --tw-ring-shadow: 0 0 #0000 !important;
+        --tw-ring-offset-shadow: 0 0 #0000 !important;
+        --tw-ring-color: transparent !important;
+    }
+
+    .portal-wallet-form input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']):focus,
+    .portal-wallet-form textarea:focus,
+    .portal-wallet-form select:focus,
+    .portal-form-field input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']):focus,
+    .portal-form-field textarea:focus,
+    .portal-form-field select:focus {
+        border: 0 !important;
+        box-shadow: none !important;
+        outline: none !important;
+        --tw-ring-shadow: 0 0 #0000 !important;
+        --tw-ring-offset-shadow: 0 0 #0000 !important;
+        --tw-ring-color: transparent !important;
+    }
+
     .auth-field {
-        @apply w-full rounded-lg border border-slate-200 bg-white py-2.5 px-3 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-brand/70 focus:ring-1 focus:ring-brand/20;
+        @apply w-full rounded-lg border border-slate-200 bg-white py-2.5 px-3 text-base text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-brand/70 focus:ring-1 focus:ring-brand/20;
+    }
+
+    @media (max-width: 767px) {
+        html {
+            --app-height: 100dvh;
+        }
+
+        html.keyboard-open,
+        html.keyboard-open body {
+            height: var(--app-height);
+        }
+
+        html.keyboard-open body {
+            overflow: hidden;
+        }
+
+        html.keyboard-open .portal-app-shell,
+        html.keyboard-open .auth-portal-layout {
+            height: var(--app-height);
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        html.keyboard-open .auth-portal-layout main {
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        html.keyboard-open .portal-bottom-nav {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        html.keyboard-open main {
+            min-height: 0 !important;
+            padding-bottom: env(safe-area-inset-bottom) !important;
+        }
+
+        .portal-app .min-h-screen,
+        .auth-portal-layout .min-h-screen {
+            min-height: var(--app-height, 100dvh);
+        }
+
+        .portal-app input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']),
+        .portal-app textarea,
+        .portal-app select,
+        .auth-portal-layout input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']),
+        .auth-portal-layout textarea,
+        .auth-portal-layout select {
+            font-size: 16px !important;
+        }
+    }
+
+    .admin-power-switch {
+        position: relative;
+        display: inline-block;
+        vertical-align: top;
+        width: 56px;
+        height: 20px;
+        padding: 3px;
+        border: 0;
+        appearance: none;
+        background-color: #fff;
+        border-radius: 18px;
+        box-shadow:
+            inset 0 -1px #fff,
+            inset 0 1px 1px rgb(0 0 0 / 5%);
+        background-image: linear-gradient(to bottom, #eee, #fff 25px);
+        cursor: pointer;
+        transition: box-shadow 0.15s ease-out;
+    }
+
+    .admin-power-switch:focus {
+        outline: none;
+        box-shadow:
+            inset 0 -1px #fff,
+            inset 0 1px 1px rgb(0 0 0 / 5%),
+            0 0 0 2px rgb(0 166 81 / 25%);
+    }
+
+    .admin-power-switch__label {
+        position: relative;
+        display: block;
+        height: inherit;
+        font-size: 10px;
+        text-transform: uppercase;
+        background: #eceeef;
+        border-radius: inherit;
+        box-shadow:
+            inset 0 1px 2px rgb(0 0 0 / 12%),
+            inset 0 0 2px rgb(0 0 0 / 15%);
+        transition:
+            background 0.15s ease-out,
+            box-shadow 0.15s ease-out;
+    }
+
+    .admin-power-switch__label::before,
+    .admin-power-switch__label::after {
+        position: absolute;
+        top: 50%;
+        margin-top: -0.5em;
+        line-height: 1;
+        transition: opacity 0.15s ease-out;
+    }
+
+    .admin-power-switch__label::before {
+        content: attr(data-off);
+        right: 11px;
+        color: #aaa;
+        text-shadow: 0 1px rgb(255 255 255 / 50%);
+    }
+
+    .admin-power-switch__label::after {
+        content: attr(data-on);
+        left: 11px;
+        color: #fff;
+        text-shadow: 0 1px rgb(0 0 0 / 20%);
+        opacity: 0;
+    }
+
+    .admin-power-switch--on .admin-power-switch__label {
+        background: #4fb845;
+        box-shadow:
+            inset 0 1px 2px rgb(0 0 0 / 15%),
+            inset 0 0 3px rgb(0 0 0 / 20%);
+    }
+
+    .admin-power-switch--on .admin-power-switch__label::before {
+        opacity: 0;
+    }
+
+    .admin-power-switch--on .admin-power-switch__label::after {
+        opacity: 1;
+    }
+
+    .admin-power-switch__handle {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 18px;
+        height: 18px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 1px 1px 5px rgb(0 0 0 / 20%);
+        background-image: linear-gradient(to bottom, #fff 40%, #f0f0f0);
+        transition: left 0.15s ease-out, box-shadow 0.15s ease-out;
+        pointer-events: none;
+    }
+
+    .admin-power-switch__handle::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin: -6px 0 0 -6px;
+        width: 12px;
+        height: 12px;
+        background: #f9f9f9;
+        border-radius: 6px;
+        box-shadow: inset 0 1px rgb(0 0 0 / 2%);
+        background-image: linear-gradient(to bottom, #eee, #fff);
+    }
+
+    .admin-power-switch--on .admin-power-switch__handle {
+        left: 40px;
+        box-shadow: -1px 1px 5px rgb(0 0 0 / 20%);
     }
 
     .portal-search-field input[type='search'] {
@@ -73,6 +281,10 @@ body {
     .portal-bottom-nav {
         font-family: inherit;
         font-size: 16px;
+    }
+
+    .portal-product-buy-bar {
+        bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
     }
 
     .portal-bottom-nav__label {
@@ -222,6 +434,22 @@ body {
 
     .ui-lazy-image img {
         @apply max-w-full;
+    }
+
+    .ui-lazy-image__fallback {
+        display: none;
+    }
+
+    .ui-lazy-image--loaded .ui-lazy-image__placeholder {
+        display: none;
+    }
+
+    .ui-lazy-image--failed .ui-lazy-image__fallback {
+        display: flex;
+    }
+
+    .ui-lazy-image--failed img {
+        display: none;
     }
 }
 

@@ -37,4 +37,21 @@ class ProductBuyableQuery
 
         return $product->distributions()->available()->exists();
     }
+
+    /** @param  array<int>  $shopUserIds */
+    public static function orderByLatestDistribution(Builder $query, array $shopUserIds = []): Builder
+    {
+        $latestDistributionAt = ProductDistribution::query()
+            ->selectRaw('max(product_distributions.created_at)')
+            ->whereColumn('product_distributions.product_id', 'products.id')
+            ->available();
+
+        if ($shopUserIds !== []) {
+            $latestDistributionAt->whereIn('user_id', $shopUserIds);
+        }
+
+        return $query
+            ->orderByDesc($latestDistributionAt)
+            ->orderByDesc('products.id');
+    }
 }

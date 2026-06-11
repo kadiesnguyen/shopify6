@@ -43,4 +43,11 @@ class OrderController extends Controller
 
         return back()->with('status', __('admin.orders.updated'));
     }
+
+    public function destroy(Order $order): RedirectResponse
+    {
+        $this->settlement->removeOrder($order);
+
+        return back()->with('status', __('admin.orders.deleted'));
+    }
 }

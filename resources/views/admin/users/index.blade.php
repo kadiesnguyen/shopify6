@@ -10,7 +10,7 @@
     <p class="mb-4 text-sm text-slate-600">{{ __('admin.users.subtitle') }}</p>
 
     <form method="GET" class="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
-        @foreach (['show_info', 'show_balance', 'show_deposit', 'show_password', 'show_payment_password', 'show_distributions'] as $modalField)
+        @foreach (['show_info', 'show_edit', 'show_balance', 'show_deposit', 'show_password', 'show_payment_password', 'show_distributions'] as $modalField)
             @if (request($modalField))
                 <input type="hidden" name="{{ $modalField }}" value="{{ request($modalField) }}">
             @endif
@@ -30,7 +30,7 @@
         <select name="role" class="w-full rounded-lg border-slate-300 text-sm sm:w-auto" onchange="this.form.submit()">
             <option value="">{{ __('admin.users.all_roles') }}</option>
             @foreach ($roles as $role)
-                <option value="{{ $role }}" @selected(request('role') === $role)>{{ ucfirst($role) }}</option>
+                <option value="{{ $role }}" @selected(request('role') === $role)>{{ __('admin.roles.'.$role) }}</option>
             @endforeach
         </select>
         <select name="shop_application" class="w-full rounded-lg border-slate-300 text-sm sm:w-auto" onchange="this.form.submit()">
@@ -50,13 +50,13 @@
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0 flex-1">
                         <p class="truncate font-medium text-slate-900">{{ $user->name }}</p>
-                        <p class="truncate text-sm text-slate-600">{{ $user->email }}</p>
-                        <p class="text-xs text-slate-500">{{ $user->phone ?: ($user->user_code ?? '—') }}</p>
+                        <x-admin.shop-application-pending-badge :user="$user" />
+                        <p class="truncate text-sm text-slate-600">{{ $user->loginIdentifier() ?? ($user->user_code ?? '—') }}</p>
                     </div>
                     <x-admin.user-actions-menu :user="$user" :list-query="$listQuery" />
                 </div>
                 <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
-                    <div><dt class="text-slate-500">{{ __('admin.columns.role') }}</dt><dd class="font-medium capitalize">{{ $user->roles->first()?->name ?? '—' }}</dd></div>
+                    <div><dt class="text-slate-500">{{ __('admin.columns.role') }}</dt><dd><x-admin.role-badge :role="$user->roles->first()?->name" /></dd></div>
                     <div><dt class="text-slate-500">{{ __('admin.columns.shop') }}</dt><dd class="truncate font-medium">{{ $user->shop?->name ?? '—' }}</dd></div>
                     <div><dt class="text-slate-500">{{ __('admin.columns.balance') }}</dt><dd class="font-medium">${{ number_format($user->wallet?->balance ?? 0, 2) }}</dd></div>
                     <div><dt class="text-slate-500">{{ __('admin.columns.balance_pending') }}</dt><dd class="font-medium">${{ number_format($user->wallet?->balance_pending ?? 0, 2) }}</dd></div>
@@ -85,27 +85,24 @@
                     @forelse ($users as $user)
                         <tr class="hover:bg-slate-50">
                             <td class="px-4 py-3">
-                                <div class="max-w-[12rem] truncate">{{ $user->email }}</div>
-                                <div class="text-xs text-slate-500">{{ $user->phone }}</div>
+                                <div class="max-w-[12rem] truncate">{{ $user->loginIdentifier() ?? ($user->user_code ?? '—') }}</div>
                             </td>
                             <td class="px-4 py-3">{{ $user->user_code ?? '—' }}</td>
-                            <td class="px-4 py-3">{{ $user->name }}</td>
-                            <td class="px-4 py-3 capitalize">{{ $user->roles->first()?->name }}</td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium text-slate-900">{{ $user->name }}</div>
+                                <x-admin.shop-application-pending-badge :user="$user" />
+                            </td>
+                            <td class="px-4 py-3"><x-admin.role-badge :role="$user->roles->first()?->name" /></td>
                             <td class="px-4 py-3">{{ $user->shop?->name ?? '—' }}</td>
                             <td class="px-4 py-3">${{ number_format($user->wallet?->balance_pending ?? 0, 2) }}</td>
                             <td class="px-4 py-3">${{ number_format($user->wallet?->balance ?? 0, 2) }}</td>
                             <td class="px-4 py-3">${{ number_format($user->wallet?->balance_frozen ?? 0, 2) }}</td>
                             <td class="px-4 py-3">
-                                <div class="flex flex-col gap-1">
-                                    @if ($user->status === \App\Models\User::STATUS_BANNED)
-                                        <span class="text-xs font-medium text-red-600">{{ __('admin.users.status_banned') }}</span>
-                                    @else
-                                        <span class="text-xs font-medium text-emerald-600">{{ __('admin.users.status_active') }}</span>
-                                    @endif
-                                    @if ($user->shopApplications->contains('status', 'pending'))
-                                        <span class="inline-flex w-fit rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">{{ __('admin.users.shop_application_pending') }}</span>
-                                    @endif
-                                </div>
+                                @if ($user->status === \App\Models\User::STATUS_BANNED)
+                                    <span class="text-xs font-medium text-red-600">{{ __('admin.users.status_banned') }}</span>
+                                @else
+                                    <span class="text-xs font-medium text-emerald-600">{{ __('admin.users.status_active') }}</span>
+                                @endif
                             </td>
                             <td class="sticky right-0 bg-white px-4 py-3 shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.12)]">
                                 <x-admin.user-actions-menu :user="$user" :list-query="$listQuery" />

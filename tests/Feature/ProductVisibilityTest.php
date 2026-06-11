@@ -109,6 +109,19 @@ class ProductVisibilityTest extends TestCase
             ->assertSee('Visible Product');
     }
 
+    public function test_shop_product_routes_do_not_collide_with_product_detail_route(): void
+    {
+        $this->actingAs($this->shopUser)
+            ->get('/home/products/distributions')
+            ->assertOk()
+            ->assertSee(__('member.products.distribution_center'), false);
+
+        $this->actingAs($this->shopUser)
+            ->get('/home/products/manage')
+            ->assertOk()
+            ->assertSee(__('member.products.management'), false);
+    }
+
     public function test_shop_can_distribute_from_distribution_center(): void
     {
         $this->actingAs($this->shopUser)
@@ -189,6 +202,45 @@ class ProductVisibilityTest extends TestCase
             ->assertOk()
             ->assertSee(__('member.products.distribution_center'), false)
             ->assertSee(__('member.products.management'), false);
+    }
+
+    public function test_products_page_returns_json_for_infinite_scroll(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+
+        $categoryId = (int) $this->product->category_id;
+
+        for ($i = 0; $i < 14; $i++) {
+            $extra = Product::query()->create([
+                'category_id' => $categoryId,
+                'name' => 'Visible Product '.$i,
+                'slug' => 'visible-product-'.$i,
+                'selling_price' => 25 + $i,
+                'purchase_price' => 10 + $i,
+                'commission' => 3,
+                'stock' => 10,
+                'status' => 'active',
+            ]);
+
+            ProductDistribution::query()->create([
+                'user_id' => $this->shopUser->id,
+                'product_id' => $extra->id,
+                'selling_price' => $extra->selling_price,
+                'purchase_price' => $extra->purchase_price,
+                'commission' => $extra->commission,
+                'commission_type' => 'fixed',
+                'status' => ProductDistribution::STATUS_AVAILABLE,
+            ]);
+        }
+
+        $this->actingAs($this->member)
+            ->getJson(route('member.products.index', ['page' => 2]))
+            ->assertOk()
+            ->assertJsonStructure(['html', 'has_more', 'next_page'])
+            ->assertJson([
+                'has_more' => false,
+                'next_page' => 3,
+            ]);
     }
 
     private function distributeAsShop(User $shopUser): void

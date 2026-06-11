@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Auth\MemberCredentials;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -39,6 +41,75 @@ class User extends Authenticatable
     public function hasPaymentPassword(): bool
     {
         return filled($this->getRawOriginal('payment_password'));
+    }
+
+    public function avatarUrl(): ?string
+    {
+        if (! filled($this->avatar)) {
+            return null;
+        }
+
+        if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+            return $this->avatar;
+        }
+
+        if (str_starts_with($this->avatar, 'uploads/')) {
+            return asset($this->avatar);
+        }
+
+        return Storage::disk('public')->url($this->avatar);
+    }
+
+    public function registeredViaEmail(): bool
+    {
+        return filled($this->email) && ! MemberCredentials::isPlaceholderEmail($this->email);
+    }
+
+    public function registeredViaPhone(): bool
+    {
+        return filled($this->phone);
+    }
+
+    public function canEditPhone(): bool
+    {
+        return $this->registeredViaEmail();
+    }
+
+    public function canEditEmail(): bool
+    {
+        return $this->registeredViaPhone() && MemberCredentials::isPlaceholderEmail($this->email);
+    }
+
+    public function isPhoneVerified(): bool
+    {
+        return filled($this->phone);
+    }
+
+    public function isEmailVerified(): bool
+    {
+        if ($this->canEditEmail()) {
+            return false;
+        }
+
+        return $this->email_verified_at !== null;
+    }
+
+    public function isNameVerified(): bool
+    {
+        return filled($this->name);
+    }
+
+    public function loginIdentifier(): ?string
+    {
+        if ($this->registeredViaEmail()) {
+            return $this->email;
+        }
+
+        if ($this->registeredViaPhone()) {
+            return $this->phone;
+        }
+
+        return $this->email ?: $this->phone;
     }
 
     public function shop(): HasOne

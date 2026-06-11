@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\UserRequest;
 use App\Models\ProductDistribution;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\Admin\AdminUserUpdateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +16,7 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    public function __construct(private readonly AdminUserUpdateService $userUpdates) {}
     public function index(Request $request): View
     {
         $users = User::query()
@@ -90,6 +92,7 @@ class UserController extends Controller
     {
         $modalId = collect([
             'show_info',
+            'show_edit',
             'show_balance',
             'show_deposit',
             'show_password',
@@ -114,6 +117,7 @@ class UserController extends Controller
     {
         return match (true) {
             $request->filled('show_info') => 'info',
+            $request->filled('show_edit') => 'edit',
             $request->filled('show_balance') => 'balance',
             $request->filled('show_deposit') => 'deposit',
             $request->filled('show_password') => 'password',
@@ -153,30 +157,28 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')->with('status', __('admin.users.created'));
     }
 
-    public function edit(User $user): View
+    public function edit(User $user): RedirectResponse
     {
         abort_if($user->isAdmin(), 404);
 
-        return view('admin.users.form', [
-            'user' => $user->load('roles'),
-            'roles' => Role::query()->pluck('name'),
-        ]);
+        return redirect()->route('admin.users.index', array_merge(
+            request()->only(['q', 'role', 'shop_application']),
+            ['show_edit' => $user->id],
+        ));
     }
 
     public function update(UserRequest $request, User $user): RedirectResponse
     {
         abort_if($user->isAdmin(), 404);
 
-        $data = $request->safe()->except(['password', 'role']);
+        $this->userUpdates->update($user, $request->validated());
 
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->validated('password'));
-        }
-
-        $user->update($data);
-        $user->syncRoles([$request->validated('role')]);
-
-        return redirect()->route('admin.users.index')->with('status', __('admin.users.updated'));
+        return redirect()->route('admin.users.index', array_filter([
+            'q' => request()->query('q'),
+            'role' => request()->query('role'),
+            'shop_application' => request()->query('shop_application'),
+            'show_edit' => request()->query('show_edit', $user->id),
+        ]))->with('status', __('admin.users.updated'));
     }
 
     public function destroy(User $user): RedirectResponse

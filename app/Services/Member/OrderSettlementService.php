@@ -12,7 +12,26 @@ class OrderSettlementService
 {
     public function __construct(
         private readonly ProductDistributionService $distributionService,
+        private readonly MemberNotificationService $notifications,
     ) {}
+
+    public function removeOrder(Order $order): void
+    {
+        DB::transaction(function () use ($order): void {
+            $order = Order::query()
+                ->whereKey($order->id)
+                ->lockForUpdate()
+                ->with(['items', 'productDistribution'])
+                ->firstOrFail();
+
+            if ($order->status !== Order::STATUS_CANCELLED) {
+                $this->handleCancellation($order, $order->status);
+            }
+
+            $order->items()->delete();
+            $order->delete();
+        });
+    }
 
     public function applyStatusChange(Order $order, string $previousStatus, string $newStatus): Order
     {
@@ -36,6 +55,14 @@ class OrderSettlementService
 
             $order->status = $newStatus;
             $order->save();
+
+            if ($newStatus === Order::STATUS_PENDING_PAYMENT && $previousStatus !== Order::STATUS_PENDING_PAYMENT) {
+                $this->notifications->notifyOrderNeedsPayment($order);
+            }
+
+            if ($newStatus === Order::STATUS_COMPLETED && $previousStatus !== Order::STATUS_COMPLETED) {
+                $this->notifications->notifyOrderCompleted($order);
+            }
 
             return $order->fresh(['items', 'buyer.wallet', 'seller.wallet']);
         });

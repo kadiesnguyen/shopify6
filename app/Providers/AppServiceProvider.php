@@ -22,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->commands([
             MigrateFreshCommand::class,
+            \App\Console\Commands\SeedCommand::class,
+            \App\Console\Commands\DbBackupCommand::class,
+            \App\Console\Commands\DbGuardCommand::class,
             DatabaseUpgradeCommand::class,
             EnsureDatabaseReadyCommand::class,
         ]);

@@ -13,7 +13,7 @@
         </p>
     </div>
 
-    <form method="POST" action="{{ route('auth.register') }}" class="space-y-5">
+    <form method="POST" action="{{ route('auth.register') }}" class="portal-wallet-form space-y-5">
         @csrf
 
         <div>

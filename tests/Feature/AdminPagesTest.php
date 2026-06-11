@@ -292,4 +292,50 @@ class AdminPagesTest extends TestCase
 
         $this->assertTrue($member->fresh()->distribution_locked);
     }
+
+    public function test_admin_can_toggle_recharge_method_status(): void
+    {
+        $method = RechargeMethod::query()->create([
+            'name' => 'Bank Recharge',
+            'type' => 'bank',
+            'status' => 'active',
+            'sort_order' => 1,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->patch(route('admin.recharge-methods.toggle-status', $method))
+            ->assertRedirect(route('admin.recharge-methods.index'))
+            ->assertSessionHas('status');
+
+        $this->assertSame(RechargeMethod::STATUS_INACTIVE, $method->fresh()->status);
+
+        $this->actingAs($this->admin)
+            ->patch(route('admin.recharge-methods.toggle-status', $method))
+            ->assertRedirect(route('admin.recharge-methods.index'));
+
+        $this->assertSame(RechargeMethod::STATUS_ACTIVE, $method->fresh()->status);
+    }
+
+    public function test_admin_can_toggle_withdrawal_method_status(): void
+    {
+        $method = WithdrawalMethod::query()->create([
+            'name' => 'Bank Withdrawal',
+            'type' => 'bank',
+            'status' => 'active',
+            'sort_order' => 1,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->patch(route('admin.withdrawal-methods.toggle-status', $method))
+            ->assertRedirect(route('admin.withdrawal-methods.index'))
+            ->assertSessionHas('status');
+
+        $this->assertSame(WithdrawalMethod::STATUS_INACTIVE, $method->fresh()->status);
+
+        $this->actingAs($this->admin)
+            ->patch(route('admin.withdrawal-methods.toggle-status', $method))
+            ->assertRedirect(route('admin.withdrawal-methods.index'));
+
+        $this->assertSame(WithdrawalMethod::STATUS_ACTIVE, $method->fresh()->status);
+    }
 }

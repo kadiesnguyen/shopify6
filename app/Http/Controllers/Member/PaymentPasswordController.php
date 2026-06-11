@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Member\MemberChangePaymentPasswordRequest;
 use App\Http\Requests\Member\PaymentPasswordRequest;
 use App\Support\Auth\AuthenticatedUserResolver;
 use Illuminate\Http\RedirectResponse;
@@ -62,5 +63,41 @@ class PaymentPasswordController extends Controller
 
         return redirect($redirect !== '' ? $redirect : route('member.home'))
             ->with('status', __('member.payment_password.saved'));
+    }
+
+    public function edit(): View|RedirectResponse
+    {
+        $user = AuthenticatedUserResolver::fromSession();
+
+        if (! $user) {
+            return redirect()->route('auth.login')->withErrors([
+                'login' => __('auth.session_stale'),
+            ]);
+        }
+
+        if (! $user->hasPaymentPassword()) {
+            return redirect()->route('member.payment-password.create');
+        }
+
+        return view('member.payment-password.edit');
+    }
+
+    public function update(MemberChangePaymentPasswordRequest $request): RedirectResponse
+    {
+        $user = AuthenticatedUserResolver::fromSession();
+
+        if (! $user) {
+            return redirect()->route('auth.login')->withErrors([
+                'login' => __('auth.session_stale'),
+            ]);
+        }
+
+        $user->update([
+            'payment_password' => $request->validated('payment_password'),
+        ]);
+
+        return redirect()
+            ->route('member.profile.show')
+            ->with('status', __('member.profile.payment_password_updated'));
     }
 }

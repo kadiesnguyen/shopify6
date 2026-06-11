@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -15,8 +17,8 @@ class EnsureDatabaseReadyCommandTest extends TestCase
     {
         parent::setUp();
 
-        Role::create(['name' => 'admin']);
-        Role::create(['name' => 'member']);
+        Role::findOrCreate('admin');
+        Role::findOrCreate('member');
     }
 
     public function test_ensure_ready_seeds_when_no_users(): void
@@ -47,5 +49,31 @@ class EnsureDatabaseReadyCommandTest extends TestCase
             ->assertSuccessful();
 
         $this->assertDatabaseHas('users', ['email' => 'admin@shopi.com']);
+    }
+
+    public function test_ensure_ready_seeds_baseline_when_no_users_but_catalog_exists(): void
+    {
+        $category = Category::query()->create([
+            'name' => 'Imported',
+            'slug' => 'imported',
+            'status' => 'active',
+        ]);
+
+        Product::query()->create([
+            'category_id' => $category->id,
+            'name' => 'Imported Product',
+            'slug' => 'sm-ensure-baseline-'.uniqid(),
+            'selling_price' => 10,
+            'purchase_price' => 5,
+            'commission' => 1,
+            'stock' => 1,
+            'status' => 'active',
+        ]);
+
+        $this->artisan('db:ensure-ready')
+            ->assertSuccessful();
+
+        $this->assertDatabaseHas('users', ['email' => 'admin@shopi.com']);
+        $this->assertDatabaseHas('products', ['name' => 'Imported Product']);
     }
 }

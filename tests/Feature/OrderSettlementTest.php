@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Notification;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Shop;
@@ -94,6 +95,11 @@ class OrderSettlementTest extends TestCase
             'type' => Transaction::TYPE_PRODUCT_COST,
             'reference' => $order->order_no.'-seller-cost',
         ]);
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $this->seller->id,
+            'type' => 'order_pending_payment',
+        ]);
     }
 
     public function test_seller_receives_purchase_return_and_commission_when_order_is_completed(): void
@@ -103,7 +109,7 @@ class OrderSettlementTest extends TestCase
 
         app(OrderSettlementService::class)->applyStatusChange(
             $order,
-            Order::STATUS_AWAITING_PICKUP,
+            Order::STATUS_PENDING_PAYMENT,
             Order::STATUS_SHIPPED,
         );
 
@@ -128,6 +134,11 @@ class OrderSettlementTest extends TestCase
             'amount' => 40,
             'reference' => $order->order_no.'-seller-commission',
         ]);
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $this->seller->id,
+            'type' => 'order_completed',
+        ]);
     }
 
     public function test_cancelled_order_refunds_buyer_without_returning_distribution_cost_to_seller(): void
@@ -145,7 +156,7 @@ class OrderSettlementTest extends TestCase
 
         app(OrderSettlementService::class)->applyStatusChange(
             $order,
-            Order::STATUS_AWAITING_PICKUP,
+            Order::STATUS_PENDING_PAYMENT,
             Order::STATUS_CANCELLED,
         );
 
@@ -167,7 +178,7 @@ class OrderSettlementTest extends TestCase
 
         app(OrderSettlementService::class)->applyStatusChange(
             $order->fresh(),
-            Order::STATUS_AWAITING_PICKUP,
+            Order::STATUS_PENDING_PAYMENT,
             Order::STATUS_COMPLETED,
         );
 
@@ -191,5 +202,166 @@ class OrderSettlementTest extends TestCase
             'id' => $order->id,
             'status' => Order::STATUS_COMPLETED,
         ]);
+    }
+
+    public function test_pending_payment_status_change_notifies_seller_once(): void
+    {
+        $order = Order::query()->create([
+            'user_id' => $this->buyer->id,
+            'shop_id' => $this->seller->shop->id,
+            'seller_id' => $this->seller->id,
+            'order_no' => 'ORD-PENDING-001',
+            'total' => 100,
+            'commission' => 40,
+            'purchase_cost' => 60,
+            'status' => Order::STATUS_AWAITING_PICKUP,
+            'payment_method' => 'wallet',
+        ]);
+
+        app(OrderSettlementService::class)->applyStatusChange(
+            $order,
+            Order::STATUS_AWAITING_PICKUP,
+            Order::STATUS_PENDING_PAYMENT,
+        );
+
+        $this->assertSame(1, Notification::query()
+            ->where('user_id', $this->seller->id)
+            ->where('type', 'order_pending_payment')
+            ->count());
+    }
+
+    public function test_admin_delete_order_reverses_wallet_settlements(): void
+    {
+        $admin = User::factory()->create(['status' => 'active']);
+        $admin->assignRole('admin');
+
+        $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
+        $balanceAfterDistribution = (float) $this->seller->wallet->fresh()->balance;
+
+        app(OrderSettlementService::class)->applyStatusChange(
+            $order,
+            Order::STATUS_PENDING_PAYMENT,
+            Order::STATUS_COMPLETED,
+        );
+
+        $this->assertSame($balanceAfterDistribution + 100.0, (float) $this->seller->wallet->fresh()->balance);
+        $this->assertSame(400.0, (float) $this->buyer->wallet->fresh()->balance);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.orders.destroy', $order))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('orders', ['id' => $order->id]);
+        $this->assertDatabaseMissing('order_items', ['order_id' => $order->id]);
+        $this->assertSame($balanceAfterDistribution, (float) $this->seller->wallet->fresh()->balance);
+        $this->assertSame(500.0, (float) $this->buyer->wallet->fresh()->balance);
+    }
+
+    public function test_admin_status_progression_syncs_to_seller_orders_page(): void
+    {
+        $admin = User::factory()->create(['status' => 'active']);
+        $admin->assignRole('admin');
+
+        $order = Order::query()->create([
+            'user_id' => $this->buyer->id,
+            'shop_id' => $this->seller->shop->id,
+            'seller_id' => $this->seller->id,
+            'order_no' => 'ORD-FLOW-001',
+            'total' => 100,
+            'commission' => 40,
+            'purchase_cost' => 60,
+            'status' => Order::STATUS_PENDING_PAYMENT,
+            'payment_method' => 'wallet',
+        ]);
+
+        $flow = [
+            Order::STATUS_AWAITING_PICKUP,
+            Order::STATUS_WAITING_SHIPMENT,
+            Order::STATUS_SHIPPED,
+            Order::STATUS_RECEIVED,
+            Order::STATUS_COMPLETED,
+        ];
+
+        $previous = Order::STATUS_PENDING_PAYMENT;
+
+        foreach ($flow as $next) {
+            $this->actingAs($admin)
+                ->patch('/admin/orders/'.$order->id, ['status' => $next])
+                ->assertRedirect();
+
+            $order->refresh();
+            $this->assertSame($next, $order->status);
+
+            $this->actingAs($this->seller)
+                ->get(route('member.seller.orders.index'))
+                ->assertOk()
+                ->assertSee(__('member.orders.'.$next), false);
+
+            $previous = $next;
+        }
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $this->seller->id,
+            'type' => 'order_completed',
+        ]);
+    }
+
+    public function test_demo_seeder_does_not_reset_existing_order_status(): void
+    {
+        $member = User::query()->firstOrCreate(
+            ['email' => 'member@shopefy.test'],
+            [
+                'username' => 'member-demo',
+                'user_code' => 'U777777',
+                'name' => 'Member Demo',
+                'phone' => '+84901234567',
+                'password' => bcrypt('password'),
+                'status' => 'active',
+            ],
+        );
+        $member->syncRoles(['member', 'shop']);
+
+        $shop = Shop::query()->create([
+            'user_id' => $member->id,
+            'name' => 'Member Shop',
+            'slug' => 'member-shop',
+            'status' => 'active',
+        ]);
+
+        $category = Category::query()->create([
+            'name' => 'Electronics',
+            'slug' => 'electronics',
+            'status' => 'active',
+        ]);
+
+        Product::query()->create([
+            'category_id' => $category->id,
+            'shop_id' => $shop->id,
+            'user_id' => $member->id,
+            'name' => 'Wireless Earbuds',
+            'slug' => 'wireless-earbuds',
+            'selling_price' => 49.99,
+            'purchase_price' => 25.00,
+            'commission' => 5.00,
+            'stock' => 10,
+            'status' => 'active',
+        ]);
+
+        $order = Order::query()->create([
+            'user_id' => $member->id,
+            'shop_id' => $shop->id,
+            'seller_id' => $member->id,
+            'order_no' => 'ORD-DEMO-001',
+            'total' => 49.99,
+            'commission' => 5,
+            'purchase_cost' => 25,
+            'status' => Order::STATUS_COMPLETED,
+            'payment_method' => 'wallet',
+            'completed_at' => now(),
+        ]);
+
+        $this->seed(\Database\Seeders\DemoDataSeeder::class);
+
+        $this->assertSame(Order::STATUS_COMPLETED, $order->fresh()->status);
     }
 }

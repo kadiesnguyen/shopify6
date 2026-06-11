@@ -1,7 +1,9 @@
 @props(['order'])
 
 @php
-    $statusColor = match ($order->status) {
+    $displayStatus = $order->getAttribute('display_status') ?: $order->status;
+
+    $statusColor = match ($displayStatus) {
         'pending_payment' => 'text-amber-600',
         'awaiting_pickup' => 'text-blue-500',
         'waiting_shipment' => 'text-orange-500',
@@ -26,7 +28,7 @@
 <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
     <div class="mb-3 flex items-center justify-between">
         <span class="font-semibold text-gray-900">#{{ $order->order_no }}</span>
-        <span @class(['text-sm font-medium', $statusColor])>{{ __('member.orders.'.$order->status) }}</span>
+        <span @class(['text-sm font-medium', $statusColor])>{{ __('member.orders.'.$displayStatus) }}</span>
     </div>
 
     @foreach ($order->items as $item)

@@ -7,15 +7,24 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Models\User;
+use App\Support\Database\Concerns\SkipsWhenDataExists;
+use App\Support\Database\DatabaseGuard;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 class SieummoPortalSeeder extends Seeder
 {
+    use SkipsWhenDataExists;
+
     public function run(): void
     {
         $this->seedBanners();
+
+        if ($this->skipWhenPreservedDataExists('SieummoPortalSeeder catalog')) {
+            return;
+        }
+
         $this->seedCatalog();
     }
 
@@ -158,8 +167,6 @@ class SieummoPortalSeeder extends Seeder
             ],
         ];
 
-        $sieummoSlugs = [];
-
         foreach ($products as $item) {
             $category = Category::query()->where('slug', $item['category'])->first();
             $shopId = $shopIds[$item['shop']] ?? null;
@@ -167,8 +174,6 @@ class SieummoPortalSeeder extends Seeder
             if (! $category || ! $shopId) {
                 continue;
             }
-
-            $sieummoSlugs[] = $item['slug'];
 
             Product::query()->updateOrCreate(
                 ['slug' => $item['slug']],
@@ -188,8 +193,19 @@ class SieummoPortalSeeder extends Seeder
             );
         }
 
+        // Retire only legacy DemoDataSeeder catalog when no sm-* import exists.
+        if (DatabaseGuard::hasSieummoCatalog()) {
+            return;
+        }
+
         Product::query()
-            ->whereNotIn('slug', $sieummoSlugs)
+            ->whereIn('slug', [
+                'wireless-earbuds',
+                'smart-watch',
+                'casual-t-shirt',
+                'desk-lamp',
+                'running-shoes',
+            ])
             ->update(['status' => Product::STATUS_INACTIVE]);
     }
 }

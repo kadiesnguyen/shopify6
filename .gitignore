@@ -42,6 +42,7 @@ Thumbs.db
 
 # Database backups & dumps
 /backups/
+/storage/app/backups/
 *.sql
 *.sql.gz
 *.dump

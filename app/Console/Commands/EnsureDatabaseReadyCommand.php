@@ -3,13 +3,15 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use Database\Seeders\BaselineDatabaseSeeder;
 use Database\Seeders\RoleAndAdminSeeder;
 use Illuminate\Console\Command;
 
 class EnsureDatabaseReadyCommand extends Command
 {
     protected $signature = 'db:ensure-ready
-                {--force-seed : Run full DatabaseSeeder even when users exist}';
+                {--force-seed : Run full DatabaseSeeder even when data exists (requires --allow-data-loss)}
+                {--allow-data-loss : Allow destructive reseed when using --force-seed}';
 
     protected $description = 'Migrate if needed and guarantee baseline users (admin/member) exist';
 
@@ -27,11 +29,43 @@ class EnsureDatabaseReadyCommand extends Command
             return self::FAILURE;
         }
 
-        if (! User::query()->exists() || $this->option('force-seed')) {
-            $this->components->warn('Database has no users — running full seed.');
+        if ($this->option('force-seed')) {
+            if (! $this->option('allow-data-loss')) {
+                $this->components->error('Refusing --force-seed without --allow-data-loss.');
 
-            if ($this->call('db:seed', ['--force' => true]) !== self::SUCCESS) {
                 return self::FAILURE;
+            }
+
+            $this->components->warn('Running full DatabaseSeeder (--allow-data-loss).');
+
+            if ($this->call('db:seed', [
+                '--force' => true,
+                '--allow-data-loss' => true,
+            ]) !== self::SUCCESS) {
+                return self::FAILURE;
+            }
+
+            $this->reportAccounts();
+
+            return self::SUCCESS;
+        }
+
+        if (! User::query()->exists()) {
+            if (\App\Support\Database\DatabaseGuard::hasPreservedData()) {
+                $this->components->warn('Database has no users but preserved data exists — running baseline seed only.');
+
+                if ($this->call('db:seed', [
+                    '--class' => BaselineDatabaseSeeder::class,
+                    '--force' => true,
+                ]) !== self::SUCCESS) {
+                    return self::FAILURE;
+                }
+            } else {
+                $this->components->warn('Database has no users — running full seed.');
+
+                if ($this->call('db:seed', ['--force' => true]) !== self::SUCCESS) {
+                    return self::FAILURE;
+                }
             }
 
             $this->reportAccounts();

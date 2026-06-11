@@ -16,6 +16,7 @@ class OrderService
 {
     public function __construct(
         private readonly ProductDistributionService $distributionService,
+        private readonly MemberNotificationService $notifications,
     ) {}
 
     public function placeOrder(User $user, Product $product, int $qty = 1): Order
@@ -65,7 +66,7 @@ class OrderService
                 'total' => $subtotal,
                 'commission' => $commission,
                 'purchase_cost' => $purchaseCost,
-                'status' => Order::STATUS_AWAITING_PICKUP,
+                'status' => Order::STATUS_PENDING_PAYMENT,
                 'payment_method' => 'wallet',
                 'paid_at' => now(),
             ]);
@@ -97,6 +98,8 @@ class OrderService
             ]);
 
             $this->distributionService->reserve($distribution);
+
+            $this->notifications->notifyOrderNeedsPayment($order);
 
             return $order;
         });

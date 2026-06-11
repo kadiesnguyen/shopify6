@@ -1,7 +1,13 @@
-@props(['status' => '', 'statusCounts' => collect(), 'routeName' => 'member.orders.index'])
+@props([
+    'status' => '',
+    'statusCounts' => collect(),
+    'routeName' => 'member.orders.index',
+    'query' => [],
+    'showPendingPayment' => true,
+])
 
 @php
-    $tabs = [
+    $tabs = collect([
         '' => __('member.orders.all_orders'),
         'pending_payment' => __('member.orders.pending_payment'),
         'awaiting_pickup' => __('member.orders.awaiting_pickup'),
@@ -10,7 +16,11 @@
         'received' => __('member.orders.received'),
         'completed' => __('member.orders.completed'),
         'cancelled' => __('member.orders.cancelled'),
-    ];
+    ]);
+
+    if (! $showPendingPayment) {
+        $tabs = $tabs->except('pending_payment');
+    }
 @endphp
 
 <div
@@ -62,7 +72,11 @@
     <div x-ref="track" class="portal-order-tabs">
         @foreach ($tabs as $key => $label)
             <a
-                href="{{ route($routeName, array_filter(['status' => $key ?: null, 'q' => request('q'), 'sort' => request('sort')])) }}"
+                href="{{ route($routeName, collect($query)->merge([
+                    'status' => $key ?: null,
+                    'q' => request('q'),
+                    'sort' => request('sort'),
+                ])->filter(fn ($value) => $value !== null && $value !== '')->all()) }}"
                 @if ($status === $key) data-order-tab-active @endif
                 @mousedown="onMouseDown($event)"
                 @click="onTabClick($event)"

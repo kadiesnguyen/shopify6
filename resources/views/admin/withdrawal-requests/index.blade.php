@@ -65,7 +65,7 @@
                                         <div class="flex justify-between gap-4"><dt class="text-slate-500">{{ __('admin.columns.user') }}</dt><dd>{{ $item->user?->email }}</dd></div>
                                         <div class="flex justify-between gap-4"><dt class="text-slate-500">{{ __('admin.columns.method') }}</dt><dd>{{ $item->withdrawalMethod?->name }}</dd></div>
                                         <div class="flex justify-between gap-4"><dt class="text-slate-500">{{ __('admin.columns.amount') }}</dt><dd class="font-semibold">${{ number_format($item->amount, 2) }}</dd></div>
-                                        <div class="flex justify-between gap-4"><dt class="text-slate-500">{{ __('admin.requests.payout_details') }}</dt><dd class="text-right">{{ $item->payout_details['details'] ?? json_encode($item->payout_details) }}</dd></div>
+                                        <div class="flex justify-between gap-4"><dt class="shrink-0 text-slate-500">{{ __('admin.requests.payout_details') }}</dt><dd class="max-w-[65%] whitespace-pre-line text-right">{{ $item->formattedPayoutDetails() }}</dd></div>
                                         @if ($item->admin_note)
                                             <div class="flex justify-between gap-4"><dt class="text-slate-500">{{ __('admin.requests.admin_note') }}</dt><dd>{{ $item->admin_note }}</dd></div>
                                         @endif

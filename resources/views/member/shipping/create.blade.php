@@ -5,7 +5,7 @@
 @section('full_bleed', '1')
 
 @section('content')
-    <div class="min-h-screen bg-gray-50">
+    <div class="min-h-[var(--app-height,100dvh)] bg-gray-50">
         <header class="sticky top-0 z-10 flex items-center bg-black px-4 py-3 text-white">
             <a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('member.my.index') }}" class="flex items-center gap-1.5">
                 <x-member.icon name="chevron-left" class="size-5" />
@@ -14,7 +14,7 @@
             <h1 class="absolute left-1/2 -translate-x-1/2 text-base font-semibold">{{ __('member.shipping.add_title') }}</h1>
         </header>
 
-        <form method="POST" action="{{ route('member.shipping.store') }}" class="mt-2 bg-white">
+        <form method="POST" action="{{ route('member.shipping.store') }}" class="portal-wallet-form mt-2 bg-white">
             @csrf
             @if ($redirect)
                 <input type="hidden" name="redirect" value="{{ $redirect }}">
@@ -22,27 +22,27 @@
 
             <div class="divide-y divide-gray-100">
                 <div class="px-4 py-4">
-                    <input name="recipient_name" value="{{ old('recipient_name') }}" required placeholder="{{ __('member.shipping.recipient_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm text-gray-900 outline-none placeholder:text-gray-400">
+                    <input name="recipient_name" value="{{ old('recipient_name') }}" required placeholder="{{ __('member.shipping.recipient_placeholder') }}" class="portal-plain-input">
                     @error('recipient_name')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="px-4 py-4">
-                    <input name="phone" value="{{ old('phone') }}" required placeholder="{{ __('member.shipping.phone_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm text-gray-900 outline-none placeholder:text-gray-400">
+                    <input name="phone" value="{{ old('phone') }}" required placeholder="{{ __('member.shipping.phone_placeholder') }}" class="portal-plain-input">
                     @error('phone')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="px-4 py-4">
-                    <input name="country" value="{{ old('country', 'Việt Nam') }}" required placeholder="{{ __('member.shipping.country_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm text-gray-900 outline-none placeholder:text-gray-400">
+                    <input name="country" value="{{ old('country', 'Việt Nam') }}" required placeholder="{{ __('member.shipping.country_placeholder') }}" class="portal-plain-input">
                     @error('country')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="px-4 py-4">
-                    <input name="state" value="{{ old('state') }}" required placeholder="{{ __('member.shipping.state_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm text-gray-900 outline-none placeholder:text-gray-400">
+                    <input name="state" value="{{ old('state') }}" required placeholder="{{ __('member.shipping.state_placeholder') }}" class="portal-plain-input">
                     @error('state')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="px-4 py-4">
-                    <input name="city" value="{{ old('city') }}" required placeholder="{{ __('member.shipping.city_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm text-gray-900 outline-none placeholder:text-gray-400">
+                    <input name="city" value="{{ old('city') }}" required placeholder="{{ __('member.shipping.city_placeholder') }}" class="portal-plain-input">
                     @error('city')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="px-4 py-4">
-                    <input name="address_line" value="{{ old('address_line') }}" required placeholder="{{ __('member.shipping.address_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm text-gray-900 outline-none placeholder:text-gray-400">
+                    <input name="address_line" value="{{ old('address_line') }}" required placeholder="{{ __('member.shipping.address_placeholder') }}" class="portal-plain-input">
                     @error('address_line')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <label class="flex items-center gap-2 px-4 py-4 text-sm text-gray-800">

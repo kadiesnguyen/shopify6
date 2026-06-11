@@ -12,9 +12,12 @@
     @foreach ($tabs as $tab)
         @php
             $active = collect($tab['patterns'])->contains(fn (string $pattern) => request()->routeIs($pattern));
+            $href = $tab['route'] === 'member.orders.index' && auth()->user()?->isShop()
+                ? route('member.seller.orders.index')
+                : route($tab['route']);
         @endphp
         <a
-            href="{{ route($tab['route']) }}"
+            href="{{ $href }}"
             @class([
                 'flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg py-1 no-underline',
                 'font-bold text-emerald-600' => $active,

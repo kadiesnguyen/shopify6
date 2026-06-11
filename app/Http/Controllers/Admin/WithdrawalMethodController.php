@@ -61,27 +61,97 @@ class WithdrawalMethodController extends Controller
         return back()->with('status', __('admin.methods.deleted'));
     }
 
+    public function toggleStatus(WithdrawalMethod $withdrawalMethod): RedirectResponse
+    {
+        $enabled = $withdrawalMethod->status !== WithdrawalMethod::STATUS_ACTIVE;
+
+        $withdrawalMethod->update([
+            'status' => $enabled ? WithdrawalMethod::STATUS_ACTIVE : WithdrawalMethod::STATUS_INACTIVE,
+        ]);
+
+        return redirect()->route('admin.withdrawal-methods.index')->with(
+            'status',
+            $enabled ? __('admin.methods.withdrawal_enabled') : __('admin.methods.withdrawal_disabled'),
+        );
+    }
+
     /** @return array<string, mixed> */
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $rules = [
             'name' => ['required', 'string', 'max:120'],
             'type' => ['required', 'in:bank,crypto'],
+            'currencies' => ['nullable', 'string', 'max:255'],
             'network_or_bank' => ['nullable', 'string', 'max:120'],
+            'networks' => ['nullable', 'array', 'min:1'],
+            'networks.*' => ['required', 'string', 'max:120', 'in:'.implode(',', $this->allowedNetworkLabels())],
             'fee_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive'],
             'internal_note' => ['nullable', 'string', 'max:1000'],
-        ]);
+        ];
+
+        if ($request->input('type') === WithdrawalMethod::TYPE_CRYPTO) {
+            $rules['currencies'][0] = 'required';
+            $rules['networks'][0] = 'required';
+        }
+
+        return $request->validate($rules);
     }
 
     /** @param array<string, mixed> $data */
     private function configFrom(array $data): array
     {
+        $feePercent = isset($data['fee_percent']) ? (float) $data['fee_percent'] : 0.0;
+        $currencies = $this->parseCsv((string) ($data['currencies'] ?? ''));
+        $networkLabels = array_values(array_unique(array_filter(
+            array_map(static fn ($item): string => trim((string) $item), (array) ($data['networks'] ?? [])),
+            static fn (string $item): bool => $item !== '',
+        )));
+
         return array_filter([
-            'network_or_bank' => $data['network_or_bank'] ?? null,
-            'fee_percent' => isset($data['fee_percent']) ? (float) $data['fee_percent'] : null,
+            'currencies' => $currencies,
+            'networks' => array_map(
+                static fn (string $label): array => ['label' => $label, 'fee' => $feePercent],
+                $networkLabels,
+            ),
+            'network_or_bank' => $networkLabels[0] ?? ($data['network_or_bank'] ?? null),
+            'fee_percent' => $feePercent,
             'internal_note' => $data['internal_note'] ?? null,
-        ], fn ($value) => $value !== null && $value !== '');
+        ], fn ($value) => $value !== null && $value !== '' && $value !== []);
+    }
+
+    /** @return list<string> */
+    private function parseCsv(string $value): array
+    {
+        $parts = array_map('trim', explode(',', $value));
+        $parts = array_filter($parts, fn (string $item): bool => $item !== '');
+
+        return array_values(array_unique($parts));
+    }
+
+    /** @return list<string> */
+    private function allowedNetworkLabels(): array
+    {
+        $plain = collect(config('wallet_data.blockchain_networks', []))
+            ->map(fn ($item): string => trim((string) $item))
+            ->filter()
+            ->values();
+
+        $combo = collect(config('wallet_data.sieummo_withdrawal_methods', []))
+            ->map(function ($item): string {
+                $currency = trim((string) ($item['currency'] ?? ''));
+                $network = trim((string) ($item['network'] ?? ''));
+
+                if ($currency === '' || $network === '') {
+                    return '';
+                }
+
+                return $currency.' ('.$network.')';
+            })
+            ->filter()
+            ->values();
+
+        return $plain->merge($combo)->unique()->values()->all();
     }
 }
