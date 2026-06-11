@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ProductDisplayStats;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -27,6 +28,8 @@ class Product extends Model
         'commission',
         'commission_type',
         'stock',
+        'display_click_count',
+        'display_sales_count',
         'status',
     ];
 
@@ -36,7 +39,23 @@ class Product extends Model
             'selling_price' => 'decimal:2',
             'purchase_price' => 'decimal:2',
             'commission' => 'decimal:2',
+            'display_click_count' => 'integer',
+            'display_sales_count' => 'integer',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Product $product): void {
+            if ($product->display_click_count !== null && $product->display_sales_count !== null) {
+                return;
+            }
+
+            $stats = ProductDisplayStats::randomPair();
+
+            $product->display_click_count ??= $stats['clicks'];
+            $product->display_sales_count ??= $stats['sales'];
+        });
     }
 
     public function category(): BelongsTo
