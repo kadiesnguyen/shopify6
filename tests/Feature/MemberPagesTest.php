@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WithdrawalMethod;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -1095,8 +1096,8 @@ class MemberPagesTest extends TestCase
 
         $path = $this->member->fresh()->avatar;
         $this->assertNotNull($path);
-        $this->assertStringStartsWith('uploads/avatars/', $path);
-        $this->assertFileExists(public_path($path));
+        $this->assertStringStartsWith('avatars/', $path);
+        $this->assertTrue(Storage::disk('public')->exists($path));
     }
 
     public function test_member_avatar_upload_syncs_shop_logo_when_user_has_shop(): void

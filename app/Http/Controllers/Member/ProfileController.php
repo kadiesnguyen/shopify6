@@ -29,18 +29,11 @@ class ProfileController extends Controller
         $file = $request->file('avatar');
         $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg';
         $filename = now()->format('YmdHis').'-'.Str::lower(Str::random(8)).'.'.$extension;
-        $relativeDir = 'uploads/avatars/'.$user->id;
-        $absoluteDir = public_path($relativeDir);
-
-        if (! is_dir($absoluteDir)) {
-            mkdir($absoluteDir, 0755, true);
-        }
+        $directory = 'avatars/'.$user->id;
 
         $this->deleteAvatarFile($user->avatar);
 
-        $file->move($absoluteDir, $filename);
-
-        $avatarPath = $relativeDir.'/'.$filename;
+        $avatarPath = Storage::disk('public')->putFileAs($directory, $file, $filename);
 
         $user->update(['avatar' => $avatarPath]);
 

@@ -91,8 +91,9 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-chown -R www:www storage bootstrap/cache 2>/dev/null || true
-chmod -R ug+rwx storage bootstrap/cache 2>/dev/null || true
+mkdir -p public/uploads/avatars
+chown -R www:www storage bootstrap/cache public/uploads 2>/dev/null || true
+chmod -R ug+rwx storage bootstrap/cache public/uploads 2>/dev/null || true
 
 echo "Remote app updated at $(pwd) @ $(git -c safe.directory=$REMOTE_PATH rev-parse --short HEAD)"
 REMOTE
