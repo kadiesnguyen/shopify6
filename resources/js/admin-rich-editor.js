@@ -87,6 +87,9 @@ function initRichEditors() {
                         image: createImageHandler(null, uploadUrl),
                     },
                 },
+                clipboard: {
+                    matchVisual: false,
+                },
             },
         });
 

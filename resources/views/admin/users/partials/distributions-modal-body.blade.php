@@ -5,6 +5,10 @@
     );
 @endphp
 
+<p class="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+    {{ __('admin.users.distributions.featured_hint') }}
+</p>
+
 <form method="GET" class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
     <input type="hidden" name="show_distributions" value="{{ $modalUser->id }}">
     @foreach (['q', 'role', 'shop_application'] as $field)
@@ -55,13 +59,17 @@
                 <th class="px-3 py-2 text-left">{{ __('admin.columns.purchase_price') }}</th>
                 <th class="px-3 py-2 text-left">{{ __('admin.columns.selling_price') }}</th>
                 <th class="px-3 py-2 text-left">{{ __('admin.columns.commission') }}</th>
+                <th class="px-3 py-2 text-left">{{ __('admin.columns.featured') }}</th>
                 <th class="px-3 py-2 text-left">{{ __('admin.columns.created_at') }}</th>
                 <th class="px-3 py-2 text-left">{{ __('admin.columns.actions') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
             @forelse ($distributions as $index => $distribution)
-                @php($product = $distribution->product)
+                @php
+                    $product = $distribution->product;
+                    $featuredToggleUrl = route('admin.users.distributions.toggle-featured', [$modalUser, $distribution]).'?'.http_build_query(array_filter($distQuery));
+                @endphp
                 <tr x-data="{ editing: false }">
                     <td class="px-3 py-2">{{ ($distributions->firstItem() ?? 1) + $index }}</td>
                     <td class="px-3 py-2">
@@ -77,6 +85,14 @@
                     <td class="px-3 py-2">
                         ${{ number_format($distribution->commission, 2) }}
                         <span class="text-xs text-slate-500">({{ $distribution->commission_type === 'percent' ? '%' : __('admin.users.distributions.commission_type_fixed') }})</span>
+                    </td>
+                    <td class="px-3 py-2">
+                        <x-admin.power-toggle
+                            :enabled="$distribution->is_featured"
+                            :action="$featuredToggleUrl"
+                            :on-label="__('admin.methods.yes')"
+                            :off-label="__('admin.methods.no')"
+                        />
                     </td>
                     <td class="px-3 py-2 text-slate-500">{{ $distribution->created_at->format('d/m/Y H:i') }}</td>
                     <td class="px-3 py-2">
@@ -104,7 +120,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="px-3 py-8 text-center text-slate-500">{{ __('admin.users.distributions.empty') }}</td>
+                    <td colspan="9" class="px-3 py-8 text-center text-slate-500">{{ __('admin.users.distributions.empty') }}</td>
                 </tr>
             @endforelse
         </tbody>

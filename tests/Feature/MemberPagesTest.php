@@ -483,6 +483,8 @@ class MemberPagesTest extends TestCase
             'commission' => 1,
             'commission_type' => 'fixed',
             'status' => 'available',
+            'is_featured' => true,
+            'featured_at' => now(),
         ]);
 
         $this->actingAs($this->member)
@@ -552,6 +554,8 @@ class MemberPagesTest extends TestCase
             'commission' => 10,
             'commission_type' => 'fixed',
             'status' => ProductDistribution::STATUS_AVAILABLE,
+            'is_featured' => true,
+            'featured_at' => now(),
             'created_at' => now()->subMinutes(5),
             'updated_at' => now()->subMinutes(5),
         ]);
@@ -621,6 +625,8 @@ class MemberPagesTest extends TestCase
             'commission' => 5,
             'commission_type' => 'fixed',
             'status' => ProductDistribution::STATUS_AVAILABLE,
+            'is_featured' => true,
+            'featured_at' => now()->subDay(),
             'created_at' => now()->subDays(3),
             'updated_at' => now()->subDays(3),
         ]);
@@ -633,6 +639,8 @@ class MemberPagesTest extends TestCase
             'commission' => 6,
             'commission_type' => 'fixed',
             'status' => ProductDistribution::STATUS_AVAILABLE,
+            'is_featured' => true,
+            'featured_at' => now(),
             'created_at' => now()->subHour(),
             'updated_at' => now()->subHour(),
         ]);
@@ -730,10 +738,9 @@ class MemberPagesTest extends TestCase
         );
         $shopItem = collect($shopResponse->json('items'))->firstWhere('value', 'Needle Portal Shop');
         $this->assertNotNull($shopItem['id'] ?? null);
-        $this->assertNotNull($shopItem['meta'] ?? null);
 
         $this->actingAs($this->member)
-            ->getJson('/home/search/suggestions?q=SMTEST001&target=shop&context=portal')
+            ->getJson('/home/search/suggestions?q=Tesst&target=shop&context=portal')
             ->assertOk()
             ->assertJsonFragment(['value' => 'Tesst Empty Shop']);
 

@@ -10,8 +10,6 @@ class SiteSettings
 {
     public const CACHE_KEY = 'site_settings.all';
 
-    public const KEY_PORTAL_HOME_MARQUEE = 'portal_home_marquee_text';
-
     public const KEY_PROFILE_MARQUEE = 'profile_marquee_text';
 
     public const KEY_WEBSITE_TITLE = 'website_title';
@@ -23,6 +21,10 @@ class SiteSettings
     public const KEY_SEO_DESCRIPTION = 'seo_description';
 
     public const KEY_SEO_OG_IMAGE = 'seo_og_image_path';
+
+    public const KEY_CHAT_SUPPORT_TITLE = 'chat_support_title';
+
+    public const KEY_CHAT_SUPPORT_AVATAR = 'chat_support_avatar_path';
 
     /** @return array<string, string|null> */
     public static function all(): array
@@ -86,14 +88,31 @@ class SiteSettings
         return self::assetUrl(self::KEY_SEO_OG_IMAGE, 'favicon.ico');
     }
 
-    public static function portalHomeMarqueeText(): string
-    {
-        return self::get(self::KEY_PORTAL_HOME_MARQUEE) ?? __('landing.marquee');
-    }
-
     public static function profileMarqueeText(): string
     {
         return self::get(self::KEY_PROFILE_MARQUEE) ?? __('member.my.payment_warning_long');
+    }
+
+    public static function chatSupportTitle(): string
+    {
+        $custom = self::get(self::KEY_CHAT_SUPPORT_TITLE);
+
+        if (filled($custom)) {
+            return $custom;
+        }
+
+        return __('chat.support_title', ['brand' => self::websiteTitle()]);
+    }
+
+    public static function chatSupportAvatarUrl(): ?string
+    {
+        $path = self::get(self::KEY_CHAT_SUPPORT_AVATAR);
+
+        if ($path === null || $path === '') {
+            return null;
+        }
+
+        return Storage::disk('public')->url($path);
     }
 
     public static function assetUrl(string $key, string $fallback): string

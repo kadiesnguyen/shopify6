@@ -89,9 +89,16 @@ class ProductVisibilityTest extends TestCase
             ->assertDontSee('Visible Product');
     }
 
-    public function test_member_sees_products_after_shop_distribution(): void
+    public function test_member_sees_products_after_featured_shop_distribution(): void
     {
         $this->distributeAsShop($this->shopUser);
+
+        $this->actingAs($this->member)
+            ->get('/home')
+            ->assertOk()
+            ->assertDontSee('Visible Product');
+
+        $this->markDistributionFeatured($this->shopUser);
 
         $this->actingAs($this->member)
             ->get('/home')
@@ -99,12 +106,44 @@ class ProductVisibilityTest extends TestCase
             ->assertSee('Visible Product');
     }
 
-    public function test_shop_sees_products_distributed_by_other_shops(): void
+    public function test_member_does_not_see_non_featured_products_on_default_listing(): void
     {
         $this->distributeAsShop($this->shopUser);
 
+        $this->actingAs($this->member)
+            ->get('/home/products')
+            ->assertOk()
+            ->assertDontSee('Visible Product');
+    }
+
+    public function test_member_sees_products_after_shop_distribution(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+        $this->markDistributionFeatured($this->shopUser);
+
+        $this->actingAs($this->member)
+            ->get('/home')
+            ->assertOk()
+            ->assertSee('Visible Product');
+    }
+
+    public function test_shop_sees_featured_shop_products_on_portal(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+        $this->markDistributionFeatured($this->shopUser);
+
         $this->actingAs($this->otherShopUser)
             ->get('/home')
+            ->assertOk()
+            ->assertSee('Visible Product');
+    }
+
+    public function test_search_still_finds_non_featured_shop_products(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+
+        $this->actingAs($this->member)
+            ->get('/home/products?q=Visible')
             ->assertOk()
             ->assertSee('Visible Product');
     }
@@ -207,6 +246,7 @@ class ProductVisibilityTest extends TestCase
     public function test_products_page_returns_json_for_infinite_scroll(): void
     {
         $this->distributeAsShop($this->shopUser);
+        $this->markDistributionFeatured($this->shopUser);
 
         $categoryId = (int) $this->product->category_id;
 
@@ -230,6 +270,8 @@ class ProductVisibilityTest extends TestCase
                 'commission' => $extra->commission,
                 'commission_type' => 'fixed',
                 'status' => ProductDistribution::STATUS_AVAILABLE,
+                'is_featured' => true,
+                'featured_at' => now(),
             ]);
         }
 
@@ -254,5 +296,15 @@ class ProductVisibilityTest extends TestCase
             'commission_type' => 'fixed',
             'status' => ProductDistribution::STATUS_AVAILABLE,
         ]);
+    }
+
+    private function markDistributionFeatured(User $shopUser): void
+    {
+        ProductDistribution::query()
+            ->where('user_id', $shopUser->id)
+            ->update([
+                'is_featured' => true,
+                'featured_at' => now(),
+            ]);
     }
 }

@@ -30,8 +30,8 @@ class HomeController extends Controller
         $hasSearchFilters = $keyword !== '' || $shopKeyword !== '' || $shopId > 0;
 
         if (! $hasSearchFilters) {
-            $products = ProductBuyableQuery::portalHomeProducts(self::HOME_PRODUCT_LIMIT);
-            $this->portalProductDisplay->applyShopLabels($products);
+            $products = ProductBuyableQuery::portalFeaturedProducts(self::HOME_PRODUCT_LIMIT);
+            $this->portalProductDisplay->applyShopLabels($products, featuredOnly: true);
         } else {
             $productQuery = ProductBuyableQuery::forPortal()
                 ->when($keyword !== '', fn ($query) => $query->where('name', 'like', "%{$keyword}%"))

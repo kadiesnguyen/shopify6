@@ -21,8 +21,9 @@
         @endforeach
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table class="min-w-full text-sm">
+    <div class="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <x-ui.responsive-table>
+        <table class="w-full text-sm">
             <thead class="bg-slate-50">
                 <tr>
                     <th class="px-4 py-3 text-left">{{ __('admin.columns.code') }}</th>
@@ -52,6 +53,7 @@
                 @endforelse
             </tbody>
         </table>
+        </x-ui.responsive-table>
         <div class="px-4 py-3">{{ $codes->links() }}</div>
     </div>
 

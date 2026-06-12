@@ -17,9 +17,9 @@
 
     <x-admin.search :placeholder="__('admin.products.search')" />
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200 text-sm">
+    <div class="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <x-ui.responsive-table>
+            <table class="w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50">
                     <tr>
                         @foreach (['image', 'name', 'category', 'selling_price', 'purchase_price', 'commission', 'stock', 'actions'] as $col)
@@ -37,8 +37,8 @@
                                     <div class="size-10 rounded bg-slate-100"></div>
                                 @endif
                             </td>
-                            <td class="px-4 py-3">{{ $product->name }}</td>
-                            <td class="px-4 py-3">{{ $product->category?->name ?? '—' }}</td>
+                            <td class="px-4 py-3"><span class="cell-clamp-2" title="{{ $product->name }}">{{ $product->name }}</span></td>
+                            <td class="px-4 py-3"><span class="cell-truncate">{{ $product->category?->name ?? '—' }}</span></td>
                             <td class="px-4 py-3">${{ number_format($product->selling_price, 2) }}</td>
                             <td class="px-4 py-3">${{ number_format($product->purchase_price, 2) }}</td>
                             <td class="px-4 py-3">
@@ -68,7 +68,7 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
+        </x-ui.responsive-table>
         <div class="px-4 py-3">{{ $products->links() }}</div>
     </div>
 

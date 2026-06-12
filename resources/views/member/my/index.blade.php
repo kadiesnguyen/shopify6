@@ -19,7 +19,7 @@
                     <img src="{{ $profileImageUrl }}" alt="" class="size-14 rounded-full border-2 border-white/50 object-cover">
                 @else
                     <img
-                        src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode($user->user_code ?? $user->id) }}"
+                        src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ urlencode((string) $user->id) }}"
                         alt=""
                         class="size-14 rounded-full border-2 border-white/50 object-cover"
                     >
@@ -27,7 +27,6 @@
                 <div class="min-w-0">
                     <p class="truncate font-medium">{{ $user->shop?->name ?? $user->name }}</p>
                     <p class="truncate text-sm text-white/80">{{ $user->phone ?: $user->email }}</p>
-                    <p class="text-xs text-white/60">ID: {{ $user->user_code ?? str_pad((string) $user->id, 6, '0', STR_PAD_LEFT) }}</p>
                 </div>
             </div>
         </div>

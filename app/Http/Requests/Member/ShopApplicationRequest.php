@@ -15,8 +15,16 @@ class ShopApplicationRequest extends FormRequest
 
     public function rules(): array
     {
+        $shop = $this->user()?->shop;
+        $isUpgrade = $shop?->isPersonal() === true;
+
         return [
-            'seller_type' => ['required', Rule::in([ShopApplication::TYPE_PERSONAL, ShopApplication::TYPE_BUSINESS])],
+            'seller_type' => [
+                'required',
+                Rule::in($isUpgrade
+                    ? [ShopApplication::TYPE_BUSINESS]
+                    : [ShopApplication::TYPE_PERSONAL, ShopApplication::TYPE_BUSINESS]),
+            ],
             'shop_name' => ['required', 'string', 'max:120'],
             'logo' => ['nullable', 'image', 'max:2048'],
             'address' => ['required', 'string', 'max:255'],

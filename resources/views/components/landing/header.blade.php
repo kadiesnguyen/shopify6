@@ -80,11 +80,7 @@
         class="border-t border-slate-200 bg-white md:hidden"
     >
         <nav class="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3 text-sm">
-            <a href="{{ route('landing.home') }}" class="rounded-lg px-3 py-2 hover:bg-slate-50">{{ __('landing.nav.home') }}</a>
-            <a href="{{ route('landing.news.index') }}" class="rounded-lg px-3 py-2 hover:bg-slate-50">{{ __('landing.nav.news') }}</a>
-            <a href="{{ route('landing.about') }}" class="rounded-lg px-3 py-2 hover:bg-slate-50">{{ __('landing.nav.about') }}</a>
-            <a href="{{ route('landing.contact') }}" class="rounded-lg px-3 py-2 hover:bg-slate-50">{{ __('landing.nav.contact') }}</a>
-            <div class="mt-2 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+            <div class="flex flex-wrap gap-2">
                 @foreach ($locales as $code => $locale)
                     <a href="{{ route('locale.switch', $code) }}" class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs @if($currentLocale === $code) border-brand text-brand @else border-slate-200 @endif">
                         @if (! empty($locale['flag']))
@@ -94,7 +90,7 @@
                     </a>
                 @endforeach
             </div>
-            <a href="{{ route('auth.login') }}" class="mt-2 rounded-lg bg-brand px-4 py-2.5 text-center font-semibold text-white">{{ __('messages.login') }}</a>
+            <a href="{{ route('auth.login') }}" class="rounded-lg bg-brand px-4 py-2.5 text-center font-semibold text-white">{{ __('messages.login') }}</a>
             <a href="{{ route('auth.register') }}" class="rounded-lg border border-brand px-4 py-2.5 text-center font-semibold text-brand">{{ __('messages.register') }}</a>
         </nav>
     </div>

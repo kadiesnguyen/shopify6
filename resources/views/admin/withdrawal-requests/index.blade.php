@@ -16,8 +16,9 @@
         </select>
     </form>
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table class="min-w-full text-sm">
+    <div class="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <x-ui.responsive-table>
+        <table class="w-full text-sm">
             <thead class="bg-slate-50">
                 <tr>
                     <th class="px-4 py-3 text-left">{{ __('admin.columns.user') }}</th>
@@ -31,11 +32,11 @@
             <tbody class="divide-y divide-slate-100">
                 @forelse ($requests as $item)
                     <tr x-data="{ open: false }">
-                        <td class="px-4 py-3">
-                            <div>{{ $item->user?->email }}</div>
-                            <div class="text-xs text-slate-500">{{ $item->user?->phone }}</div>
+                        <td class="px-3 py-2.5">
+                            <span class="cell-truncate font-medium" title="{{ $item->user?->email }}">{{ $item->user?->email }}</span>
+                            <span class="cell-truncate text-xs text-slate-500">{{ $item->user?->phone }}</span>
                         </td>
-                        <td class="px-4 py-3">{{ $item->withdrawalMethod?->name ?? '—' }}</td>
+                        <td class="px-3 py-2.5"><span class="cell-truncate">{{ $item->withdrawalMethod?->name ?? '—' }}</span></td>
                         <td class="px-4 py-3 font-medium">${{ number_format($item->amount, 2) }}</td>
                         <td class="px-4 py-3">
                             <span @class([
@@ -86,6 +87,7 @@
                 @endforelse
             </tbody>
         </table>
+        </x-ui.responsive-table>
         <div class="px-4 py-3">{{ $requests->links() }}</div>
     </div>
 @endsection

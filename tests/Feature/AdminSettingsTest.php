@@ -20,8 +20,8 @@ class AdminSettingsTest extends TestCase
     {
         parent::setUp();
 
-        Role::create(['name' => 'admin']);
-        Role::create(['name' => 'member']);
+        Role::findOrCreate('admin');
+        Role::findOrCreate('member');
 
         $this->admin = User::factory()->create(['status' => 'active']);
         $this->admin->assignRole('admin');
@@ -33,38 +33,23 @@ class AdminSettingsTest extends TestCase
             ->get('/admin/settings')
             ->assertOk()
             ->assertSee(__('admin.menu.settings'))
-            ->assertSee(__('admin.settings.portal_home_marquee'))
-            ->assertSee(__('admin.settings.tabs.landing_pages'));
+            ->assertSee(__('admin.settings.profile_marquee'))
+            ->assertSee(__('admin.settings.tabs.about'));
     }
 
     public function test_admin_can_update_text_settings(): void
     {
         $this->actingAs($this->admin)
             ->put('/admin/settings', [
-                'portal_home_marquee_text' => 'Thông báo trang chủ test',
                 'profile_marquee_text' => 'Cảnh báo profile test',
                 'website_title' => 'Shopefy Test',
                 'seo_description' => 'Mô tả SEO test',
             ])
             ->assertRedirect(route('admin.settings.edit', ['tab' => 'general']));
 
-        $this->assertSame('Thông báo trang chủ test', SiteSettings::portalHomeMarqueeText());
         $this->assertSame('Cảnh báo profile test', SiteSettings::profileMarqueeText());
         $this->assertSame('Shopefy Test', SiteSettings::websiteTitle());
         $this->assertSame('Mô tả SEO test', SiteSettings::seoDescription());
-    }
-
-    public function test_portal_home_shows_custom_marquee(): void
-    {
-        SiteSettings::set(SiteSettings::KEY_PORTAL_HOME_MARQUEE, 'Marquee portal unique text');
-
-        $member = User::factory()->create(['status' => 'active']);
-        $member->assignRole('member');
-
-        $this->actingAs($member)
-            ->get('/home')
-            ->assertOk()
-            ->assertSee('Marquee portal unique text');
     }
 
     public function test_profile_page_shows_custom_marquee(): void
@@ -123,26 +108,25 @@ class AdminSettingsTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_admin_can_update_landing_page_content(): void
+    public function test_admin_can_update_about_content(): void
     {
         $this->seed(\Database\Seeders\CmsSeeder::class);
 
         $this->actingAs($this->admin)
             ->put('/admin/settings', [
                 'about_content_vi' => '<h2>Giá trị test</h2><p>Nội dung <strong>giới thiệu</strong>.</p>',
-                'contact_content_vi' => '<p>Địa chỉ liên hệ test</p>',
-                'active_tab' => 'pages',
+                'active_tab' => 'about',
             ])
-            ->assertRedirect(route('admin.settings.edit', ['tab' => 'pages']));
+            ->assertRedirect(route('admin.settings.edit', ['tab' => 'about']));
 
-        $this->get('/gioi-thieu')
+        $member = User::factory()->create(['status' => 'active']);
+        $member->assignRole('member');
+
+        $this->actingAs($member)
+            ->get(route('member.contract.show'))
             ->assertOk()
             ->assertSee('Giá trị test')
             ->assertSee('Nội dung <strong>giới thiệu</strong>', false);
-
-        $this->get('/lien-he')
-            ->assertOk()
-            ->assertSee('Địa chỉ liên hệ test');
     }
 
     public function test_admin_can_upload_cms_image(): void

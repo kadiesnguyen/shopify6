@@ -29,25 +29,31 @@ class ProductController extends Controller
         $shopFilter = $this->resolveShopFilter($shopId, $shopKeyword);
         $shopUserIds = $shopFilter['user_ids'];
         $selectedShop = $shopFilter['selected_shop'];
+        $hasSearchFilters = $keyword !== '' || $shopKeyword !== '' || $shopId > 0;
 
-        $productQuery = ProductBuyableQuery::forPortal()
-            ->when($keyword !== '', fn ($query) => $query->where('name', 'like', "%{$keyword}%"))
-            ->when($shopUserIds !== [], function ($query) use ($shopUserIds): void {
-                $query->whereHas('distributions', function ($distributionQuery) use ($shopUserIds): void {
-                    $distributionQuery
-                        ->available()
-                        ->whereIn('user_id', $shopUserIds);
+        if (! $hasSearchFilters) {
+            $products = ProductBuyableQuery::paginateFeaturedPortalProducts(12)->withQueryString();
+            $this->portalProductDisplay->applyShopLabels($products->getCollection(), featuredOnly: true);
+        } else {
+            $productQuery = ProductBuyableQuery::forPortal()
+                ->when($keyword !== '', fn ($query) => $query->where('name', 'like', "%{$keyword}%"))
+                ->when($shopUserIds !== [], function ($query) use ($shopUserIds): void {
+                    $query->whereHas('distributions', function ($distributionQuery) use ($shopUserIds): void {
+                        $distributionQuery
+                            ->available()
+                            ->whereIn('user_id', $shopUserIds);
+                    });
+                })
+                ->when($shopKeyword !== '' && $shopUserIds === [], function ($query): void {
+                    $query->whereRaw('1 = 0');
                 });
-            })
-            ->when($shopKeyword !== '' && $shopUserIds === [], function ($query): void {
-                $query->whereRaw('1 = 0');
-            });
 
-        $products = ProductBuyableQuery::orderByLatestDistribution($productQuery, $shopUserIds)
-            ->paginate(12)
-            ->withQueryString();
+            $products = ProductBuyableQuery::orderByLatestDistribution($productQuery, $shopUserIds)
+                ->paginate(12)
+                ->withQueryString();
 
-        $this->portalProductDisplay->applyShopLabels($products->getCollection(), $shopUserIds, $selectedShop);
+            $this->portalProductDisplay->applyShopLabels($products->getCollection(), $shopUserIds, $selectedShop);
+        }
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([

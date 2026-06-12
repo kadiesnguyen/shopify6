@@ -36,4 +36,12 @@ return [
     'back_to_list' => 'Danh sách',
     'user_info' => 'Thông tin',
     'loading' => 'Đang tải...',
+    'settings_title' => 'Cài đặt khung chat CSKH',
+    'settings_subtitle' => 'Ảnh đại diện và tên hiển thị trên khung chat phía user/guest.',
+    'support_display_name' => 'Tên hiển thị CSKH',
+    'support_display_name_hint' => 'Để trống sẽ dùng mặc định: :default',
+    'support_avatar' => 'Ảnh đại diện CSKH',
+    'remove_support_avatar' => 'Xóa ảnh đại diện',
+    'save_settings' => 'Lưu cài đặt',
+    'settings_saved' => 'Đã lưu cài đặt chat CSKH.',
 ];

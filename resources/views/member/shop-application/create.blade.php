@@ -1,34 +1,48 @@
 @extends('layouts.member')
 
-@section('title', __('member.shop_application.title'))
+@section('title', $mode === \App\Models\ShopApplication::KIND_UPGRADE ? __('member.shop_application.upgrade_title') : __('member.shop_application.title'))
 @section('hide_portal_header', '1')
 @section('full_bleed', '1')
 
 @section('content')
+    @php
+        $isUpgrade = $mode === \App\Models\ShopApplication::KIND_UPGRADE;
+        $defaultType = old('seller_type', $defaultSellerType);
+    @endphp
+
     <div
         class="min-h-screen bg-gray-50 pb-8"
-        x-data="{ step: 1, sellerType: '{{ old('seller_type', 'personal') }}' }"
+        x-data="{ step: {{ $isUpgrade ? 2 : 1 }}, sellerType: '{{ $defaultType }}' }"
     >
         <header class="sticky top-0 z-10 flex items-center bg-black px-4 py-3 text-white">
-            <a
-                href="{{ route('member.home') }}"
-                class="flex items-center gap-1.5"
-                x-show="step === 1"
-            >
-                <x-member.icon name="chevron-left" class="size-5" />
-                <span class="text-sm">{{ __('member.shop_application.back_home') }}</span>
-            </a>
-            <button
-                type="button"
-                class="flex items-center gap-1.5"
-                x-show="step === 2"
-                x-cloak
-                @click="step = 1"
-            >
-                <x-member.icon name="chevron-left" class="size-5" />
-                <span class="text-sm">{{ __('member.shop_application.back_type') }}</span>
-            </button>
-            <h1 class="absolute left-1/2 -translate-x-1/2 text-base font-semibold">{{ __('member.shop_application.title') }}</h1>
+            @if ($isUpgrade)
+                <a href="{{ route('member.home') }}" class="flex items-center gap-1.5">
+                    <x-member.icon name="chevron-left" class="size-5" />
+                    <span class="text-sm">{{ __('member.shop_application.back_home') }}</span>
+                </a>
+            @else
+                <a
+                    href="{{ route('member.home') }}"
+                    class="flex items-center gap-1.5"
+                    x-show="step === 1"
+                >
+                    <x-member.icon name="chevron-left" class="size-5" />
+                    <span class="text-sm">{{ __('member.shop_application.back_home') }}</span>
+                </a>
+                <button
+                    type="button"
+                    class="flex items-center gap-1.5"
+                    x-show="step === 2"
+                    x-cloak
+                    @click="step = 1"
+                >
+                    <x-member.icon name="chevron-left" class="size-5" />
+                    <span class="text-sm">{{ __('member.shop_application.back_type') }}</span>
+                </button>
+            @endif
+            <h1 class="absolute left-1/2 -translate-x-1/2 text-base font-semibold">
+                {{ $isUpgrade ? __('member.shop_application.upgrade_title') : __('member.shop_application.title') }}
+            </h1>
         </header>
 
         @if (session('status'))
@@ -37,6 +51,13 @@
             </div>
         @endif
 
+        @if ($isUpgrade)
+            <div class="mx-4 mt-4 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-900">
+                {{ __('member.shop_application.upgrade_intro') }}
+            </div>
+        @endif
+
+        @unless ($isUpgrade)
         <div x-show="step === 1" class="px-4 pt-6">
             <p class="mb-4 text-sm font-medium text-gray-900">{{ __('member.shop_application.choose_type') }}</p>
 
@@ -65,10 +86,10 @@
                 {{ __('member.shop_application.continue') }}
             </button>
         </div>
+        @endunless
 
         <form
-            x-show="step === 2"
-            x-cloak
+            @unless($isUpgrade) x-show="step === 2" x-cloak @endunless
             method="POST"
             action="{{ route('member.shop-application.store') }}"
             enctype="multipart/form-data"
@@ -85,15 +106,15 @@
                 </div>
 
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <input name="shop_name" value="{{ old('shop_name') }}" required placeholder="{{ __('member.shop_application.shop_name_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
+                    <input name="shop_name" value="{{ old('shop_name', $shop?->name) }}" required placeholder="{{ __('member.shop_application.shop_name_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
                     @error('shop_name')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <input name="address" value="{{ old('address') }}" required placeholder="{{ __('member.shop_application.address_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
+                    <input name="address" value="{{ old('address', $shop?->address) }}" required placeholder="{{ __('member.shop_application.address_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
                     @error('address')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <input name="country" value="{{ old('country') }}" required placeholder="{{ __('member.shop_application.country_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
+                    <input name="country" value="{{ old('country', $shop?->country) }}" required placeholder="{{ __('member.shop_application.country_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
                     @error('country')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
@@ -109,16 +130,16 @@
                     @error('referral_code')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <input name="id_number" value="{{ old('id_number') }}" required placeholder="{{ __('member.shop_application.id_number_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
+                    <input name="id_number" value="{{ old('id_number', $shop?->id_number) }}" required placeholder="{{ $isUpgrade ? __('member.shop_application.business_license_placeholder') : __('member.shop_application.id_number_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
                     @error('id_number')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <label class="mb-2 block text-sm font-medium text-gray-900">{{ __('member.shop_application.id_front') }}</label>
+                    <label class="mb-2 block text-sm font-medium text-gray-900">{{ $isUpgrade ? __('member.shop_application.business_license_front') : __('member.shop_application.id_front') }}</label>
                     <input type="file" name="id_front" accept="image/*" required class="w-full text-sm text-gray-600">
                     @error('id_front')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <label class="mb-2 block text-sm font-medium text-gray-900">{{ __('member.shop_application.id_back') }}</label>
+                    <label class="mb-2 block text-sm font-medium text-gray-900">{{ $isUpgrade ? __('member.shop_application.business_license_back') : __('member.shop_application.id_back') }}</label>
                     <input type="file" name="id_back" accept="image/*" required class="w-full text-sm text-gray-600">
                     @error('id_back')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
@@ -137,7 +158,7 @@
 
             <div class="p-4">
                 <button type="submit" class="w-full rounded-lg bg-emerald-600 py-3 text-sm font-semibold text-white hover:bg-emerald-700">
-                    {{ __('member.shop_application.submit') }}
+                    {{ $isUpgrade ? __('member.shop_application.upgrade_submit') : __('member.shop_application.submit') }}
                 </button>
             </div>
         </form>

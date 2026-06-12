@@ -5,8 +5,9 @@
 @section('content')
     <x-admin.page-header :title="__('admin.requests.password_title')" />
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table class="min-w-full text-sm">
+    <div class="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <x-ui.responsive-table>
+        <table class="w-full text-sm">
             <thead class="bg-slate-50"><tr><th class="px-4 py-3 text-left">User</th><th class="px-4 py-3 text-left">Type</th><th class="px-4 py-3 text-left">Status</th><th class="px-4 py-3">Actions</th></tr></thead>
             <tbody class="divide-y divide-slate-100">
                 @forelse ($requests as $item)
@@ -26,6 +27,7 @@
                 @endforelse
             </tbody>
         </table>
+        </x-ui.responsive-table>
         <div class="px-4 py-3">{{ $requests->links() }}</div>
     </div>
 @endsection

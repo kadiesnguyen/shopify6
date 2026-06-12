@@ -2,7 +2,7 @@
     $tabs = [
         ['route' => 'member.home', 'label' => __('member.nav.home'), 'icon' => 'home', 'patterns' => ['member.home']],
         ['route' => 'member.products.index', 'label' => __('member.nav.products'), 'icon' => 'layout-grid', 'patterns' => ['member.products.*']],
-        ['route' => 'member.chat.index', 'label' => __('member.nav.support'), 'icon' => 'headset', 'patterns' => ['member.chat.*']],
+        ['route' => 'member.chat.index', 'label' => __('member.nav.support'), 'icon' => 'chat-bubble', 'patterns' => ['member.chat.*']],
         ['route' => 'member.orders.index', 'label' => __('member.nav.orders'), 'icon' => 'clipboard-list', 'patterns' => ['member.orders.*', 'member.seller.orders.*']],
         ['route' => 'member.my.index', 'label' => __('member.nav.my'), 'icon' => 'user', 'patterns' => ['member.my.*', 'member.profile.*', 'member.shipping.*', 'member.wallet.*', 'member.promotions.*', 'member.notifications.*']],
     ];

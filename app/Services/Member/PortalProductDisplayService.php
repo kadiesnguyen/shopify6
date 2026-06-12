@@ -10,8 +10,12 @@ use Illuminate\Support\Collection;
 class PortalProductDisplayService
 {
     /** @param  array<int>  $shopUserIds */
-    public function applyShopLabels(Collection $products, array $shopUserIds = [], ?Shop $selectedShop = null): void
-    {
+    public function applyShopLabels(
+        Collection $products,
+        array $shopUserIds = [],
+        ?Shop $selectedShop = null,
+        bool $featuredOnly = false,
+    ): void {
         if ($products->isEmpty()) {
             return;
         }
@@ -22,10 +26,14 @@ class PortalProductDisplayService
             return;
         }
 
-        $latestDistributions = $this->latestDistributionsFor($products->pluck('id')->all(), $shopUserIds);
+        $distributions = $this->resolveDisplayDistributions(
+            $products->pluck('id')->all(),
+            $shopUserIds,
+            $featuredOnly,
+        );
 
-        $products->each(function (Product $product) use ($latestDistributions): void {
-            $distribution = $latestDistributions->get($product->id);
+        $products->each(function (Product $product) use ($distributions): void {
+            $distribution = $distributions->get($product->id);
 
             $this->applyDistributionShop($product, $distribution?->user?->shop);
         });
@@ -46,8 +54,11 @@ class PortalProductDisplayService
     /** @param  array<int>  $productIds
      * @param  array<int>  $shopUserIds
      * @return Collection<int, ProductDistribution> */
-    private function latestDistributionsFor(array $productIds, array $shopUserIds = []): Collection
-    {
+    private function resolveDisplayDistributions(
+        array $productIds,
+        array $shopUserIds = [],
+        bool $featuredOnly = false,
+    ): Collection {
         if ($productIds === []) {
             return collect();
         }
@@ -55,9 +66,14 @@ class PortalProductDisplayService
         $distributions = ProductDistribution::query()
             ->available()
             ->whereIn('product_id', $productIds)
+            ->when($featuredOnly, fn ($query) => $query->where('is_featured', true))
             ->when($shopUserIds !== [], fn ($query) => $query->whereIn('user_id', $shopUserIds))
             ->with(['user.shop', 'user:id,avatar'])
-            ->orderByDesc('created_at')
+            ->when(
+                $featuredOnly,
+                fn ($query) => $query->orderByDesc('featured_at')->orderByDesc('created_at'),
+                fn ($query) => $query->orderByDesc('created_at'),
+            )
             ->orderByDesc('id')
             ->get();
 

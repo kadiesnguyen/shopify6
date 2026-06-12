@@ -16,6 +16,15 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    private const MODAL_QUERY_KEYS = [
+        'show_info',
+        'show_edit',
+        'show_balance',
+        'show_deposit',
+        'show_password',
+        'show_payment_password',
+        'show_distributions',
+    ];
     public function __construct(private readonly AdminUserUpdateService $userUpdates) {}
     public function index(Request $request): View
     {
@@ -26,8 +35,7 @@ class UserController extends Controller
                 $query->where(function ($q) use ($search): void {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%")
-                        ->orWhere('user_code', 'like', "%{$search}%");
+                        ->orWhere('phone', 'like', "%{$search}%");
                 });
             })
             ->when($request->filled('role'), fn ($q) => $q->role($request->string('role')))
@@ -165,6 +173,31 @@ class UserController extends Controller
             request()->only(['q', 'role', 'shop_application']),
             ['show_edit' => $user->id],
         ));
+    }
+
+    public function show(User $user): RedirectResponse
+    {
+        abort_if($user->isAdmin(), 404);
+
+        return redirect()->route('admin.users.index', $this->modalRedirectParams($user));
+    }
+
+    /** @return array<string, mixed> */
+    private function modalRedirectParams(User $user): array
+    {
+        $params = request()->only(['q', 'role', 'shop_application']);
+
+        foreach (self::MODAL_QUERY_KEYS as $key) {
+            if (request()->has($key)) {
+                $params[$key] = $user->id;
+
+                return $params;
+            }
+        }
+
+        $params['show_edit'] = $user->id;
+
+        return $params;
     }
 
     public function update(UserRequest $request, User $user): RedirectResponse

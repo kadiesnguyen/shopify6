@@ -4,7 +4,64 @@
 @section('admin_chat_page', '1')
 
 @section('content')
-    <div
+    <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+        <section class="shrink-0 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+            <form
+                method="POST"
+                action="{{ route('admin.chat.settings.update') }}"
+                enctype="multipart/form-data"
+                class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
+            >
+                @csrf
+
+                <div class="flex min-w-0 items-center gap-3 sm:w-auto">
+                    <div class="size-12 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
+                        @if ($chatSupportAvatarUrl)
+                            <img src="{{ $chatSupportAvatarUrl }}" alt="" class="size-full object-cover">
+                        @else
+                            <div class="flex size-full items-center justify-center text-[10px] text-slate-400">CSKH</div>
+                        @endif
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs font-medium text-slate-700">{{ __('chat.support_avatar') }}</p>
+                        <label class="mt-1 inline-flex cursor-pointer items-center rounded-md bg-brand px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-brand-dark">
+                            {{ __('admin.users.actions.choose_image') }}
+                            <input type="file" name="chat_support_avatar" accept="image/*" class="hidden">
+                        </label>
+                        @if ($chatSupportAvatarUrl)
+                            <label class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500">
+                                <input type="checkbox" name="remove_chat_support_avatar" value="1" class="rounded border-slate-300">
+                                <span>{{ __('chat.remove_support_avatar') }}</span>
+                            </label>
+                        @endif
+                        @error('chat_support_avatar')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="min-w-0 flex-1 sm:min-w-[14rem]">
+                    <label for="chat_support_title" class="mb-1 block text-xs font-medium text-slate-700">{{ __('chat.support_display_name') }}</label>
+                    <input
+                        id="chat_support_title"
+                        type="text"
+                        name="chat_support_title"
+                        value="{{ old('chat_support_title', $chatSupportTitle) }}"
+                        placeholder="{{ $chatSupportTitleDefault }}"
+                        class="w-full rounded-lg border-slate-300 text-sm"
+                    >
+                    @error('chat_support_title')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <button type="submit" class="w-full shrink-0 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark sm:w-auto">
+                    {{ __('chat.save_settings') }}
+                </button>
+            </form>
+        </section>
+
+        <div
         class="admin-chat-shell flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
         x-data="adminChat({
             initialFilter: @js($initialFilter),

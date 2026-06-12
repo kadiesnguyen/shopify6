@@ -59,12 +59,12 @@ body {
         outline: none !important;
     }
 
-    .portal-wallet-form input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']),
-    .portal-wallet-form textarea,
-    .portal-wallet-form select,
-    .portal-form-field input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']),
-    .portal-form-field textarea,
-    .portal-form-field select {
+    .portal-wallet-form input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']):not(.auth-field),
+    .portal-wallet-form textarea:not(.auth-field),
+    .portal-wallet-form select:not(.auth-field),
+    .portal-form-field input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']):not(.auth-field),
+    .portal-form-field textarea:not(.auth-field),
+    .portal-form-field select:not(.auth-field) {
         border: 0 !important;
         background-color: transparent !important;
         box-shadow: none !important;
@@ -74,12 +74,12 @@ body {
         --tw-ring-color: transparent !important;
     }
 
-    .portal-wallet-form input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']):focus,
-    .portal-wallet-form textarea:focus,
-    .portal-wallet-form select:focus,
-    .portal-form-field input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']):focus,
-    .portal-form-field textarea:focus,
-    .portal-form-field select:focus {
+    .portal-wallet-form input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']):not(.auth-field):focus,
+    .portal-wallet-form textarea:not(.auth-field):focus,
+    .portal-wallet-form select:not(.auth-field):focus,
+    .portal-form-field input:not([type='hidden']):not([type='checkbox']):not([type='radio']):not([type='file']):not(.auth-field):focus,
+    .portal-form-field textarea:not(.auth-field):focus,
+    .portal-form-field select:not(.auth-field):focus {
         border: 0 !important;
         box-shadow: none !important;
         outline: none !important;
@@ -89,7 +89,7 @@ body {
     }
 
     .auth-field {
-        @apply w-full rounded-lg border border-slate-200 bg-white py-2.5 px-3 text-base text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-brand/70 focus:ring-1 focus:ring-brand/20;
+        @apply w-full rounded-[5px] border border-slate-300 bg-white py-2.5 px-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand/20;
     }
 
     @media (max-width: 767px) {
@@ -306,8 +306,8 @@ body {
 
     .portal-chat-shell {
         @apply flex min-h-0 flex-1 flex-col overflow-hidden bg-gray-50;
-        height: calc(100dvh - (4.5rem + env(safe-area-inset-bottom, 0px)));
-        max-height: calc(100dvh - (4.5rem + env(safe-area-inset-bottom, 0px)));
+        height: 100%;
+        max-height: 100%;
     }
 
     .portal-chat-thread {
@@ -413,13 +413,42 @@ body {
     }
 
     .responsive-table-scroll {
-        @apply max-w-full overflow-x-auto overscroll-x-contain;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: thin;
+        @apply w-full min-w-0 max-w-full;
     }
 
-    .responsive-table-scroll table {
-        @apply min-w-full;
+    @media (max-width: 767px) {
+        .responsive-table-scroll {
+            @apply overflow-x-auto overscroll-x-contain;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+    }
+
+    .responsive-table-scroll > table {
+        @apply w-full text-sm;
+    }
+
+    @media (min-width: 768px) {
+        .responsive-table-scroll > table {
+            table-layout: fixed;
+        }
+    }
+
+    .responsive-table-scroll > table th,
+    .responsive-table-scroll > table td {
+        overflow: hidden;
+        vertical-align: top;
+    }
+
+    .responsive-table-scroll > table .cell-truncate {
+        @apply block truncate;
+    }
+
+    .responsive-table-scroll > table .cell-clamp-2 {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
     }
 
     .ui-content-grid {
@@ -509,4 +538,60 @@ body {
 
 .admin-rich-editor .ql-editor {
     min-height: 220px;
+}
+
+.admin-rich-editor--tall .ql-container,
+.admin-rich-editor--tall .ql-editor {
+    min-height: 320px;
+}
+
+.rich-content {
+    @apply text-slate-700 leading-relaxed;
+}
+
+.rich-content h1,
+.rich-content h2,
+.rich-content h3 {
+    @apply mt-6 mb-3 font-semibold text-slate-900;
+}
+
+.rich-content h1 {
+    @apply text-xl;
+}
+
+.rich-content h2 {
+    @apply text-lg;
+}
+
+.rich-content h3 {
+    @apply text-base;
+}
+
+.rich-content p {
+    @apply mb-3;
+}
+
+.rich-content ul,
+.rich-content ol {
+    @apply mb-3 ml-5 list-outside;
+}
+
+.rich-content ul {
+    @apply list-disc;
+}
+
+.rich-content ol {
+    @apply list-decimal;
+}
+
+.rich-content a {
+    @apply text-brand underline;
+}
+
+.rich-content img {
+    @apply my-3 max-w-full rounded-lg;
+}
+
+.rich-content blockquote {
+    @apply my-3 border-l-4 border-slate-200 pl-4 text-slate-600 italic;
 }

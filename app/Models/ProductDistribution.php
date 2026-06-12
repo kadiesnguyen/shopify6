@@ -24,6 +24,8 @@ class ProductDistribution extends Model
         'commission',
         'commission_type',
         'status',
+        'is_featured',
+        'featured_at',
     ];
 
     protected function casts(): array
@@ -32,6 +34,8 @@ class ProductDistribution extends Model
             'selling_price' => 'decimal:2',
             'purchase_price' => 'decimal:2',
             'commission' => 'decimal:2',
+            'is_featured' => 'boolean',
+            'featured_at' => 'datetime',
         ];
     }
 
@@ -58,5 +62,12 @@ class ProductDistribution extends Model
     public function scopeAvailable($query)
     {
         return $query->where('status', self::STATUS_AVAILABLE);
+    }
+
+    public function scopeFeatured($query)
+    {
+        return $query
+            ->available()
+            ->where('is_featured', true);
     }
 }

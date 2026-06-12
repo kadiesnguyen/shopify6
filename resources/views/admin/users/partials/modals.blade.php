@@ -1,7 +1,7 @@
 @php
     $listQuery = request()->only(['q', 'role', 'shop_application']);
     $closeUrl = route('admin.users.index', $listQuery);
-    $userLabel = $modalUser->loginIdentifier() ?: ($modalUser->user_code ?: '—');
+    $userLabel = $modalUser->loginIdentifier() ?: ($modalUser->name ?: '—');
     $defaultAddress = $modalUser->shippingAddresses->sortByDesc('is_default')->first();
     $idNumber = $modalUser->shop?->id_number ?? $modalUser->shopApplications->sortByDesc('created_at')->first()?->id_number ?? '—';
 @endphp
@@ -44,7 +44,6 @@
                 <dl class="grid gap-3 text-sm sm:grid-cols-2">
                     @foreach ([
                         ['Email', $modalUser->email ?: '—'],
-                        [__('admin.columns.user_code'), $modalUser->user_code ?: '—'],
                         [__('admin.users.actions.real_name'), $modalUser->name ?: '—'],
                         [__('admin.users.actions.shop_name'), $modalUser->shop?->name ?? '—'],
                         [__('admin.users.actions.shop_followers'), number_format($modalUser->shop?->followers ?? 0)],
@@ -67,7 +66,7 @@
                     @endforeach
                     <div>
                         <dt class="text-slate-500">{{ __('admin.columns.role') }}</dt>
-                        <dd><x-admin.role-badge :role="$modalUser->roles->first()?->name" /></dd>
+                        <dd><x-admin.role-badge :role="$modalUser->roles->first()?->name" :shop="$modalUser->shop" /></dd>
                     </div>
                 </dl>
             @elseif ($activeModal === 'balance')

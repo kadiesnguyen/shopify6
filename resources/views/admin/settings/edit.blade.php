@@ -24,11 +24,11 @@
             </button>
             <button
                 type="button"
-                @click="tab = 'pages'"
-                :class="tab === 'pages' ? 'bg-brand text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'"
+                @click="tab = 'about'"
+                :class="tab === 'about' ? 'bg-brand text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'"
                 class="flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition"
             >
-                {{ __('admin.settings.tabs.landing_pages') }}
+                {{ __('admin.settings.tabs.about') }}
             </button>
         </div>
 
@@ -48,8 +48,8 @@
                 @include('admin.settings.partials.general-tab')
             </div>
 
-            <div x-show="tab === 'pages'" x-cloak class="space-y-8">
-                @include('admin.settings.partials.pages-tab')
+            <div x-show="tab === 'about'" x-cloak class="space-y-8">
+                @include('admin.settings.partials.about-tab')
             </div>
 
             <div class="flex justify-end">

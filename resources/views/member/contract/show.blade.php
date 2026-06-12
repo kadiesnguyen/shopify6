@@ -8,7 +8,7 @@
         <h1 class="text-lg font-semibold text-slate-900">
             {{ $page?->translate('title') ?? __('member.contract.title') }}
         </h1>
-        <div class="prose prose-sm mt-4 max-w-none text-slate-700">
+        <div class="rich-content prose prose-sm mt-4 max-w-none text-slate-700">
             @if ($page)
                 {!! $page->translate('content') !!}
             @else

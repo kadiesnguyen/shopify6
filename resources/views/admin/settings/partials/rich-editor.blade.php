@@ -3,6 +3,7 @@
     'label',
     'value' => '',
     'hint' => null,
+    'tall' => false,
 ])
 
 <div>
@@ -16,7 +17,10 @@
     <div
         data-rich-editor
         data-input="{{ $name }}"
-        class="admin-rich-editor rounded-lg border border-slate-200 bg-white"
+        @class([
+            'admin-rich-editor rounded-lg border border-slate-200 bg-white',
+            'admin-rich-editor--tall' => $tall,
+        ])
     ></div>
 
     @error($name)

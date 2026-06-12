@@ -51,12 +51,12 @@
                     <div class="min-w-0 flex-1">
                         <p class="truncate font-medium text-slate-900">{{ $user->name }}</p>
                         <x-admin.shop-application-pending-badge :user="$user" />
-                        <p class="truncate text-sm text-slate-600">{{ $user->loginIdentifier() ?? ($user->user_code ?? '—') }}</p>
+                        <p class="truncate text-sm text-slate-600">{{ $user->loginIdentifier() ?? '—' }}</p>
                     </div>
                     <x-admin.user-actions-menu :user="$user" :list-query="$listQuery" />
                 </div>
                 <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
-                    <div><dt class="text-slate-500">{{ __('admin.columns.role') }}</dt><dd><x-admin.role-badge :role="$user->roles->first()?->name" /></dd></div>
+                    <div><dt class="text-slate-500">{{ __('admin.columns.role') }}</dt><dd><x-admin.role-badge :role="$user->roles->first()?->name" :shop="$user->shop" /></dd></div>
                     <div><dt class="text-slate-500">{{ __('admin.columns.shop') }}</dt><dd class="truncate font-medium">{{ $user->shop?->name ?? '—' }}</dd></div>
                     <div><dt class="text-slate-500">{{ __('admin.columns.balance') }}</dt><dd class="font-medium">${{ number_format($user->wallet?->balance ?? 0, 2) }}</dd></div>
                     <div><dt class="text-slate-500">{{ __('admin.columns.balance_pending') }}</dt><dd class="font-medium">${{ number_format($user->wallet?->balance_pending ?? 0, 2) }}</dd></div>
@@ -68,48 +68,46 @@
         <div>{{ $users->links() }}</div>
     </div>
 
-    <div class="hidden overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm md:block">
+    <div class="hidden min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm md:block">
         <x-ui.responsive-table>
-            <table class="min-w-full divide-y divide-slate-200 text-sm">
+            <table class="w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50">
                     <tr>
-                        @foreach (['email_phone', 'user_code', 'name', 'role', 'shop', 'balance_pending', 'balance', 'balance_frozen', 'status', 'actions'] as $col)
-                            <th @class([
-                                'px-4 py-3 text-left font-medium text-slate-600',
-                                'sticky right-0 bg-slate-50 shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.12)]' => $col === 'actions',
-                            ])>{{ __('admin.columns.'.$col) }}</th>
+                        @foreach (['email_phone', 'name', 'role', 'shop', 'balance_pending', 'balance', 'balance_frozen', 'status', 'actions'] as $col)
+                            <th class="px-3 py-2.5 text-left text-xs font-medium text-slate-600">{{ __('admin.columns.'.$col) }}</th>
                         @endforeach
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($users as $user)
                         <tr class="hover:bg-slate-50">
-                            <td class="px-4 py-3">
-                                <div class="max-w-[12rem] truncate">{{ $user->loginIdentifier() ?? ($user->user_code ?? '—') }}</div>
+                            <td class="px-3 py-2.5">
+                                <span class="cell-truncate" title="{{ $user->loginIdentifier() ?? '—' }}">{{ $user->loginIdentifier() ?? '—' }}</span>
                             </td>
-                            <td class="px-4 py-3">{{ $user->user_code ?? '—' }}</td>
-                            <td class="px-4 py-3">
-                                <div class="font-medium text-slate-900">{{ $user->name }}</div>
+                            <td class="px-3 py-2.5">
+                                <span class="cell-truncate font-medium text-slate-900" title="{{ $user->name }}">{{ $user->name }}</span>
                                 <x-admin.shop-application-pending-badge :user="$user" />
                             </td>
-                            <td class="px-4 py-3"><x-admin.role-badge :role="$user->roles->first()?->name" /></td>
-                            <td class="px-4 py-3">{{ $user->shop?->name ?? '—' }}</td>
-                            <td class="px-4 py-3">${{ number_format($user->wallet?->balance_pending ?? 0, 2) }}</td>
-                            <td class="px-4 py-3">${{ number_format($user->wallet?->balance ?? 0, 2) }}</td>
-                            <td class="px-4 py-3">${{ number_format($user->wallet?->balance_frozen ?? 0, 2) }}</td>
-                            <td class="px-4 py-3">
+                            <td class="px-3 py-2.5"><x-admin.role-badge :role="$user->roles->first()?->name" :shop="$user->shop" /></td>
+                            <td class="px-3 py-2.5">
+                                <span class="cell-truncate" title="{{ $user->shop?->name }}">{{ $user->shop?->name ?? '—' }}</span>
+                            </td>
+                            <td class="px-3 py-2.5 whitespace-nowrap">${{ number_format($user->wallet?->balance_pending ?? 0, 2) }}</td>
+                            <td class="px-3 py-2.5 whitespace-nowrap">${{ number_format($user->wallet?->balance ?? 0, 2) }}</td>
+                            <td class="px-3 py-2.5 whitespace-nowrap">${{ number_format($user->wallet?->balance_frozen ?? 0, 2) }}</td>
+                            <td class="px-3 py-2.5">
                                 @if ($user->status === \App\Models\User::STATUS_BANNED)
                                     <span class="text-xs font-medium text-red-600">{{ __('admin.users.status_banned') }}</span>
                                 @else
                                     <span class="text-xs font-medium text-emerald-600">{{ __('admin.users.status_active') }}</span>
                                 @endif
                             </td>
-                            <td class="sticky right-0 bg-white px-4 py-3 shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.12)]">
+                            <td class="px-3 py-2.5">
                                 <x-admin.user-actions-menu :user="$user" :list-query="$listQuery" />
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="10" class="px-4 py-8 text-center text-slate-500">{{ __('admin.users.empty') }}</td></tr>
+                        <tr><td colspan="9" class="px-4 py-8 text-center text-slate-500">{{ __('admin.users.empty') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>

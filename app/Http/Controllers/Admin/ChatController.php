@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateChatSettingsRequest;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Services\Chat\ChatService;
+use App\Support\SiteSettings;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -18,7 +21,36 @@ class ChatController extends Controller
     {
         return view('admin.chat.index', [
             'initialFilter' => $request->string('filter', 'all')->toString(),
+            'chatSupportTitle' => SiteSettings::get(SiteSettings::KEY_CHAT_SUPPORT_TITLE),
+            'chatSupportAvatarUrl' => SiteSettings::chatSupportAvatarUrl(),
+            'chatSupportTitleDefault' => SiteSettings::chatSupportTitle(),
         ]);
+    }
+
+    public function updateSettings(UpdateChatSettingsRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+
+        SiteSettings::set(
+            SiteSettings::KEY_CHAT_SUPPORT_TITLE,
+            filled($data['chat_support_title'] ?? null) ? $data['chat_support_title'] : null,
+        );
+
+        if ($request->boolean('remove_chat_support_avatar')) {
+            SiteSettings::deleteStoredFile(SiteSettings::get(SiteSettings::KEY_CHAT_SUPPORT_AVATAR));
+            SiteSettings::set(SiteSettings::KEY_CHAT_SUPPORT_AVATAR, null);
+        }
+
+        if ($request->hasFile('chat_support_avatar')) {
+            $previous = SiteSettings::get(SiteSettings::KEY_CHAT_SUPPORT_AVATAR);
+            $path = $request->file('chat_support_avatar')->store('site-settings/chat', 'public');
+            SiteSettings::set(SiteSettings::KEY_CHAT_SUPPORT_AVATAR, $path);
+            SiteSettings::deleteStoredFile($previous);
+        }
+
+        return redirect()
+            ->route('admin.chat.index')
+            ->with('status', __('chat.settings_saved'));
     }
 
     public function conversations(Request $request): JsonResponse

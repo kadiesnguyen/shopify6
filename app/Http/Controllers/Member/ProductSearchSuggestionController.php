@@ -48,27 +48,15 @@ class ProductSearchSuggestionController extends Controller
 
     private function shopSuggestions(string $keyword, string $context): array
     {
-        $numericKeyword = preg_replace('/\D+/', '', $keyword);
-
         return Shop::query()
-            ->with('user:id,user_code')
             ->where('status', Shop::STATUS_ACTIVE)
-            ->where(function (Builder $query) use ($keyword, $numericKeyword): void {
-                $query
-                    ->where('name', 'like', "%{$keyword}%")
-                    ->orWhereHas('user', fn (Builder $userQuery) => $userQuery->where('user_code', 'like', "%{$keyword}%"));
-
-                if ($numericKeyword !== '') {
-                    $query->orWhere('id', (int) $numericKeyword);
-                }
-            })
+            ->where('name', 'like', "%{$keyword}%")
             ->orderBy('name')
             ->limit(8)
             ->get(['id', 'user_id', 'name'])
             ->map(fn (Shop $shop) => [
                 'id' => $shop->id,
                 'value' => $shop->name,
-                'meta' => $shop->user?->user_code ?: 'ID '.$shop->id,
                 'type' => 'shop',
             ])
             ->values()

@@ -21,10 +21,6 @@
                     <dt class="text-sm text-slate-500">{{ __('admin.profile.username') }}</dt>
                     <dd class="mt-1 font-medium text-slate-900">{{ $user->username }}</dd>
                 </div>
-                <div>
-                    <dt class="text-sm text-slate-500">{{ __('admin.profile.user_code') }}</dt>
-                    <dd class="mt-1 font-medium text-slate-900">{{ $user->user_code ?: '—' }}</dd>
-                </div>
             </dl>
         </section>
 

@@ -9,7 +9,7 @@
         @csrf
         @if ($user->exists) @method('PUT') @endif
 
-        @foreach (['username', 'user_code', 'name', 'email', 'phone'] as $field)
+        @foreach (['username', 'name', 'email', 'phone'] as $field)
             <div>
                 <label class="mb-1 block text-sm font-medium">{{ ucfirst($field) }}</label>
                 <input name="{{ $field }}" value="{{ old($field, $user->$field) }}" @if(in_array($field, ['username','name','email'])) required @endif class="w-full rounded-lg border-slate-300">

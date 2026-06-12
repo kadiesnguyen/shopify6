@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\User;
+use App\Support\SiteSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -23,8 +24,8 @@ class ChatTest extends TestCase
     {
         parent::setUp();
 
-        Role::create(['name' => 'admin']);
-        Role::create(['name' => 'member']);
+        Role::findOrCreate('admin');
+        Role::findOrCreate('member');
 
         $this->admin = User::factory()->create(['status' => 'active']);
         $this->admin->assignRole('admin');
@@ -180,8 +181,32 @@ class ChatTest extends TestCase
             ->get(route('admin.chat.index'))
             ->assertOk()
             ->assertSee(__('chat.admin_title'))
+            ->assertSee(__('chat.support_display_name'))
+            ->assertSee(__('chat.save_settings'))
             ->assertSee('admin-chat-shell', false)
             ->assertSee('adminChat', false);
+    }
+
+    public function test_admin_can_update_chat_support_settings(): void
+    {
+        Storage::fake('public');
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.chat.settings.update'), [
+                'chat_support_title' => 'Hotline VIP',
+                'chat_support_avatar' => UploadedFile::fake()->create('avatar.jpg', 100, 'image/jpeg'),
+            ])
+            ->assertRedirect(route('admin.chat.index'))
+            ->assertSessionHas('status', __('chat.settings_saved'));
+
+        $this->assertSame('Hotline VIP', SiteSettings::chatSupportTitle());
+        $this->assertNotNull(SiteSettings::get(SiteSettings::KEY_CHAT_SUPPORT_AVATAR));
+        Storage::disk('public')->assertExists(SiteSettings::get(SiteSettings::KEY_CHAT_SUPPORT_AVATAR));
+
+        $this->actingAs($this->member)
+            ->get(route('member.chat.index'))
+            ->assertOk()
+            ->assertSee('Hotline VIP');
     }
 
     public function test_member_chat_page_is_full_screen(): void
@@ -190,6 +215,7 @@ class ChatTest extends TestCase
             ->get(route('member.chat.index'))
             ->assertOk()
             ->assertSee(__('chat.placeholder'))
+            ->assertSee(__('chat.send'))
             ->assertSee(__('member.back'));
     }
 }

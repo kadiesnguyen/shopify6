@@ -142,7 +142,7 @@ class RichTextSanitizer
     private function isSafeStyle(string $style): bool
     {
         return (bool) preg_match(
-            '/^(?:\s*(?:color|background-color|font-size|text-align)\s*:\s*[^;]+;?\s*)+$/i',
+            '/^(?:\s*(?:color|background-color|font-size|text-align|font-weight|font-style|text-decoration)\s*:\s*[^;]+;?\s*)+$/i',
             $style,
         );
     }

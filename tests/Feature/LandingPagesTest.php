@@ -81,7 +81,7 @@ class LandingPagesTest extends TestCase
         $response->assertSessionHas('status');
     }
 
-    public function test_faq_section_on_home_when_seeded(): void
+    public function test_home_does_not_show_faq_section(): void
     {
         Faq::query()->create([
             'question' => ['vi' => 'Câu hỏi test', 'en' => 'Test question'],
@@ -90,6 +90,9 @@ class LandingPagesTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->get('/')->assertOk()->assertSee('Câu hỏi test');
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSee('Câu hỏi test')
+            ->assertDontSee(__('landing.faq.title'), false);
     }
 }

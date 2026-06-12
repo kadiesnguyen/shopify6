@@ -34,12 +34,13 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::post('/logout', [AdminLoginController::class, 'destroy'])->name('logout');
 
-        Route::resource('users', UserController::class)->except(['show']);
+        Route::resource('users', UserController::class);
         Route::get('users/{user}/documents/{document}', [ShopDocumentController::class, 'show'])
             ->whereIn('document', ['id_front', 'id_back'])
             ->name('users.documents.show');
         Route::post('users/{user}/distributions', [UserProductDistributionController::class, 'store'])->name('users.distributions.store');
         Route::patch('users/{user}/distributions/{distribution}', [UserProductDistributionController::class, 'update'])->name('users.distributions.update');
+        Route::patch('users/{user}/distributions/{distribution}/toggle-featured', [UserProductDistributionController::class, 'toggleFeatured'])->name('users.distributions.toggle-featured');
         Route::delete('users/{user}/distributions/{distribution}', [UserProductDistributionController::class, 'destroy'])->name('users.distributions.destroy');
         Route::patch('users/{user}/balance', [UserActionController::class, 'updateBalance'])->name('users.balance.update');
         Route::post('users/{user}/deposit', [UserActionController::class, 'deposit'])->name('users.deposit');
@@ -94,6 +95,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::post('/password-change-requests/{passwordChangeRequest}/reject', [PasswordChangeRequestController::class, 'reject'])->name('password-change-requests.reject');
 
         Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+        Route::post('/chat/settings', [ChatController::class, 'updateSettings'])->name('chat.settings.update');
         Route::get('/chat/conversations', [ChatController::class, 'conversations'])->name('chat.conversations');
         Route::delete('/chat/conversations', [ChatController::class, 'destroyConversations'])->name('chat.conversations.destroy');
         Route::get('/chat/conversations/{conversation}', [ChatController::class, 'show'])->name('chat.show');

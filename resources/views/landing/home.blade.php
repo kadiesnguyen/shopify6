@@ -23,5 +23,4 @@
     <x-landing.text-marquee />
     <x-landing.feature-grid />
     <x-landing.opportunity-carousel />
-    <x-landing.faq-section :faqs="$faqs" />
 @endsection

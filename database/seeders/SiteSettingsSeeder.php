@@ -11,7 +11,6 @@ class SiteSettingsSeeder extends Seeder
     public function run(): void
     {
         $defaults = [
-            SiteSettings::KEY_PORTAL_HOME_MARQUEE => __('landing.marquee'),
             SiteSettings::KEY_PROFILE_MARQUEE => __('member.my.payment_warning_long'),
             SiteSettings::KEY_WEBSITE_TITLE => config('portal.brand_name', 'Shopify'),
             SiteSettings::KEY_SEO_DESCRIPTION => __('landing.meta_description'),

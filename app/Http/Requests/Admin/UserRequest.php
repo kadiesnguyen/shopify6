@@ -2,7 +2,11 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\User;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 class UserRequest extends FormRequest
@@ -91,5 +95,24 @@ class UserRequest extends FormRequest
         if ($merged !== []) {
             $this->merge($merged);
         }
+    }
+
+    protected function failedValidation(Validator $validator): void
+    {
+        $user = $this->route('user');
+
+        if ($user instanceof User && $this->isMethod('PUT')) {
+            throw new HttpResponseException(
+                redirect()
+                    ->route('admin.users.index', array_filter(array_merge(
+                        Arr::only($this->query->all(), ['q', 'role', 'shop_application']),
+                        ['show_edit' => $this->query('show_edit', $user->id)],
+                    )))
+                    ->withErrors($validator)
+                    ->withInput()
+            );
+        }
+
+        parent::failedValidation($validator);
     }
 }

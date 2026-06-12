@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Landing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
-use App\Models\Faq;
 use App\Support\Cache\CachedModelCollection;
 use Illuminate\View\View;
 
@@ -21,15 +20,6 @@ class HomeController extends Controller
                 Banner::class,
                 fn () => Banner::query()
                     ->where('status', Banner::STATUS_ACTIVE)
-                    ->orderBy('sort_order')
-                    ->get(),
-            ),
-            'faqs' => CachedModelCollection::remember(
-                'landing.home.faqs',
-                self::CACHE_SECONDS,
-                Faq::class,
-                fn () => Faq::query()
-                    ->where('status', Faq::STATUS_ACTIVE)
                     ->orderBy('sort_order')
                     ->get(),
             ),

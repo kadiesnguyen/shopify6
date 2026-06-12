@@ -91,9 +91,14 @@ class UserActionController extends Controller
 
     private function redirectBack(?string $status = null): RedirectResponse
     {
-        $redirect = redirect()->route('admin.users.index', request()->only([
+        $query = array_filter(request()->only([
             'q', 'role', 'shop_application',
-        ]));
+            'show_info', 'show_edit', 'show_balance', 'show_deposit',
+            'show_password', 'show_payment_password', 'show_distributions',
+            'dist_q', 'dist_commission_type', 'dist_price_from', 'dist_price_to', 'dist_sort',
+        ]), fn ($value) => $value !== null && $value !== '');
+
+        $redirect = redirect()->route('admin.users.index', $query);
 
         return $status ? $redirect->with('status', $status) : $redirect;
     }

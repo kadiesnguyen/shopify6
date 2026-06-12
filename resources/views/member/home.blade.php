@@ -6,8 +6,6 @@
 @section('content')
     <x-member.banner-carousel :banners="$banners" />
 
-    <x-member.portal-marquee />
-
     <x-member.quick-actions />
 
     <form method="GET" action="{{ route('member.home') }}" class="mt-3 space-y-2 px-4">

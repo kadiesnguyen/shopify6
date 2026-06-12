@@ -36,6 +36,9 @@
                             'bg-red-100 text-red-800' => $item->status === 'rejected',
                         ])>{{ __('admin.shop_applications.status_'.$item->status) }}</span>
                     </div>
+                    <div class="mt-2">
+                        <x-admin.shop-application-type-badges :application="$item" />
+                    </div>
                     <p class="mt-1 truncate text-sm text-slate-500">
                         {{ $item->user?->email }}
                         <span class="mx-1 text-slate-300">·</span>

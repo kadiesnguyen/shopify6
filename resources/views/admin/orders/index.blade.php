@@ -14,8 +14,9 @@
         @endforeach
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table class="min-w-full divide-y divide-slate-200 text-sm">
+    <div class="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <x-ui.responsive-table>
+        <table class="w-full divide-y divide-slate-200 text-sm">
             <thead class="bg-slate-50">
                 <tr>
                     @foreach (['order_no', 'buyer', 'store', 'product', 'qty', 'total', 'commission', 'payment', 'current_balance', 'status', 'actions'] as $col)
@@ -29,10 +30,10 @@
                         $buyerLabel = $order->buyer?->email ?? '—';
                     @endphp
                     <tr>
-                        <td class="max-w-[4.5rem] px-2 py-2 whitespace-nowrap" title="{{ $order->order_no }}">{{ \Illuminate\Support\Str::limit($order->order_no, 5) }}</td>
-                        <td class="max-w-[6rem] px-2 py-2 whitespace-nowrap" title="{{ $buyerLabel }}">{{ \Illuminate\Support\Str::limit($buyerLabel, 10) }}</td>
-                        <td class="px-2 py-2">{{ $order->shop?->name ?? '—' }}</td>
-                        <td class="max-w-[8rem] truncate px-2 py-2" title="{{ $order->items->first()?->product_name }}">{{ $order->items->first()?->product_name }}</td>
+                        <td class="px-2 py-2" title="{{ $order->order_no }}"><span class="cell-truncate">{{ $order->order_no }}</span></td>
+                        <td class="px-2 py-2" title="{{ $buyerLabel }}"><span class="cell-truncate">{{ $buyerLabel }}</span></td>
+                        <td class="px-2 py-2"><span class="cell-truncate" title="{{ $order->shop?->name }}">{{ $order->shop?->name ?? '—' }}</span></td>
+                        <td class="px-2 py-2" title="{{ $order->items->first()?->product_name }}"><span class="cell-clamp-2">{{ $order->items->first()?->product_name }}</span></td>
                         <td class="px-2 py-2">{{ $order->items->sum('qty') }}</td>
                         <td class="px-2 py-2 whitespace-nowrap">${{ number_format($order->total, 2) }}</td>
                         <td class="px-2 py-2 whitespace-nowrap">${{ number_format($order->commission, 2) }}</td>
@@ -64,6 +65,7 @@
                 @endforelse
             </tbody>
         </table>
+        </x-ui.responsive-table>
         <div class="px-4 py-3">{{ $orders->links() }}</div>
     </div>
 @endsection

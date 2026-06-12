@@ -9,12 +9,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Shop extends Model
 {
+    public const TYPE_PERSONAL = 'personal';
+
+    public const TYPE_BUSINESS = 'business';
+
     public const STATUS_ACTIVE = 'active';
 
     public const STATUS_INACTIVE = 'inactive';
 
     protected $fillable = [
         'user_id',
+        'seller_type',
         'name',
         'slug',
         'description',
@@ -43,6 +48,8 @@ class Shop extends Model
         'display_visitors_30d',
         'order_status_seen_at',
         'status',
+        'is_featured',
+        'featured_at',
     ];
 
     protected function casts(): array
@@ -66,6 +73,8 @@ class Shop extends Model
             'display_visitors_7d' => 'integer',
             'display_visitors_30d' => 'integer',
             'order_status_seen_at' => 'array',
+            'is_featured' => 'boolean',
+            'featured_at' => 'datetime',
         ];
     }
 
@@ -166,6 +175,23 @@ class Shop extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function isPersonal(): bool
+    {
+        return ($this->seller_type ?? self::TYPE_PERSONAL) === self::TYPE_PERSONAL;
+    }
+
+    public function isBusiness(): bool
+    {
+        return $this->seller_type === self::TYPE_BUSINESS;
+    }
+
+    public function scopeFeatured($query)
+    {
+        return $query
+            ->where('status', self::STATUS_ACTIVE)
+            ->where('is_featured', true);
     }
 
     public function promotions(): HasMany

@@ -54,7 +54,7 @@
             </header>
 
             <main @class([
-                'flex-1 overflow-x-hidden p-4 md:p-6',
+                'min-w-0 flex-1 overflow-x-hidden p-4 md:p-6',
                 'flex min-h-0 flex-col overflow-hidden p-2 md:p-4' => View::hasSection('admin_chat_page'),
             ])>
                 @if (session('status'))

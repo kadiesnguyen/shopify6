@@ -6,9 +6,9 @@
     'toggleRoute' => null,
 ])
 
-<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-    <div class="overflow-x-auto">
-        <table class="min-w-full text-sm">
+<div class="min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <x-ui.responsive-table>
+        <table class="w-full text-sm">
             <thead class="bg-slate-50">
                 <tr>
                     <th class="px-4 py-3 text-left">{{ __('admin.columns.name') }}</th>
@@ -58,6 +58,6 @@
                 @endforelse
             </tbody>
         </table>
-    </div>
+    </x-ui.responsive-table>
     <div class="px-4 py-3">{{ $methods->links() }}</div>
 </div>

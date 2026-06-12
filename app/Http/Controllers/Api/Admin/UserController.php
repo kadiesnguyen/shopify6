@@ -22,7 +22,7 @@ class UserController extends Controller
         $users = $this->paginateQuery(
             User::query()->withoutAdmins()->with(['roles', 'wallet', 'shop']),
             $request,
-            searchColumns: ['name', 'email', 'phone', 'user_code', 'username'],
+            searchColumns: ['name', 'email', 'phone', 'username'],
             filterable: ['status'],
             sortable: ['created_at', 'name', 'email'],
         );

@@ -2,22 +2,6 @@
     <h2 class="text-base font-semibold text-slate-900">{{ __('admin.settings.sections.notifications') }}</h2>
 
     <div>
-        <label for="portal_home_marquee_text" class="mb-1.5 block text-sm font-medium text-slate-700">
-            {{ __('admin.settings.portal_home_marquee') }}
-        </label>
-        <textarea
-            id="portal_home_marquee_text"
-            name="portal_home_marquee_text"
-            rows="3"
-            class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand focus:ring-brand"
-            placeholder="{{ __('admin.settings.portal_home_marquee_hint') }}"
-        >{{ old('portal_home_marquee_text', $settings['portal_home_marquee_text']) }}</textarea>
-        @error('portal_home_marquee_text')
-            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-        @enderror
-    </div>
-
-    <div>
         <label for="profile_marquee_text" class="mb-1.5 block text-sm font-medium text-slate-700">
             {{ __('admin.settings.profile_marquee') }}
         </label>

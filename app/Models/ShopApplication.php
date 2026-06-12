@@ -11,6 +11,10 @@ class ShopApplication extends Model
 
     public const TYPE_BUSINESS = 'business';
 
+    public const KIND_REGISTRATION = 'registration';
+
+    public const KIND_UPGRADE = 'upgrade';
+
     public const STATUS_PENDING = 'pending';
 
     public const STATUS_APPROVED = 'approved';
@@ -20,6 +24,7 @@ class ShopApplication extends Model
     protected $fillable = [
         'user_id',
         'seller_type',
+        'application_kind',
         'shop_name',
         'logo',
         'address',
@@ -60,5 +65,15 @@ class ShopApplication extends Model
         }
 
         return asset('storage/'.$path);
+    }
+
+    public function isUpgrade(): bool
+    {
+        return $this->application_kind === self::KIND_UPGRADE;
+    }
+
+    public function isRegistration(): bool
+    {
+        return ($this->application_kind ?? self::KIND_REGISTRATION) === self::KIND_REGISTRATION;
     }
 }

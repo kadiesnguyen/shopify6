@@ -36,4 +36,12 @@ return [
     'back_to_list' => 'List',
     'user_info' => 'Info',
     'loading' => 'Loading...',
+    'settings_title' => 'Support chat appearance',
+    'settings_subtitle' => 'Avatar and display name shown on member and guest chat headers.',
+    'support_display_name' => 'Support display name',
+    'support_display_name_hint' => 'Leave blank to use default: :default',
+    'support_avatar' => 'Support avatar',
+    'remove_support_avatar' => 'Remove avatar',
+    'save_settings' => 'Save settings',
+    'settings_saved' => 'Support chat settings saved.',
 ];

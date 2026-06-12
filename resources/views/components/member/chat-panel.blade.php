@@ -7,7 +7,10 @@
 ])
 
 @php
-    $brandLabel = __('chat.support_title', ['brand' => $brand]);
+    use App\Support\SiteSettings;
+
+    $supportTitle = SiteSettings::chatSupportTitle();
+    $supportAvatarUrl = SiteSettings::chatSupportAvatarUrl();
 @endphp
 
 <div
@@ -36,17 +39,20 @@
             >
                 <x-member.icon name="chevron-left" class="size-6" />
             </a>
+            @if ($supportAvatarUrl)
+                <img src="{{ $supportAvatarUrl }}" alt="" class="size-10 shrink-0 rounded-full border border-white/30 object-cover">
+            @endif
             <div class="min-w-0 flex-1">
-                <p class="truncate font-semibold">{{ $brandLabel }}</p>
-                <p class="text-xs text-emerald-100" x-text="labels.online"></p>
+                <p class="truncate font-semibold">{{ $supportTitle }}</p>
+                <p class="text-xs text-emerald-100">{{ __('chat.online') }}</p>
             </div>
         </div>
     </header>
 
     <div class="portal-chat-thread px-4 py-4" x-ref="thread">
-        <template x-if="!loading && messages.length === 0">
-            <p class="py-8 text-center text-sm text-gray-500" x-text="labels.empty"></p>
-        </template>
+        <p class="py-8 text-center text-sm text-gray-500" x-show="!loading && messages.length === 0" x-cloak>
+            {{ __('chat.empty_thread') }}
+        </p>
         <div class="space-y-3">
             <template x-for="msg in messages" :key="msg.id">
                 <div :class="msg.sender_role === 'user' ? 'flex justify-end' : 'flex justify-start'">
@@ -83,14 +89,9 @@
                 x-model="draft"
                 rows="2"
                 class="min-w-0 flex-1 resize-none rounded-xl border-gray-300 text-sm leading-snug"
-                :placeholder="labels.placeholder"
+                placeholder="{{ __('chat.placeholder') }}"
             ></textarea>
-            <button
-                type="submit"
-                class="shrink-0 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                :disabled="sending"
-                x-text="labels.send"
-            ></button>
+            <x-member.chat-send-button x-bind:disabled="sending" />
         </div>
         <p x-show="pendingImage" class="mt-2 truncate text-xs text-gray-500">
             📷 <span x-text="pendingImage?.name"></span>
