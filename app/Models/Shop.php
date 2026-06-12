@@ -41,6 +41,7 @@ class Shop extends Model
         'display_visitors_today',
         'display_visitors_7d',
         'display_visitors_30d',
+        'order_status_seen_at',
         'status',
     ];
 
@@ -64,6 +65,7 @@ class Shop extends Model
             'display_visitors_today' => 'integer',
             'display_visitors_7d' => 'integer',
             'display_visitors_30d' => 'integer',
+            'order_status_seen_at' => 'array',
         ];
     }
 

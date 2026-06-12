@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\RechargeMethodController;
 use App\Http\Controllers\Admin\RechargeRequestController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\ShopDocumentController;
+use App\Http\Controllers\Admin\ShopSearchSuggestionController;
 use App\Http\Controllers\Admin\ShopApplicationController;
 use App\Http\Controllers\Admin\UserActionController;
 use App\Http\Controllers\Admin\UserController;
@@ -51,6 +52,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::resource('promotions', PromotionController::class)->except(['show']);
 
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/shops/search-suggestions', ShopSearchSuggestionController::class)->name('shops.search-suggestions');
         Route::patch('/orders/{order}', [OrderController::class, 'update'])->name('orders.update');
         Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
 

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\Shop;
 use App\Models\User;
+use App\Support\Member\ShopOrderStatusBadges;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -89,7 +90,7 @@ class ShopDashboardTest extends TestCase
             ->assertDontSee(__('member.shop_dashboard.store_data'));
     }
 
-    public function test_my_page_uses_display_order_count_overrides(): void
+    public function test_my_page_order_status_badges_use_actual_seller_counts(): void
     {
         Role::findOrCreate('shop');
         $this->member->assignRole('shop');
@@ -117,7 +118,9 @@ class ShopDashboardTest extends TestCase
         $this->actingAs($this->member)
             ->get(route('member.my.index'))
             ->assertOk()
-            ->assertSee('99');
+            ->assertSee('1', false)
+            ->assertDontSee('>99<', false)
+            ->assertSee(route('member.seller.orders.index', ['status' => 'pending_payment']), false);
     }
 
     public function test_shop_role_without_shop_row_uses_seller_order_metrics(): void
@@ -155,5 +158,65 @@ class ShopDashboardTest extends TestCase
         $this->actingAs($this->member)
             ->get(route('member.seller.orders.index'))
             ->assertForbidden();
+    }
+
+    public function test_shop_order_status_badge_clears_after_viewing_seller_orders(): void
+    {
+        Role::findOrCreate('shop');
+        $this->member->assignRole('shop');
+
+        $shop = Shop::query()->create([
+            'user_id' => $this->member->id,
+            'name' => 'Badge Shop',
+            'slug' => 'badge-shop',
+            'status' => 'active',
+        ]);
+
+        $buyer = User::factory()->create(['status' => 'active']);
+
+        Order::query()->create([
+            'user_id' => $buyer->id,
+            'shop_id' => $shop->id,
+            'seller_id' => $this->member->id,
+            'order_no' => 'ORD-BADGE-001',
+            'total' => 120,
+            'commission' => 20,
+            'purchase_cost' => 70,
+            'status' => Order::STATUS_COMPLETED,
+            'payment_method' => 'wallet',
+            'completed_at' => now(),
+        ]);
+
+        $this->assertSame(
+            1,
+            ShopOrderStatusBadges::unseenCounts($shop, $this->member->id)->get('completed'),
+        );
+
+        $this->actingAs($this->member)
+            ->get(route('member.seller.orders.index', ['status' => Order::STATUS_COMPLETED]))
+            ->assertOk();
+
+        $this->assertSame(
+            0,
+            ShopOrderStatusBadges::unseenCounts($shop->fresh(), $this->member->id)->get('completed'),
+        );
+
+        Order::query()->create([
+            'user_id' => $buyer->id,
+            'shop_id' => $shop->id,
+            'seller_id' => $this->member->id,
+            'order_no' => 'ORD-BADGE-002',
+            'total' => 90,
+            'commission' => 15,
+            'purchase_cost' => 50,
+            'status' => Order::STATUS_COMPLETED,
+            'payment_method' => 'wallet',
+            'completed_at' => now(),
+        ]);
+
+        $this->assertSame(
+            1,
+            ShopOrderStatusBadges::unseenCounts($shop->fresh(), $this->member->id)->get('completed'),
+        );
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Support\Member\ShopOrderStatusBadges;
 use App\Services\Member\ShopDashboardService;
 use Illuminate\View\View;
 
@@ -19,17 +20,12 @@ class MyController extends Controller
         $baseOrders = Order::query()
             ->when($isSeller, fn ($query) => $query->where('seller_id', $user->id), fn ($query) => $query->where('user_id', $user->id));
 
-        $statusCounts = (clone $baseOrders)
-            ->selectRaw('status, count(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
-
-        if ($user->shop) {
-            $shop = $user->shop;
-            $statusCounts = $statusCounts->map(
-                fn (int $count, string $status): int => $shop->resolveDisplayCount($status, $count),
-            );
-        }
+        $statusCounts = $isSeller && $user->shop
+            ? ShopOrderStatusBadges::unseenCounts($user->shop, $user->id)
+            : (clone $baseOrders)
+                ->selectRaw('status, count(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status');
 
         $pendingPaymentTotal = (float) (clone $baseOrders)
             ->where('status', Order::STATUS_PENDING_PAYMENT)

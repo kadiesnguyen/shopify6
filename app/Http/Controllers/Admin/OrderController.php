@@ -19,14 +19,17 @@ class OrderController extends Controller
     public function index(Request $request): View
     {
         $status = $request->string('status')->toString();
+        $keyword = trim($request->string('q')->toString());
+        $shopId = $request->integer('shop_id');
 
         $orders = Order::query()
             ->with(['buyer.wallet', 'shop', 'items'])
             ->when($status !== '', fn ($q) => $q->where('status', $status))
-            ->when($request->string('q'), fn ($q, $search) => $q->where(function ($query) use ($search): void {
-                $query->where('order_no', 'like', "%{$search}%")
-                    ->orWhereHas('shop', fn ($shopQuery) => $shopQuery->where('name', 'like', "%{$search}%"));
-            }))
+            ->when($shopId > 0, fn ($q) => $q->where('shop_id', $shopId))
+            ->when($shopId <= 0 && $keyword !== '', fn ($q) => $q->whereHas(
+                'shop',
+                fn ($shopQuery) => $shopQuery->where('name', 'like', "%{$keyword}%"),
+            ))
             ->latest()
             ->paginate(15)
             ->withQueryString();

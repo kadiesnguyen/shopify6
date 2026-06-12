@@ -1,4 +1,7 @@
-@props(['statusCounts' => collect()])
+@props([
+    'statusCounts' => collect(),
+    'ordersRoute' => 'member.orders.index',
+])
 
 @php
     $items = [
@@ -12,9 +15,15 @@
 
 <div class="portal-scroll-x flex gap-2 px-3 py-4">
     @foreach ($items as $item)
-        @php $count = (int) ($statusCounts[$item['key']] ?? 0); @endphp
+        @php
+            $count = (int) ($statusCounts[$item['key']] ?? 0);
+            $status = $item['key'];
+            if ($ordersRoute === 'member.orders.index' && $status === 'pending_payment') {
+                $status = 'awaiting_pickup';
+            }
+        @endphp
         <a
-            href="{{ route('member.orders.index', ['status' => $item['key']]) }}"
+            href="{{ route($ordersRoute, ['status' => $status]) }}"
             class="flex min-w-[5rem] shrink-0 flex-col items-center gap-1 active:opacity-80"
         >
             <span class="relative inline-flex size-10 items-center justify-center">

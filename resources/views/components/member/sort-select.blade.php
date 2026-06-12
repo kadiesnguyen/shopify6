@@ -9,7 +9,7 @@
     $selected = $value ?? request($name, array_key_first($options));
 @endphp
 
-<div class="portal-sort-select relative shrink-0">
+<div class="portal-sort-select shrink-0">
     <select
         name="{{ $name }}"
         @if ($autoSubmit) onchange="this.form.submit()" @endif
@@ -19,7 +19,4 @@
             <option value="{{ $optionValue }}" @selected((string) $selected === (string) $optionValue)>{{ $optionLabel }}</option>
         @endforeach
     </select>
-    <span class="pointer-events-none absolute inset-y-0 end-0 flex items-center pe-2.5 text-gray-400" aria-hidden="true">
-        <x-member.icon name="chevron-down" class="size-4" />
-    </span>
 </div>

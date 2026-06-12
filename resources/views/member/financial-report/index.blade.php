@@ -29,10 +29,6 @@
                     <p class="text-sm text-white/80">{{ __('member.financial_report.total_profit') }}</p>
                     <p class="text-xl font-bold text-green-400">${{ number_format($report['total_profit'], 2) }}</p>
                 </div>
-                <div class="col-span-2 rounded-xl bg-black p-4 text-white">
-                    <p class="text-sm text-white/80">{{ __('member.my.total_income') }}</p>
-                    <p class="text-xl font-bold text-amber-300">${{ number_format($report['total_income'], 2) }}</p>
-                </div>
             </div>
 
             <div class="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm">

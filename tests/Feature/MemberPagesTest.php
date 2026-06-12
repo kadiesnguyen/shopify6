@@ -1406,12 +1406,14 @@ class MemberPagesTest extends TestCase
             ->get(route('member.financial-report.index'))
             ->assertOk()
             ->assertSee('$35.00')
-            ->assertSee('$75.00');
+            ->assertDontSee(__('member.my.total_income'));
     }
 
     public function test_my_page_shop_financial_metrics_follow_pending_profit_income_formula(): void
     {
-        Shop::query()->create([
+        $this->member->assignRole('shop');
+
+        $shop = Shop::query()->create([
             'user_id' => $this->member->id,
             'name' => 'My Finance Shop',
             'slug' => 'my-finance-shop',
@@ -1422,6 +1424,7 @@ class MemberPagesTest extends TestCase
 
         Order::query()->create([
             'user_id' => $buyer->id,
+            'shop_id' => $shop->id,
             'seller_id' => $this->member->id,
             'order_no' => 'ORD-MY-PENDING-001',
             'total' => 300,
@@ -1434,6 +1437,7 @@ class MemberPagesTest extends TestCase
 
         Order::query()->create([
             'user_id' => $buyer->id,
+            'shop_id' => $shop->id,
             'seller_id' => $this->member->id,
             'order_no' => 'ORD-MY-COMPLETE-001',
             'total' => 300,
@@ -1450,6 +1454,7 @@ class MemberPagesTest extends TestCase
             ->assertOk()
             ->assertSee('$250.00')
             ->assertSee('$100.00')
-            ->assertSee('$300.00');
+            ->assertDontSee(__('member.my.total_income'))
+            ->assertDontSee(__('member.my.transactions'));
     }
 }
