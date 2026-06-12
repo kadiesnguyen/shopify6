@@ -53,6 +53,10 @@
                             <span class="text-sm text-gray-500">{{ __('member.products.profit') }}</span>
                             <span class="font-bold text-emerald-600">${{ number_format($profit, 2) }}</span>
                         </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500">{{ __('member.my.total_income') }}</span>
+                            <span class="font-bold text-gray-900">${{ number_format($totalIncome, 2) }}</span>
+                        </div>
                     @endif
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-500">{{ __('member.my.balance') }}</span>

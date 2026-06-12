@@ -1454,7 +1454,7 @@ class MemberPagesTest extends TestCase
             ->assertOk()
             ->assertSee('$250.00')
             ->assertSee('$100.00')
-            ->assertDontSee(__('member.my.total_income'))
+            ->assertSee(__('member.my.total_income'))
             ->assertDontSee(__('member.my.transactions'));
     }
 }
