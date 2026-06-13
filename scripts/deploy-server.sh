@@ -160,9 +160,8 @@ fi
 
 mysql -u"$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" < "$REMOTE_DUMP"
 rm -f "$REMOTE_DUMP"
-php artisan db:ensure-ready --no-interaction
 php artisan shops:sync-roles --no-interaction
-echo "DB imported into $DB_DATABASE"
+echo "DB imported into $DB_DATABASE (skipped db:ensure-ready — full dump already contains users)"
 REMOTE
 }
 
