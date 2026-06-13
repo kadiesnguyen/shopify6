@@ -1,12 +1,14 @@
+import { chatComposerState } from './chat-composer';
+
 export function registerMemberChatComponents(Alpine) {
     Alpine.data('memberChatPanel', (config) => ({
+        ...chatComposerState(),
         messagesUrl: config.messagesUrl,
         sendUrl: config.sendUrl,
         csrf: config.csrf,
         labels: config.labels ?? {},
         messages: [],
         draft: config.prefill || '',
-        pendingImage: null,
         sending: false,
         loading: true,
         pollTimer: null,
@@ -41,12 +43,8 @@ export function registerMemberChatComponents(Alpine) {
             }
         },
 
-        onImagePick(e) {
-            const file = e.target.files?.[0];
-            if (file) {
-                this.pendingImage = file;
-            }
-            e.target.value = '';
+        onComposerKeydown(event) {
+            this.handleComposerKeydown(event, () => this.send());
         },
 
         async send() {
@@ -72,7 +70,7 @@ export function registerMemberChatComponents(Alpine) {
                 });
                 if (res.ok) {
                     this.draft = '';
-                    this.pendingImage = null;
+                    this.clearPendingImage();
                     await this.loadMessages();
                 }
             } finally {
@@ -82,6 +80,7 @@ export function registerMemberChatComponents(Alpine) {
     }));
 
     Alpine.data('guestChatWidget', (config) => ({
+        ...chatComposerState(),
         messagesUrl: config.messagesUrl,
         sendUrl: config.sendUrl,
         brand: config.brand,
@@ -93,7 +92,6 @@ export function registerMemberChatComponents(Alpine) {
         messages: [],
         draft: '',
         guestLabel: '',
-        pendingImage: null,
         sending: false,
         pollTimer: null,
 
@@ -140,12 +138,8 @@ export function registerMemberChatComponents(Alpine) {
             }
         },
 
-        onImagePick(e) {
-            const file = e.target.files?.[0];
-            if (file) {
-                this.pendingImage = file;
-            }
-            e.target.value = '';
+        onComposerKeydown(event) {
+            this.handleComposerKeydown(event, () => this.send());
         },
 
         async send() {
@@ -174,7 +168,7 @@ export function registerMemberChatComponents(Alpine) {
                 });
                 if (res.ok) {
                     this.draft = '';
-                    this.pendingImage = null;
+                    this.clearPendingImage();
                     await this.loadMessages();
                 }
             } finally {

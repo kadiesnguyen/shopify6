@@ -160,11 +160,26 @@
                 </form>
             </div>
         @else
-            <div class="flex justify-end border-t border-slate-100 px-5 py-4 sm:px-6">
+            <div class="flex flex-col-reverse gap-2 border-t border-slate-100 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+                <form
+                    method="POST"
+                    action="{{ route('admin.shop-applications.destroy', $item) }}"
+                    class="inline"
+                    onsubmit="return confirm(@js(__('admin.shop_applications.confirm_delete')))"
+                >
+                    @csrf
+                    @method('DELETE')
+                    <button
+                        type="submit"
+                        class="inline-flex w-full items-center justify-center rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50 sm:w-auto"
+                    >
+                        {{ __('admin.actions.delete') }}
+                    </button>
+                </form>
                 <button
                     type="button"
                     @click="reviewId = null"
-                    class="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    class="inline-flex w-full items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 sm:w-auto"
                 >
                     {{ __('admin.shop_applications.close') }}
                 </button>

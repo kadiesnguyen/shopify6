@@ -172,6 +172,36 @@ class User extends Authenticatable
         return $this->hasRole('shop');
     }
 
+    public function adminFormRole(): string
+    {
+        if ($this->hasRole('admin')) {
+            return 'admin';
+        }
+
+        if ($this->hasRole('shop')) {
+            return $this->shop?->isBusiness()
+                ? 'shop_business'
+                : 'shop_personal';
+        }
+
+        if ($this->hasRole('member')) {
+            return 'member';
+        }
+
+        return $this->roles->first()?->name ?? 'member';
+    }
+
+    /** @return list<string> */
+    public static function adminMemberRoleOptions(): array
+    {
+        return ['member', 'shop_personal', 'shop_business'];
+    }
+
+    public static function isAdminShopFormRole(?string $role): bool
+    {
+        return in_array($role, ['shop', 'shop_personal', 'shop_business'], true);
+    }
+
     public function isMemberOnly(): bool
     {
         return $this->hasRole('member') && ! $this->isShop();
@@ -185,5 +215,17 @@ class User extends Authenticatable
     public function scopeWithoutAdmins($query)
     {
         return $query->whereDoesntHave('roles', fn ($roleQuery) => $roleQuery->where('name', 'admin'));
+    }
+
+    public function scopeAdminKeywordSearch($query, string $keyword)
+    {
+        return $query->where(function ($q) use ($keyword): void {
+            $q->where('name', 'like', "%{$keyword}%")
+                ->orWhere('email', 'like', "%{$keyword}%")
+                ->orWhere('phone', 'like', "%{$keyword}%")
+                ->orWhere('username', 'like', "%{$keyword}%")
+                ->orWhere('user_code', 'like', "%{$keyword}%")
+                ->orWhereHas('shop', fn ($shopQuery) => $shopQuery->where('name', 'like', "%{$keyword}%"));
+        });
     }
 }

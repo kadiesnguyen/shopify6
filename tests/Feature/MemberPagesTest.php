@@ -1350,6 +1350,24 @@ class MemberPagesTest extends TestCase
         ]);
     }
 
+    public function test_member_recharge_redirects_to_support_when_no_active_methods(): void
+    {
+        RechargeMethod::query()->update(['status' => RechargeMethod::STATUS_INACTIVE]);
+
+        $prefill = RechargeMethod::supportChatPrefill($this->member);
+
+        $this->actingAs($this->member)
+            ->get(route('member.wallet.recharge'))
+            ->assertRedirect(route('member.chat.index', ['prefill' => $prefill]));
+
+        $response = $this->actingAs($this->member)
+            ->get(route('member.chat.index', ['prefill' => $prefill]));
+
+        $response->assertOk();
+        $this->assertStringContainsString((string) $this->member->user_code, $response->getContent());
+        $this->assertStringContainsString('prefill', $response->getContent());
+    }
+
     public function test_member_recharge_page_includes_disabled_methods(): void
     {
         $disabled = RechargeMethod::query()->create([
@@ -1366,18 +1384,46 @@ class MemberPagesTest extends TestCase
             ->assertSee(route('member.chat.index'), false);
     }
 
-    public function test_member_can_view_financial_report_page(): void
+    public function test_member_cannot_view_financial_report_page(): void
     {
         $this->actingAs($this->member)
+            ->get(route('member.financial-report.index'))
+            ->assertForbidden();
+
+        $this->actingAs($this->member)
+            ->get(route('member.my.index'))
+            ->assertOk()
+            ->assertDontSee(__('member.my.financial_report'));
+    }
+
+    public function test_shop_can_view_financial_report_page(): void
+    {
+        $this->member->assignRole('shop');
+
+        Shop::query()->create([
+            'user_id' => $this->member->id,
+            'name' => 'Finance Shop',
+            'slug' => 'finance-shop-view',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($this->member->fresh())
             ->get(route('member.financial-report.index'))
             ->assertOk()
             ->assertSee(__('member.financial_report.title'))
             ->assertSee(__('member.financial_report.stock_import'))
             ->assertSee(__('member.financial_report.period_day'));
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.my.index'))
+            ->assertOk()
+            ->assertSee(__('member.my.financial_report'));
     }
 
     public function test_financial_report_shows_seller_profit_totals(): void
     {
+        $this->member->assignRole('shop');
+
         Shop::query()->create([
             'user_id' => $this->member->id,
             'name' => 'Finance Shop',
@@ -1409,11 +1455,11 @@ class MemberPagesTest extends TestCase
             'created_at' => now(),
         ]);
 
-        $this->actingAs($this->member)
+        $this->actingAs($this->member->fresh())
             ->get(route('member.financial-report.index'))
             ->assertOk()
             ->assertSee('$35.00')
-            ->assertDontSee(__('member.my.total_income'));
+            ->assertSee(__('member.my.total_income'));
     }
 
     public function test_my_page_shop_financial_metrics_follow_pending_profit_income_formula(): void

@@ -4,6 +4,7 @@ namespace App\Services\Admin;
 
 use App\Models\ShippingAddress;
 use App\Models\Shop;
+use App\Models\ShopApplication;
 use App\Models\User;
 use App\Support\Storage\PublicUploadStorage;
 use App\Support\Storage\ShopDocumentStorage;
@@ -11,10 +12,11 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Role;
 
 class AdminUserUpdateService
 {
+    public function __construct(private readonly AdminShopRoleTransitionService $shopRoleTransition) {}
+
     /** @param  array<string, mixed>  $data */
     public function update(User $user, array $data): User
     {
@@ -24,26 +26,75 @@ class AdminUserUpdateService
             $userData['password'] = Hash::make($data['password']);
         }
 
+        if (! empty($data['payment_password'])) {
+            $userData['payment_password'] = $data['payment_password'];
+        }
+
         $user->update($userData);
 
         if (isset($data['role'])) {
-            $user->syncRoles([$data['role']]);
-            $this->syncShopRole($user, $data['role']);
+            $this->shopRoleTransition->beforeRoleChange($user, (string) $data['role']);
+
+            match ($data['role']) {
+                'member' => $user->syncRoles(['member']),
+                'shop', 'shop_personal', 'shop_business' => $user->syncRoles(['shop', 'member']),
+                default => $user->syncRoles([$data['role']]),
+            };
         }
 
         $this->syncShippingAddress($user, $data);
-        $this->syncShopProfile($user, $data);
+
+        if (User::isAdminShopFormRole($data['role'] ?? null)) {
+            $this->syncShopProfile($user, $data);
+            $this->resolvePendingRegistrationApplications($user);
+        }
 
         return $user->fresh(['roles', 'shop', 'wallet', 'shippingAddresses']);
+    }
+
+    private function resolvePendingRegistrationApplications(User $user): void
+    {
+        $reviewerId = auth()->id();
+
+        if (! $reviewerId) {
+            return;
+        }
+
+        ShopApplication::query()
+            ->where('user_id', $user->id)
+            ->where('status', ShopApplication::STATUS_PENDING)
+            ->where('application_kind', ShopApplication::KIND_REGISTRATION)
+            ->update([
+                'status' => ShopApplication::STATUS_APPROVED,
+                'reviewed_by' => $reviewerId,
+                'reviewed_at' => now(),
+            ]);
     }
 
     /** @param  array<string, mixed>  $data */
     private function syncShippingAddress(User $user, array $data): void
     {
-        $addressLine = $data['address'] ?? null;
-        $country = $data['country'] ?? null;
+        $map = [
+            'shipping_recipient_name' => 'recipient_name',
+            'shipping_phone' => 'phone',
+            'shipping_address' => 'address_line',
+            'shipping_city' => 'city',
+            'shipping_state' => 'state',
+            'shipping_postal_code' => 'postal_code',
+            'shipping_country' => 'country',
+        ];
 
-        if ($addressLine === null && $country === null) {
+        $payload = [];
+
+        foreach ($map as $inputKey => $column) {
+            if (! array_key_exists($inputKey, $data)) {
+                continue;
+            }
+
+            $payload[$column] = $data[$inputKey] === '' ? null : $data[$inputKey];
+        }
+
+        if ($payload === []) {
             return;
         }
 
@@ -51,24 +102,36 @@ class AdminUserUpdateService
             ?? $user->shippingAddresses()->first();
 
         if ($address) {
-            $address->update([
-                'address_line' => $addressLine ?? $address->address_line,
-                'country' => $country ?? $address->country,
-            ]);
+            foreach (['recipient_name', 'phone', 'address_line', 'country'] as $requiredColumn) {
+                if (array_key_exists($requiredColumn, $payload) && $payload[$requiredColumn] === null) {
+                    unset($payload[$requiredColumn]);
+                }
+            }
+
+            if ($payload !== []) {
+                $address->update($payload);
+            }
 
             return;
         }
 
-        if (filled($addressLine) || filled($country)) {
-            ShippingAddress::query()->create([
-                'user_id' => $user->id,
-                'recipient_name' => $user->name,
-                'phone' => $user->phone,
-                'address_line' => $addressLine,
-                'country' => $country,
-                'is_default' => true,
-            ]);
+        $createPayload = [
+            'user_id' => $user->id,
+            'recipient_name' => $payload['recipient_name'] ?? $user->name,
+            'phone' => $payload['phone'] ?? $user->phone ?? '',
+            'address_line' => $payload['address_line'] ?? '',
+            'city' => $payload['city'] ?? null,
+            'state' => $payload['state'] ?? null,
+            'postal_code' => $payload['postal_code'] ?? null,
+            'country' => $payload['country'] ?? 'Việt Nam',
+            'is_default' => true,
+        ];
+
+        if (! filled($createPayload['address_line'])) {
+            return;
         }
+
+        ShippingAddress::query()->create($createPayload);
     }
 
     /** @param  array<string, mixed>  $data */
@@ -101,9 +164,15 @@ class AdminUserUpdateService
         $shopPayload = [];
 
         foreach ($shopFields as $inputKey => $column) {
-            if (array_key_exists($inputKey, $data)) {
-                $shopPayload[$column] = $data[$inputKey] === '' ? null : $data[$inputKey];
+            if (! array_key_exists($inputKey, $data)) {
+                continue;
             }
+
+            if ($column === 'name' && ! filled($data[$inputKey])) {
+                continue;
+            }
+
+            $shopPayload[$column] = $data[$inputKey] === '' ? null : $data[$inputKey];
         }
 
         foreach (['logo', 'id_front', 'id_back'] as $fileKey) {
@@ -114,6 +183,12 @@ class AdminUserUpdateService
             }
 
             $shopPayload[$fileKey] = $this->storeShopImage($uploadedFile, $user, $fileKey);
+        }
+
+        if (isset($data['role']) && User::isAdminShopFormRole($data['role'])) {
+            $shopPayload['seller_type'] = $data['role'] === 'shop_business'
+                ? Shop::TYPE_BUSINESS
+                : Shop::TYPE_PERSONAL;
         }
 
         if ($shopPayload === [] && ! $user->shop && blank($data['shop_name'] ?? null)) {
@@ -132,6 +207,9 @@ class AdminUserUpdateService
                 'name' => $shopName,
                 'slug' => $this->uniqueShopSlug($shopName),
                 'status' => Shop::STATUS_ACTIVE,
+                'seller_type' => isset($data['role']) && $data['role'] === 'shop_business'
+                    ? Shop::TYPE_BUSINESS
+                    : Shop::TYPE_PERSONAL,
             ]);
         }
 
@@ -182,14 +260,5 @@ class AdminUserUpdateService
         }
 
         return $slug;
-    }
-
-    private function syncShopRole(User $user, string $role): void
-    {
-        if ($role !== 'shop') {
-            return;
-        }
-
-        Role::findOrCreate('shop');
     }
 }

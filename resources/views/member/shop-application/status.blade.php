@@ -7,9 +7,8 @@
 @section('content')
     <div class="min-h-screen bg-gray-50">
         <header class="sticky top-0 z-10 flex items-center bg-black px-4 py-3 text-white">
-            <a href="{{ route('member.home') }}" class="flex items-center gap-1.5">
+            <a href="{{ route('member.home') }}" class="inline-flex items-center" aria-label="{{ __('member.back') }}">
                 <x-member.icon name="chevron-left" class="size-5" />
-                <span class="text-sm">{{ __('member.back') }}</span>
             </a>
             <h1 class="absolute left-1/2 -translate-x-1/2 text-base font-semibold">{{ __('member.shop_application.status_title') }}</h1>
         </header>

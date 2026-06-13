@@ -3,7 +3,7 @@
 @section('title', __('admin.users.title'))
 
 @section('content')
-    @php($listQuery = request()->only(['q', 'role', 'shop_application']))
+    @php($listQuery = request()->only(['q', 'user_id', 'role', 'shop_application']))
 
     <x-admin.page-header :title="__('admin.users.title')" :action-url="route('admin.users.create')" />
 
@@ -20,13 +20,10 @@
                 <input type="hidden" name="{{ $distField }}" value="{{ request($distField) }}">
             @endif
         @endforeach
-        <input
-            type="search"
-            name="q"
-            value="{{ request('q') }}"
-            placeholder="{{ __('admin.users.search') }}"
-            class="w-full rounded-lg border-slate-300 text-sm lg:min-w-[220px] lg:flex-1"
-        >
+        <x-admin.user-search-field
+            :value="request('q')"
+            :placeholder="__('admin.users.search')"
+        />
         <select name="role" class="w-full rounded-lg border-slate-300 text-sm sm:w-auto" onchange="this.form.submit()">
             <option value="">{{ __('admin.users.all_roles') }}</option>
             @foreach ($roles as $role)
@@ -51,13 +48,13 @@
                     <div class="min-w-0 flex-1">
                         <p class="truncate font-medium text-slate-900">{{ $user->name }}</p>
                         <x-admin.shop-application-pending-badge :user="$user" />
-                        <p class="truncate text-sm text-slate-600">{{ $user->loginIdentifier() ?? '—' }}</p>
+                        <p class="break-words text-sm text-slate-600">{{ $user->loginIdentifier() ?? '—' }}</p>
                     </div>
                     <x-admin.user-actions-menu :user="$user" :list-query="$listQuery" />
                 </div>
                 <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
-                    <div><dt class="text-slate-500">{{ __('admin.columns.role') }}</dt><dd><x-admin.role-badge :role="$user->roles->first()?->name" :shop="$user->shop" /></dd></div>
-                    <div><dt class="text-slate-500">{{ __('admin.columns.shop') }}</dt><dd class="truncate font-medium">{{ $user->shop?->name ?? '—' }}</dd></div>
+                    <div><dt class="text-slate-500">{{ __('admin.columns.role') }}</dt><dd><x-admin.role-badge :role="$user->adminFormRole()" :shop="$user->shop" /></dd></div>
+                    <div><dt class="text-slate-500">{{ __('admin.columns.shop') }}</dt><dd class="break-words font-medium">{{ $user->shop?->name ?? '—' }}</dd></div>
                     <div><dt class="text-slate-500">{{ __('admin.columns.balance') }}</dt><dd class="font-medium">${{ number_format($user->wallet?->balance ?? 0, 2) }}</dd></div>
                     <div><dt class="text-slate-500">{{ __('admin.columns.balance_pending') }}</dt><dd class="font-medium">${{ number_format($user->wallet?->balance_pending ?? 0, 2) }}</dd></div>
                 </dl>
@@ -68,7 +65,7 @@
         <div>{{ $users->links() }}</div>
     </div>
 
-    <div class="hidden min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm md:block">
+    <div class="admin-users-table hidden min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm md:block">
         <x-ui.responsive-table>
             <table class="w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50">
@@ -82,15 +79,15 @@
                     @forelse ($users as $user)
                         <tr class="hover:bg-slate-50">
                             <td class="px-3 py-2.5">
-                                <span class="cell-truncate" title="{{ $user->loginIdentifier() ?? '—' }}">{{ $user->loginIdentifier() ?? '—' }}</span>
+                                <span class="cell-wrap">{{ $user->loginIdentifier() ?? '—' }}</span>
                             </td>
                             <td class="px-3 py-2.5">
                                 <span class="cell-truncate font-medium text-slate-900" title="{{ $user->name }}">{{ $user->name }}</span>
                                 <x-admin.shop-application-pending-badge :user="$user" />
                             </td>
-                            <td class="px-3 py-2.5"><x-admin.role-badge :role="$user->roles->first()?->name" :shop="$user->shop" /></td>
+                            <td class="px-3 py-2.5"><x-admin.role-badge :role="$user->adminFormRole()" :shop="$user->shop" /></td>
                             <td class="px-3 py-2.5">
-                                <span class="cell-truncate" title="{{ $user->shop?->name }}">{{ $user->shop?->name ?? '—' }}</span>
+                                <span class="cell-wrap">{{ $user->shop?->name ?? '—' }}</span>
                             </td>
                             <td class="px-3 py-2.5 whitespace-nowrap">${{ number_format($user->wallet?->balance_pending ?? 0, 2) }}</td>
                             <td class="px-3 py-2.5 whitespace-nowrap">${{ number_format($user->wallet?->balance ?? 0, 2) }}</td>

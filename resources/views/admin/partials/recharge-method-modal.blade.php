@@ -165,7 +165,7 @@
                             class="w-full rounded-lg border-slate-300 text-sm"
                             autocomplete="off"
                         >
-                        <input type="hidden" name="currencies" :value="selectedCurrency">
+                        <input type="hidden" name="currencies" :value="selectedCurrency" :disabled="type !== 'crypto'">
                         <div
                             x-show="currencyOpen"
                             x-cloak
@@ -195,7 +195,7 @@
                             class="w-full rounded-lg border-slate-300 text-sm"
                             autocomplete="off"
                         >
-                        <input type="hidden" name="networks[]" :value="selectedNetwork">
+                        <input type="hidden" name="networks[]" :value="selectedNetwork" :disabled="type !== 'crypto'">
                         <div
                             x-show="networkOpen"
                             x-cloak

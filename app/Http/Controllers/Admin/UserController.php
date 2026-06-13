@@ -28,16 +28,15 @@ class UserController extends Controller
     public function __construct(private readonly AdminUserUpdateService $userUpdates) {}
     public function index(Request $request): View
     {
+        $userId = $request->integer('user_id');
+
         $users = User::query()
             ->withoutAdmins()
             ->with(['roles', 'shop', 'wallet', 'shopApplications'])
-            ->when($request->string('q'), function ($query, $search): void {
-                $query->where(function ($q) use ($search): void {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%");
-                });
-            })
+            ->when($userId > 0, fn ($query) => $query->whereKey($userId))
+            ->when($userId <= 0 && $request->filled('q'), fn ($query) => $query->adminKeywordSearch(
+                trim($request->string('q')->toString()),
+            ))
             ->when($request->filled('role'), fn ($q) => $q->role($request->string('role')))
             ->when($request->filled('shop_application'), function ($query) use ($request): void {
                 $filter = $request->string('shop_application')->toString();
@@ -155,7 +154,20 @@ class UserController extends Controller
             'status' => $request->validated('status'),
         ]);
 
-        $user->syncRoles([$request->validated('role')]);
+        $role = $request->validated('role');
+
+        if (User::isAdminShopFormRole($role)) {
+            $user->syncRoles(['shop', 'member']);
+        } else {
+            $user->syncRoles([$role]);
+        }
+
+        if (User::isAdminShopFormRole($role)) {
+            app(AdminUserUpdateService::class)->update($user, [
+                'role' => $role,
+                'shop_name' => $request->validated('name'),
+            ]);
+        }
 
         Wallet::query()->firstOrCreate(
             ['user_id' => $user->id],

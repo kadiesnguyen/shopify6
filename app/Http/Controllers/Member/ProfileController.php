@@ -34,7 +34,7 @@ class ProfileController extends Controller
 
         $user->update(['avatar' => $avatarPath]);
 
-        if ($user->shop) {
+        if ($user->isShop() && $user->shop) {
             PublicUploadStorage::delete($user->shop->logo);
             $user->shop->update(['logo' => $avatarPath]);
         }

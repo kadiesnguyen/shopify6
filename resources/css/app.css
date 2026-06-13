@@ -448,6 +448,27 @@ body {
         @apply block truncate;
     }
 
+    .responsive-table-scroll > table .cell-wrap {
+        @apply block min-w-0 max-w-full whitespace-normal break-words;
+        overflow-wrap: anywhere;
+    }
+
+    .responsive-table-scroll > table td:has(.cell-wrap) {
+        overflow: visible;
+    }
+
+    @media (min-width: 768px) {
+        .admin-users-table .responsive-table-scroll > table {
+            table-layout: auto;
+        }
+
+        .admin-users-table .responsive-table-scroll > table th:first-child,
+        .admin-users-table .responsive-table-scroll > table td:first-child {
+            overflow: visible;
+            min-width: 11rem;
+        }
+    }
+
     .responsive-table-scroll > table .cell-clamp-2 {
         display: -webkit-box;
         -webkit-box-orient: vertical;

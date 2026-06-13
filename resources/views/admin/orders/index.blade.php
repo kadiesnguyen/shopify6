@@ -37,7 +37,7 @@
                     @endphp
                     <tr>
                         <td class="px-2 py-2 align-top">{{ $buyerLabel }}</td>
-                        <td class="px-2 py-2 align-top">{{ $order->shop?->name ?? '—' }}</td>
+                        <td class="px-2 py-2 align-top"><span class="cell-wrap">{{ $order->shop?->name ?? '—' }}</span></td>
                         <td class="px-2 py-2 align-top" title="{{ $order->items->first()?->product_name }}"><span class="cell-clamp-2">{{ $order->items->first()?->product_name }}</span></td>
                         <td class="px-2 py-2 align-top">{{ $order->items->sum('qty') }}</td>
                         <td class="px-2 py-2 align-top whitespace-nowrap">${{ number_format($order->total, 2) }}</td>

@@ -55,7 +55,7 @@ class FinancialReportService
         $query = $this->ordersQuery($user)
             ->where('status', Order::STATUS_PENDING_PAYMENT);
 
-        if ($user->shop) {
+        if ($user->isShop()) {
             return (float) $query->sum('purchase_cost');
         }
 
@@ -66,7 +66,7 @@ class FinancialReportService
     {
         $query = $this->ordersQuery($user);
 
-        if ($user->shop) {
+        if ($user->isShop()) {
             return (float) $query
                 ->where('status', '!=', Order::STATUS_CANCELLED)
                 ->sum('commission');
@@ -82,7 +82,7 @@ class FinancialReportService
         $completedOrders = $this->ordersQuery($user)
             ->where('status', Order::STATUS_COMPLETED);
 
-        if ($user->shop) {
+        if ($user->isShop()) {
             return (float) (clone $completedOrders)->sum('purchase_cost')
                 + (float) (clone $completedOrders)->sum('commission');
         }
@@ -93,7 +93,7 @@ class FinancialReportService
     /** @return Builder<Order> */
     private function ordersQuery(User $user): Builder
     {
-        if ($user->shop) {
+        if ($user->isShop()) {
             return Order::query()->where('seller_id', $user->id);
         }
 
@@ -180,7 +180,7 @@ class FinancialReportService
                 continue;
             }
 
-            $purchases[$index] += $user->shop
+            $purchases[$index] += $user->isShop()
                 ? (float) $order->purchase_cost
                 : (float) $order->total;
             $profits[$index] += (float) $order->commission;

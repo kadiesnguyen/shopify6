@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\ShopSearchSuggestionController;
 use App\Http\Controllers\Admin\ShopApplicationController;
 use App\Http\Controllers\Admin\UserActionController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserSearchSuggestionController;
 use App\Http\Controllers\Admin\UserProductDistributionController;
 use App\Http\Controllers\Admin\WithdrawalMethodController;
 use App\Http\Controllers\Admin\WithdrawalRequestController;
@@ -34,6 +35,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::post('/logout', [AdminLoginController::class, 'destroy'])->name('logout');
 
+        Route::get('users/search-suggestions', UserSearchSuggestionController::class)->name('users.search-suggestions');
         Route::resource('users', UserController::class);
         Route::get('users/{user}/documents/{document}', [ShopDocumentController::class, 'show'])
             ->whereIn('document', ['id_front', 'id_back'])
@@ -81,6 +83,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/shop-applications', [ShopApplicationController::class, 'index'])->name('shop-applications.index');
         Route::post('/shop-applications/{shopApplication}/approve', [ShopApplicationController::class, 'approve'])->name('shop-applications.approve');
         Route::post('/shop-applications/{shopApplication}/reject', [ShopApplicationController::class, 'reject'])->name('shop-applications.reject');
+        Route::delete('/shop-applications/{shopApplication}', [ShopApplicationController::class, 'destroy'])->name('shop-applications.destroy');
 
         Route::get('/recharge-requests', [RechargeRequestController::class, 'index'])->name('recharge-requests.index');
         Route::post('/recharge-requests/{rechargeRequest}/approve', [RechargeRequestController::class, 'approve'])->name('recharge-requests.approve');

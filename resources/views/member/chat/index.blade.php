@@ -11,5 +11,6 @@
         :messages-url="route('member.chat.messages.index')"
         :send-url="route('member.chat.messages.store')"
         :back-url="route('member.home')"
+        :prefill="$prefill ?? ''"
     />
 @endsection

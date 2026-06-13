@@ -44,4 +44,5 @@ return [
     'remove_support_avatar' => 'Xóa ảnh đại diện',
     'save_settings' => 'Lưu cài đặt',
     'settings_saved' => 'Đã lưu cài đặt chat CSKH.',
+    'remove_image' => 'Xóa ảnh',
 ];

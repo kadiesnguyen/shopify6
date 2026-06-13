@@ -15,9 +15,11 @@ class ChatController extends Controller
 {
     public function __construct(private readonly ChatService $chat) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        return view('member.chat.index');
+        $prefill = mb_substr(trim((string) $request->query('prefill', '')), 0, 5000);
+
+        return view('member.chat.index', compact('prefill'));
     }
 
     public function messages(Request $request): JsonResponse

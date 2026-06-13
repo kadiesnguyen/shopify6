@@ -1,5 +1,5 @@
 @php
-    $listQuery = request()->only(['q', 'role', 'shop_application']);
+    $listQuery = request()->only(['q', 'user_id', 'role', 'shop_application']);
     $closeUrl = route('admin.users.index', $listQuery);
     $userLabel = $modalUser->loginIdentifier() ?: ($modalUser->name ?: '—');
     $defaultAddress = $modalUser->shippingAddresses->sortByDesc('is_default')->first();
@@ -13,8 +13,8 @@
         'max-w-3xl' => $activeModal === 'edit',
         'max-w-5xl' => $activeModal === 'distributions',
     ])>
-        <div class="flex items-start justify-between border-b border-slate-100 px-5 py-4">
-            <div>
+        <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+            <div class="min-w-0 flex-1">
                 @if ($activeModal === 'info')
                     <h3 class="text-lg font-semibold text-slate-900">{{ __('admin.users.actions.info_title') }}</h3>
                 @elseif ($activeModal === 'balance')
@@ -36,7 +36,14 @@
                     <h3 class="text-lg font-semibold text-slate-900">{{ __('admin.users.actions.edit_title') }}</h3>
                 @endif
             </div>
-            <a href="{{ $closeUrl }}" class="text-2xl leading-none text-slate-400 hover:text-slate-600" aria-label="{{ __('admin.users.distributions.close') }}">×</a>
+            @if ($activeModal === 'edit')
+                <div class="flex shrink-0 items-center gap-2">
+                    <a href="{{ $closeUrl }}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">{{ __('admin.actions.cancel') }}</a>
+                    <button type="submit" form="admin-user-edit-form" class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark">{{ __('admin.actions.save') }}</button>
+                </div>
+            @else
+                <a href="{{ $closeUrl }}" class="shrink-0 text-2xl leading-none text-slate-400 hover:text-slate-600" aria-label="{{ __('admin.users.distributions.close') }}">×</a>
+            @endif
         </div>
 
         <div class="overflow-y-auto px-5 py-4">
@@ -66,7 +73,7 @@
                     @endforeach
                     <div>
                         <dt class="text-slate-500">{{ __('admin.columns.role') }}</dt>
-                        <dd><x-admin.role-badge :role="$modalUser->roles->first()?->name" :shop="$modalUser->shop" /></dd>
+                        <dd><x-admin.role-badge :role="$modalUser->adminFormRole()" :shop="$modalUser->shop" /></dd>
                     </div>
                 </dl>
             @elseif ($activeModal === 'balance')

@@ -405,6 +405,7 @@ return [
         'insufficient_balance' => 'Insufficient balance.',
         'payout_details' => 'Payout details',
         'recharge_method_disabled' => 'This recharge method is disabled. Please contact support.',
+        'recharge_support_prefill' => 'I need to recharge for :username. Amount: ',
         'method_invalid' => 'Invalid withdrawal method.',
         'field_required' => 'This field is required.',
         'bank_name_invalid' => 'Invalid bank name. Please select from the list.',

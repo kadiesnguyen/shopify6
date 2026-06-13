@@ -6,7 +6,9 @@
 
 @section('content')
     @php
-        $profileImageUrl = $user->shop?->displayLogoUrl() ?: $user->avatarUrl();
+        $profileImageUrl = $user->isShop()
+            ? ($user->shop?->displayLogoUrl() ?: $user->avatarUrl())
+            : $user->avatarUrl();
     @endphp
 
     <div class="pb-4">
@@ -25,7 +27,7 @@
                     >
                 @endif
                 <div class="min-w-0">
-                    <p class="truncate font-medium">{{ $user->shop?->name ?? $user->name }}</p>
+                    <p class="truncate font-medium">{{ $user->isShop() ? ($user->shop?->name ?? $user->name) : $user->name }}</p>
                     <p class="truncate text-sm text-white/80">{{ $user->phone ?: $user->email }}</p>
                 </div>
             </div>
@@ -62,7 +64,7 @@
                         <span class="font-bold text-gray-900">${{ number_format($walletBalance, 2) }}</span>
                     </div>
                     <div class="mt-2 grid grid-cols-2 gap-2">
-                        <a href="{{ route('member.wallet.recharge') }}" class="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-3 text-sm font-medium text-white">
+                        <a href="{{ \App\Models\RechargeMethod::memberEntryUrl($user) }}" class="flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-3 text-sm font-medium text-white">
                             <x-member.icon name="wallet" class="size-4" />
                             {{ __('member.my.recharge') }}
                         </a>
@@ -88,7 +90,9 @@
                 <x-member.menu-link :href="$user->isShop() ? route('member.seller.orders.index') : route('member.orders.index')" icon="clipboard-list" :label="__('member.my.order_management')" />
                 <x-member.menu-link :href="route('member.profile.show')" icon="user" icon-color="text-blue-600" icon-bg="bg-blue-50" :label="__('member.my.personal')" />
                 <x-member.menu-link :href="route('member.shipping.index')" icon="map-pin" icon-color="text-orange-600" icon-bg="bg-orange-50" :label="__('member.my.shipping_address')" />
-                <x-member.menu-link :href="route('member.financial-report.index')" icon="bar-chart" icon-color="text-cyan-600" icon-bg="bg-cyan-50" :label="__('member.my.financial_report')" />
+                @if ($user->isShop())
+                    <x-member.menu-link :href="route('member.financial-report.index')" icon="bar-chart" icon-color="text-cyan-600" icon-bg="bg-cyan-50" :label="__('member.my.financial_report')" />
+                @endif
                 <x-member.menu-link :href="route('member.contract.show')" icon="file-text" icon-color="text-gray-600" icon-bg="bg-gray-50" :label="__('member.my.about')" />
                 <form method="POST" action="{{ route('auth.logout') }}">
                     @csrf

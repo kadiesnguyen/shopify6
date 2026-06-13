@@ -16,28 +16,27 @@
     >
         <header class="sticky top-0 z-10 flex items-center bg-black px-4 py-3 text-white">
             @if ($isUpgrade)
-                <a href="{{ route('member.home') }}" class="flex items-center gap-1.5">
+                <a href="{{ route('member.home') }}" class="inline-flex items-center" aria-label="{{ __('member.shop_application.back_home') }}">
                     <x-member.icon name="chevron-left" class="size-5" />
-                    <span class="text-sm">{{ __('member.shop_application.back_home') }}</span>
                 </a>
             @else
                 <a
                     href="{{ route('member.home') }}"
-                    class="flex items-center gap-1.5"
+                    class="inline-flex items-center"
+                    aria-label="{{ __('member.shop_application.back_home') }}"
                     x-show="step === 1"
                 >
                     <x-member.icon name="chevron-left" class="size-5" />
-                    <span class="text-sm">{{ __('member.shop_application.back_home') }}</span>
                 </a>
                 <button
                     type="button"
-                    class="flex items-center gap-1.5"
+                    class="inline-flex items-center"
+                    aria-label="{{ __('member.shop_application.back_type') }}"
                     x-show="step === 2"
                     x-cloak
                     @click="step = 1"
                 >
                     <x-member.icon name="chevron-left" class="size-5" />
-                    <span class="text-sm">{{ __('member.shop_application.back_type') }}</span>
                 </button>
             @endif
             <h1 class="absolute left-1/2 -translate-x-1/2 text-base font-semibold">

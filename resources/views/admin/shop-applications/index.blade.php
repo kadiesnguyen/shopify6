@@ -28,12 +28,12 @@
                 <table class="w-full text-sm">
                     <colgroup>
                         <col class="w-[17%]">
-                        <col class="w-[14%]">
-                        <col class="w-[12%]">
+                        <col class="w-[18%]">
+                        <col class="w-[11%]">
                         <col class="w-[16%]">
                         <col class="w-[11%]">
                         <col class="w-[13%]">
-                        <col class="w-[17%]">
+                        <col class="w-[14%]">
                     </colgroup>
                     <thead class="bg-slate-50">
                         <tr>
@@ -54,7 +54,7 @@
                                     <span class="cell-truncate text-xs text-slate-500">{{ $item->phone }}</span>
                                 </td>
                                 <td class="px-3 py-2.5">
-                                    <span class="cell-clamp-2 font-medium text-slate-900" title="{{ $item->shop_name }}">{{ $item->shop_name }}</span>
+                                    <span class="cell-wrap font-medium text-slate-900">{{ $item->shop_name }}</span>
                                 </td>
                                 <td class="px-3 py-2.5">
                                     <span class="cell-truncate" title="{{ $item->real_name }}">{{ $item->real_name }}</span>
@@ -80,6 +80,18 @@
                                         >
                                             {{ __('admin.actions.view') }}
                                         </button>
+                                        <form
+                                            method="POST"
+                                            action="{{ route('admin.shop-applications.destroy', $item) }}"
+                                            class="inline"
+                                            onsubmit="return confirm(@js(__('admin.shop_applications.confirm_delete')))"
+                                        >
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="inline-flex items-center rounded-lg px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50">
+                                                {{ __('admin.actions.delete') }}
+                                            </button>
+                                        </form>
                                         @if ($item->status === 'pending')
                                             <form method="POST" action="{{ route('admin.shop-applications.approve', $item) }}" class="inline">
                                                 @csrf
@@ -105,7 +117,7 @@
                 <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0 flex-1">
-                            <p class="truncate font-medium text-slate-900">{{ $item->shop_name }}</p>
+                            <p class="break-words font-medium text-slate-900">{{ $item->shop_name }}</p>
                             <p class="truncate text-xs text-slate-500">{{ $item->user?->email }}</p>
                         </div>
                         <span @class([
@@ -122,6 +134,16 @@
                         <span>{{ $item->created_at->format('d/m/Y H:i') }}</span>
                         <div class="flex gap-2">
                             <button type="button" @click="reviewId = {{ $item->id }}" class="font-medium text-brand">{{ __('admin.actions.view') }}</button>
+                            <form
+                                method="POST"
+                                action="{{ route('admin.shop-applications.destroy', $item) }}"
+                                class="inline"
+                                onsubmit="return confirm(@js(__('admin.shop_applications.confirm_delete')))"
+                            >
+                                @csrf
+                                @method('DELETE')
+                                <button class="font-medium text-red-600">{{ __('admin.actions.delete') }}</button>
+                            </form>
                             @if ($item->status === 'pending')
                                 <form method="POST" action="{{ route('admin.shop-applications.approve', $item) }}" class="inline">
                                     @csrf

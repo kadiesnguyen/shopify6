@@ -27,8 +27,8 @@
             <div>
                 <label class="mb-1 block text-sm font-medium">Role</label>
                 <select name="role" class="w-full rounded-lg border-slate-300">
-                    @foreach ($roles as $role)
-                        <option value="{{ $role }}" @selected(old('role', $user->roles->first()?->name) === $role)>{{ $role }}</option>
+                    @foreach (\App\Models\User::adminMemberRoleOptions() as $roleOption)
+                        <option value="{{ $roleOption }}" @selected(old('role', $user->adminFormRole()) === $roleOption)>{{ __('admin.roles.'.$roleOption) }}</option>
                     @endforeach
                 </select>
             </div>

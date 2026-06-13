@@ -117,6 +117,77 @@ class ShopApplicationTest extends TestCase
             ->assertSee(__('member.shop_application.upgrade_intro'));
     }
 
+    public function test_member_with_shop_record_but_no_shop_role_sees_registration_form(): void
+    {
+        Shop::query()->create([
+            'user_id' => $this->member->id,
+            'seller_type' => Shop::TYPE_PERSONAL,
+            'name' => 'Orphan Shop',
+            'slug' => 'orphan-shop-apply',
+            'status' => Shop::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.shop-application.create'))
+            ->assertOk()
+            ->assertSee(__('member.shop_application.title'))
+            ->assertSee(__('member.shop_application.choose_type'))
+            ->assertDontSee(__('member.shop_application.upgrade_title'))
+            ->assertDontSee(__('member.shop_application.upgrade_intro'));
+    }
+
+    public function test_member_with_business_shop_record_but_no_shop_role_can_apply_as_seller(): void
+    {
+        Shop::query()->create([
+            'user_id' => $this->member->id,
+            'seller_type' => Shop::TYPE_BUSINESS,
+            'name' => 'Old Business Shop',
+            'slug' => 'old-business-shop',
+            'status' => Shop::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.shop-application.create'))
+            ->assertOk()
+            ->assertSee(__('member.shop_application.title'))
+            ->assertDontSee(__('member.shop_application.upgrade_title'));
+    }
+
+    public function test_member_with_shop_record_but_no_shop_role_can_submit_personal_application(): void
+    {
+        Shop::query()->create([
+            'user_id' => $this->member->id,
+            'seller_type' => Shop::TYPE_PERSONAL,
+            'name' => 'Orphan Shop',
+            'slug' => 'orphan-shop-submit',
+            'status' => Shop::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($this->member->fresh())
+            ->post(route('member.shop-application.store'), [
+                'seller_type' => ShopApplication::TYPE_PERSONAL,
+                'shop_name' => 'Fresh Shop',
+                'address' => '123 Street',
+                'country' => 'VN',
+                'phone' => '0356674288',
+                'real_name' => 'Test User',
+                'id_number' => '001234567890',
+                'id_front' => UploadedFile::fake()->create('front.jpg', 100, 'image/jpeg'),
+                'id_back' => UploadedFile::fake()->create('back.jpg', 100, 'image/jpeg'),
+                'terms' => '1',
+            ])
+            ->assertRedirect(route('member.shop-application.create'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('shop_applications', [
+            'user_id' => $this->member->id,
+            'shop_name' => 'Fresh Shop',
+            'seller_type' => ShopApplication::TYPE_PERSONAL,
+            'application_kind' => ShopApplication::KIND_REGISTRATION,
+            'status' => ShopApplication::STATUS_PENDING,
+        ]);
+    }
+
     public function test_personal_shop_can_submit_business_upgrade_request(): void
     {
         $this->createPersonalShop();
@@ -183,6 +254,88 @@ class ShopApplicationTest extends TestCase
         $this->actingAs($this->member)
             ->get(route('member.shop-application.create'))
             ->assertRedirect(route('member.home'));
+    }
+
+    public function test_admin_can_approve_registration_when_orphan_shop_exists(): void
+    {
+        $shop = Shop::query()->create([
+            'user_id' => $this->member->id,
+            'seller_type' => Shop::TYPE_PERSONAL,
+            'name' => 'Orphan Shop',
+            'slug' => 'orphan-shop-approve',
+            'status' => Shop::STATUS_ACTIVE,
+        ]);
+
+        $application = ShopApplication::query()->create([
+            'user_id' => $this->member->id,
+            'seller_type' => ShopApplication::TYPE_PERSONAL,
+            'application_kind' => ShopApplication::KIND_REGISTRATION,
+            'shop_name' => 'Reactivated Shop',
+            'address' => '123 Street',
+            'country' => 'VN',
+            'phone' => '0356674288',
+            'real_name' => 'Test User',
+            'id_number' => '001234567890',
+            'status' => ShopApplication::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.shop-applications.approve', $application))
+            ->assertRedirect()
+            ->assertSessionHas('status', __('admin.shop_applications.approved'));
+
+        $this->assertSame(ShopApplication::STATUS_APPROVED, $application->fresh()->status);
+        $this->assertTrue($this->member->fresh()->hasRole('shop'));
+        $this->assertSame($shop->id, $this->member->fresh()->shop->id);
+        $this->assertSame('Reactivated Shop', $this->member->fresh()->shop->name);
+    }
+
+    public function test_admin_cannot_approve_registration_when_user_is_already_shop(): void
+    {
+        $this->createPersonalShop();
+
+        $application = ShopApplication::query()->create([
+            'user_id' => $this->member->id,
+            'seller_type' => ShopApplication::TYPE_PERSONAL,
+            'application_kind' => ShopApplication::KIND_REGISTRATION,
+            'shop_name' => 'Duplicate Shop',
+            'address' => '123 Street',
+            'country' => 'VN',
+            'phone' => '0901234567',
+            'real_name' => 'Nguyen Van A',
+            'id_number' => '001234567890',
+            'status' => ShopApplication::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.shop-applications.approve', $application))
+            ->assertRedirect()
+            ->assertSessionHasErrors('user');
+
+        $this->assertSame(ShopApplication::STATUS_PENDING, $application->fresh()->status);
+    }
+
+    public function test_admin_can_delete_shop_application(): void
+    {
+        $application = ShopApplication::query()->create([
+            'user_id' => $this->member->id,
+            'seller_type' => ShopApplication::TYPE_PERSONAL,
+            'application_kind' => ShopApplication::KIND_REGISTRATION,
+            'shop_name' => 'Delete Me Shop',
+            'address' => '123 Street',
+            'country' => 'VN',
+            'phone' => '0356674288',
+            'real_name' => 'Test User',
+            'id_number' => '001234567890',
+            'status' => ShopApplication::STATUS_REJECTED,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->delete(route('admin.shop-applications.destroy', $application))
+            ->assertRedirect()
+            ->assertSessionHas('status', __('admin.shop_applications.deleted'));
+
+        $this->assertDatabaseMissing('shop_applications', ['id' => $application->id]);
     }
 
     private function createPersonalShop(): Shop

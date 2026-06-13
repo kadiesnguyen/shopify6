@@ -43,7 +43,7 @@ class MyController extends Controller
         $walletBalance = (float) ($user->wallet?->balance ?? 0);
         $shopStats = null;
 
-        if ($user->shop) {
+        if ($isSeller && $user->shop) {
             $shopStats = $this->shopDashboard->statsFor($user);
             $walletBalance = $user->shop->resolveDisplayAmount($walletBalance, 'display_balance');
         }

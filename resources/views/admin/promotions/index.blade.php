@@ -22,7 +22,7 @@
                 @forelse ($promotions as $promotion)
                     <tr>
                         <td class="px-4 py-3">{{ $promotion->title }}</td>
-                        <td class="px-4 py-3">{{ $promotion->shop?->name ?? '—' }}</td>
+                        <td class="px-4 py-3"><span class="cell-wrap">{{ $promotion->shop?->name ?? '—' }}</span></td>
                         <td class="px-4 py-3">{{ $promotion->status }}</td>
                         <td class="px-4 py-3">
                             <a href="{{ route('admin.promotions.edit', $promotion) }}" class="text-brand">{{ __('admin.actions.edit') }}</a>

@@ -34,4 +34,32 @@ class RechargeMethod extends Model
     {
         return $this->hasMany(RechargeRequest::class);
     }
+
+    public static function hasActive(): bool
+    {
+        return static::query()->where('status', self::STATUS_ACTIVE)->exists();
+    }
+
+    public static function supportChatPrefill(User $user): string
+    {
+        $username = $user->user_code
+            ?: $user->username
+            ?: $user->name
+            ?: ($user->loginIdentifier() ?? (string) $user->id);
+
+        return __('member.wallet.recharge_support_prefill', ['username' => $username]);
+    }
+
+    public static function memberEntryUrl(?User $user = null): string
+    {
+        if (static::hasActive()) {
+            return route('member.wallet.recharge');
+        }
+
+        $user ??= auth()->user();
+
+        return route('member.chat.index', [
+            'prefill' => static::supportChatPrefill($user),
+        ]);
+    }
 }

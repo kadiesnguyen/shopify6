@@ -15,8 +15,9 @@ class ShopApplicationRequest extends FormRequest
 
     public function rules(): array
     {
-        $shop = $this->user()?->shop;
-        $isUpgrade = $shop?->isPersonal() === true;
+        $user = $this->user();
+        $shop = $user?->shop;
+        $isUpgrade = $user?->isShop() && $shop?->isPersonal() === true;
 
         return [
             'seller_type' => [

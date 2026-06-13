@@ -19,8 +19,12 @@ class WalletController extends Controller
 {
     public function __construct(private readonly WithdrawalQuoteService $withdrawalQuote) {}
 
-    public function recharge(): View
+    public function recharge(): View|RedirectResponse
     {
+        if (! RechargeMethod::hasActive()) {
+            return redirect()->to(RechargeMethod::memberEntryUrl(auth()->user()));
+        }
+
         $methods = $this->mergeCryptoMethods(
             RechargeMethod::query()
             ->orderBy('sort_order')
@@ -117,6 +121,10 @@ class WalletController extends Controller
 
     public function storeRecharge(MemberRechargeRequest $request): RedirectResponse
     {
+        if (! RechargeMethod::hasActive()) {
+            return redirect()->to(RechargeMethod::memberEntryUrl(auth()->user()));
+        }
+
         RechargeRequest::query()->create([
             'user_id' => auth()->id(),
             'recharge_method_id' => $request->validated('recharge_method_id'),
@@ -398,6 +406,10 @@ class WalletController extends Controller
                 ->withQueryString();
         }
 
-        return view('member.wallet.fund-records', compact('records', 'type'));
+        return view('member.wallet.fund-records', [
+            'records' => $records,
+            'type' => $type,
+            'rechargeEntryUrl' => RechargeMethod::memberEntryUrl(auth()->user()),
+        ]);
     }
 }

@@ -21,13 +21,6 @@
             >
         </a>
 
-        <nav class="hidden items-center gap-6 text-sm font-medium text-white/90 md:flex">
-            <a href="{{ route('landing.home') }}" @class(['font-semibold text-white' => request()->routeIs('landing.home')])>{{ __('landing.nav.home') }}</a>
-            <a href="{{ route('landing.news.index') }}" @class(['font-semibold text-white' => request()->routeIs('landing.news.*')])>{{ __('landing.nav.news') }}</a>
-            <a href="{{ route('landing.about') }}" @class(['font-semibold text-white' => request()->routeIs('landing.about')])>{{ __('landing.nav.about') }}</a>
-            <a href="{{ route('landing.contact') }}" @class(['font-semibold text-white' => request()->routeIs('landing.contact')])>{{ __('landing.nav.contact') }}</a>
-        </nav>
-
         <div class="flex items-center gap-2">
             <div class="relative" x-data="{ open: false }">
                 <button

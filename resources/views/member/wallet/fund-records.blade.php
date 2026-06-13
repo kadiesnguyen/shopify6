@@ -8,7 +8,7 @@
     @php
         $backUrl = $type === 'withdrawal'
             ? route('member.wallet.withdrawal')
-            : route('member.wallet.recharge');
+            : ($rechargeEntryUrl ?? route('member.wallet.recharge'));
     @endphp
 
     <div class="min-h-[var(--app-height,100dvh)] bg-gray-50 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">

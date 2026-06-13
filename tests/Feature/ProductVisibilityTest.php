@@ -285,6 +285,27 @@ class ProductVisibilityTest extends TestCase
             ]);
     }
 
+    public function test_featured_reserved_distribution_is_hidden_from_default_portal_listing(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+        $this->markDistributionFeatured($this->shopUser);
+
+        ProductDistribution::query()
+            ->where('user_id', $this->shopUser->id)
+            ->where('product_id', $this->product->id)
+            ->update(['status' => ProductDistribution::STATUS_RESERVED]);
+
+        $this->actingAs($this->member)
+            ->get('/home')
+            ->assertOk()
+            ->assertDontSee('Visible Product');
+
+        $this->actingAs($this->member)
+            ->get('/home/products')
+            ->assertOk()
+            ->assertDontSee('Visible Product');
+    }
+
     private function distributeAsShop(User $shopUser): void
     {
         ProductDistribution::query()->create([

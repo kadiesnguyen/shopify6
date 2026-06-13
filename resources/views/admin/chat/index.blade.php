@@ -176,14 +176,16 @@
                 </div>
             </aside>
 
-            {{-- Thread --}}
+            {{-- Thread (x-show keeps composer in DOM so Enter keydown binds reliably) --}}
             <section class="flex min-h-0 min-w-0 flex-1 flex-col" :class="!activeId && 'hidden md:flex'">
-                <template x-if="!activeId">
-                    <div class="hidden flex-1 items-center justify-center p-6 text-sm text-slate-500 md:flex" x-text="labels.select_conversation"></div>
-                </template>
+                <div
+                    x-show="!activeId"
+                    x-cloak
+                    class="hidden flex-1 items-center justify-center p-6 text-sm text-slate-500 md:flex"
+                    x-text="labels.select_conversation"
+                ></div>
 
-                <template x-if="activeId">
-                    <div class="flex min-h-0 flex-1 flex-col">
+                <div x-show="activeId" x-cloak class="flex min-h-0 flex-1 flex-col">
                         <div class="flex shrink-0 items-center gap-2 border-b border-slate-100 px-3 py-2">
                             <button type="button" class="rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden" @click="activeId = null">
                                 ← <span x-text="labels.back_to_list"></span>
@@ -254,13 +256,13 @@
                                     rows="2"
                                     class="min-w-0 flex-1 resize-none rounded-lg border-slate-300 text-sm"
                                     :placeholder="labels.placeholder"
+                                    @keydown.enter="onComposerKeydown($event)"
                                 ></textarea>
                                 <button type="submit" class="shrink-0 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white" :disabled="sending" x-text="labels.send"></button>
                             </div>
-                            <p x-show="pendingImage" class="mt-2 text-xs text-slate-500">📷 <span x-text="pendingImage?.name"></span></p>
+                            <x-chat.pending-image-preview />
                         </form>
-                    </div>
-                </template>
+                </div>
             </section>
         </div>
     </div>

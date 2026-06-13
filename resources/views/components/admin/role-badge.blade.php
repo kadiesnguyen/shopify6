@@ -4,10 +4,15 @@
     use App\Models\Shop;
 
     $roleName = is_string($role) ? $role : ($role?->name ?? null);
+    $shopType = match ($roleName) {
+        'shop_business' => Shop::TYPE_BUSINESS,
+        'shop_personal', 'shop' => Shop::TYPE_PERSONAL,
+        default => $shop?->seller_type ?? Shop::TYPE_PERSONAL,
+    };
 @endphp
 
-@if ($shop || $roleName === 'shop')
-    <x-admin.shop-type-badge :type="$shop?->seller_type ?? Shop::TYPE_PERSONAL" {{ $attributes }} />
+@if (in_array($roleName, ['shop', 'shop_personal', 'shop_business'], true))
+    <x-admin.shop-type-badge :type="$shopType" {{ $attributes }} />
 @elseif ($roleName)
     @php
         $styles = match ($roleName) {

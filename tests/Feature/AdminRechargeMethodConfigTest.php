@@ -48,6 +48,31 @@ class AdminRechargeMethodConfigTest extends TestCase
         $this->assertSame('NGUYEN VAN A', $method->config['bank_account_name'] ?? null);
     }
 
+    public function test_admin_can_create_bank_recharge_method_when_crypto_fields_are_empty(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('admin.recharge-methods.store'), [
+                'name' => 'ngan hang',
+                'type' => 'bank',
+                'bank_name' => 'BIDV',
+                'bank_account_number' => '45344343',
+                'bank_account_name' => 'NGUYEN VAN A',
+                'networks' => [''],
+                'currencies' => '',
+                'wallet_address' => '',
+                'sort_order' => 1,
+                'status' => 'active',
+            ])
+            ->assertRedirect(route('admin.recharge-methods.index'))
+            ->assertSessionHasNoErrors();
+
+        $method = RechargeMethod::query()->where('name', 'ngan hang')->firstOrFail();
+
+        $this->assertSame('bank', $method->type);
+        $this->assertSame('BIDV', $method->config['bank_name'] ?? null);
+        $this->assertArrayNotHasKey('networks', $method->config);
+    }
+
     public function test_admin_can_create_crypto_recharge_method_with_options(): void
     {
         $this->actingAs($this->admin)

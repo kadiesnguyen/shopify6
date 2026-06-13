@@ -44,4 +44,5 @@ return [
     'remove_support_avatar' => 'Remove avatar',
     'save_settings' => 'Save settings',
     'settings_saved' => 'Support chat settings saved.',
+    'remove_image' => 'Remove image',
 ];

@@ -97,12 +97,14 @@ class RechargeMethodController extends Controller
             $rules['bank_account_name'][0] = 'required';
             $rules['bank_name'][0] = 'required';
             $rules['bank_account_number'][0] = 'required';
+            unset($rules['networks'], $rules['networks.*']);
         }
 
         if ($request->input('type') === RechargeMethod::TYPE_CRYPTO) {
             $rules['wallet_address'][0] = 'required';
             $rules['currencies'][0] = 'required';
-            $rules['networks'][0] = 'required';
+            $rules['networks'] = ['required', 'array', 'min:1'];
+            $rules['networks.*'] = ['required', 'string', 'max:120', 'in:'.implode(',', $this->allowedNetworkLabels())];
         }
 
         if ($request->input('type') === RechargeMethod::TYPE_BANK) {

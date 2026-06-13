@@ -26,7 +26,7 @@ class ShopDashboardTest extends TestCase
         $this->member->assignRole('member');
     }
 
-    public function test_member_with_shop_sees_shop_data_on_my_page(): void
+    public function test_member_with_shop_record_but_no_shop_role_does_not_see_shop_data_on_my_page(): void
     {
         Shop::query()->create([
             'user_id' => $this->member->id,
@@ -38,7 +38,31 @@ class ShopDashboardTest extends TestCase
             'star_rating' => 4.5,
         ]);
 
-        $this->actingAs($this->member)
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.my.index'))
+            ->assertOk()
+            ->assertSee($this->member->name)
+            ->assertDontSee(__('member.shop_dashboard.store_data'))
+            ->assertDontSee(__('member.shop_dashboard.sales_chart'))
+            ->assertDontSee('$999.99');
+    }
+
+    public function test_shop_role_sees_shop_data_on_my_page(): void
+    {
+        Role::findOrCreate('shop');
+        $this->member->assignRole('shop');
+
+        Shop::query()->create([
+            'user_id' => $this->member->id,
+            'name' => 'Demo Shop',
+            'slug' => 'demo-shop-role',
+            'status' => 'active',
+            'display_total_sales' => 999.99,
+            'display_visitors_today' => 42,
+            'star_rating' => 4.5,
+        ]);
+
+        $this->actingAs($this->member->fresh())
             ->get(route('member.my.index'))
             ->assertOk()
             ->assertSee('Demo Shop')
@@ -51,6 +75,9 @@ class ShopDashboardTest extends TestCase
 
     public function test_shop_dashboard_route_redirects_to_my_page(): void
     {
+        Role::findOrCreate('shop');
+        $this->member->assignRole('shop');
+
         Shop::query()->create([
             'user_id' => $this->member->id,
             'name' => 'Demo Shop',

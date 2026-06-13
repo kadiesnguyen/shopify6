@@ -1,5 +1,8 @@
+import { chatComposerState } from './chat-composer';
+
 document.addEventListener('alpine:init', () => {
     Alpine.data('adminChat', (config) => ({
+        ...chatComposerState(),
         filter: config.initialFilter || 'all',
         conversations: [],
         messages: [],
@@ -7,7 +10,6 @@ document.addEventListener('alpine:init', () => {
         activeConversation: null,
         displayName: '',
         draft: '',
-        pendingImage: null,
         selectedIds: [],
         selectedConversationIds: [],
         loadingList: false,
@@ -99,12 +101,8 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
-        onImagePick(e) {
-            const file = e.target.files?.[0];
-            if (file) {
-                this.pendingImage = file;
-            }
-            e.target.value = '';
+        onComposerKeydown(event) {
+            this.handleComposerKeydown(event, () => this.sendMessage());
         },
 
         async sendMessage() {
@@ -130,7 +128,7 @@ document.addEventListener('alpine:init', () => {
                 });
                 if (res.ok) {
                     this.draft = '';
-                    this.pendingImage = null;
+                    this.clearPendingImage();
                     await this.loadThread(this.activeId);
                     await this.loadConversations(true);
                 }

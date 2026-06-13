@@ -91,9 +91,14 @@ class WithdrawalMethodController extends Controller
             'internal_note' => ['nullable', 'string', 'max:1000'],
         ];
 
+        if ($request->input('type') === WithdrawalMethod::TYPE_BANK) {
+            unset($rules['networks'], $rules['networks.*']);
+        }
+
         if ($request->input('type') === WithdrawalMethod::TYPE_CRYPTO) {
             $rules['currencies'][0] = 'required';
-            $rules['networks'][0] = 'required';
+            $rules['networks'] = ['required', 'array', 'min:1'];
+            $rules['networks.*'] = ['required', 'string', 'max:120', 'in:'.implode(',', $this->allowedNetworkLabels())];
         }
 
         return $request->validate($rules);

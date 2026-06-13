@@ -405,6 +405,7 @@ return [
         'insufficient_balance' => 'Số dư không đủ.',
         'payout_details' => 'Thông tin nhận tiền',
         'recharge_method_disabled' => 'Phương thức nạp này đang tắt. Vui lòng liên hệ CSKH.',
+        'recharge_support_prefill' => 'Tôi cần nạp tiền cho :username. Số tiền là: ',
         'field_required' => 'Vui lòng nhập đầy đủ thông tin.',
         'bank_name_invalid' => 'Ngân hàng không hợp lệ. Vui lòng chọn từ danh sách.',
         'currency_required' => 'Vui lòng chọn tiền tệ.',

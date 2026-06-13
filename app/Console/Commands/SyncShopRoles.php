@@ -25,7 +25,13 @@ class SyncShopRoles extends Command
                     return;
                 }
 
-                $user->assignRole('shop');
+                $roles = ['shop'];
+
+                if ($user->hasRole('member')) {
+                    $roles[] = 'member';
+                }
+
+                $user->syncRoles($roles);
                 $count++;
             });
 

@@ -7,6 +7,7 @@ use App\Models\ShopApplication;
 use App\Services\Admin\ShopApplicationApprovalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ShopApplicationController extends Controller
@@ -50,5 +51,20 @@ class ShopApplicationController extends Controller
         $this->approvalService->reject($shopApplication, auth()->user(), $request->string('admin_note')->toString() ?: null);
 
         return back()->with('status', __('admin.shop_applications.rejected'));
+    }
+
+    public function destroy(ShopApplication $shopApplication): RedirectResponse
+    {
+        foreach (['logo', 'id_front', 'id_back'] as $field) {
+            $path = $shopApplication->{$field};
+
+            if (filled($path)) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+
+        $shopApplication->delete();
+
+        return back()->with('status', __('admin.shop_applications.deleted'));
     }
 }

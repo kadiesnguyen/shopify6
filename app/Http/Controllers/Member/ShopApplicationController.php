@@ -15,7 +15,7 @@ class ShopApplicationController extends Controller
         $user = auth()->user();
         $shop = $user->shop;
 
-        if ($shop?->isBusiness()) {
+        if ($user->isShop() && $shop?->isBusiness()) {
             return redirect()
                 ->route('member.home')
                 ->with('status', __('member.shop_application.already_business_shop'));
@@ -33,7 +33,7 @@ class ShopApplicationController extends Controller
             ]);
         }
 
-        $mode = $shop?->isPersonal() ? ShopApplication::KIND_UPGRADE : ShopApplication::KIND_REGISTRATION;
+        $mode = $this->applicationModeFor($user, $shop);
 
         return view('member.shop-application.create', [
             'mode' => $mode,
@@ -49,7 +49,7 @@ class ShopApplicationController extends Controller
         $user = auth()->user();
         $shop = $user->shop;
 
-        if ($shop?->isBusiness()) {
+        if ($user->isShop() && $shop?->isBusiness()) {
             return redirect()
                 ->route('member.home')
                 ->with('status', __('member.shop_application.already_business_shop'));
@@ -66,7 +66,7 @@ class ShopApplicationController extends Controller
                 ->with('status', __('member.shop_application.pending_exists'));
         }
 
-        $mode = $shop?->isPersonal() ? ShopApplication::KIND_UPGRADE : ShopApplication::KIND_REGISTRATION;
+        $mode = $this->applicationModeFor($user, $shop);
         $sellerType = $request->validated('seller_type');
 
         if ($mode === ShopApplication::KIND_UPGRADE && $sellerType !== ShopApplication::TYPE_BUSINESS) {
@@ -94,5 +94,14 @@ class ShopApplicationController extends Controller
             ->with('status', $mode === ShopApplication::KIND_UPGRADE
                 ? __('member.shop_application.upgrade_submitted')
                 : __('member.shop_application.submitted'));
+    }
+
+    private function applicationModeFor(\App\Models\User $user, ?\App\Models\Shop $shop): string
+    {
+        if ($user->isShop() && $shop?->isPersonal()) {
+            return ShopApplication::KIND_UPGRADE;
+        }
+
+        return ShopApplication::KIND_REGISTRATION;
     }
 }

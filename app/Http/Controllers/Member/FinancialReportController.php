@@ -13,6 +13,8 @@ class FinancialReportController extends Controller
 
     public function index(Request $request): View
     {
+        abort_unless(auth()->user()->isShop(), 403);
+
         $period = $request->string('period', 'day')->toString();
 
         if (! in_array($period, ['day', 'week', 'month', 'year', 'custom'], true)) {

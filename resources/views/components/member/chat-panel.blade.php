@@ -90,11 +90,10 @@
                 rows="2"
                 class="min-w-0 flex-1 resize-none rounded-xl border-gray-300 text-sm leading-snug"
                 placeholder="{{ __('chat.placeholder') }}"
+                @keydown="onComposerKeydown($event)"
             ></textarea>
             <x-member.chat-send-button x-bind:disabled="sending" />
         </div>
-        <p x-show="pendingImage" class="mt-2 truncate text-xs text-gray-500">
-            📷 <span x-text="pendingImage?.name"></span>
-        </p>
+        <x-chat.pending-image-preview />
     </form>
 </div>
