@@ -48,6 +48,10 @@ body {
 }
 
 @layer components {
+    .landing-mobile-nav-panel__body {
+        padding-bottom: 20px;
+    }
+
     .portal-plain-input {
         @apply min-w-0 w-full border-0 bg-transparent p-0 text-base text-gray-900 shadow-none outline-none ring-0 ring-offset-0;
         @apply placeholder:text-gray-400;
@@ -449,6 +453,18 @@ body {
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
         overflow: hidden;
+    }
+
+    @media (min-width: 768px) {
+        .admin-orders-table .responsive-table-scroll > table {
+            table-layout: auto;
+        }
+
+        .admin-orders-table .responsive-table-scroll > table .admin-orders-table__actions {
+            overflow: visible;
+            min-width: 10.5rem;
+            width: 10.5rem;
+        }
     }
 
     .ui-content-grid {

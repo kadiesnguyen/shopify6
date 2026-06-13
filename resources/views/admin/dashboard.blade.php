@@ -94,7 +94,6 @@
                                 ['route' => 'admin.users.index', 'label' => __('admin.menu.users'), 'icon' => 'users', 'color' => 'text-cyan-600'],
                                 ['route' => 'admin.invite-codes.index', 'label' => __('admin.menu.invite_codes'), 'icon' => 'ticket', 'color' => 'text-violet-600'],
                                 ['route' => 'admin.products.index', 'label' => __('admin.menu.products'), 'icon' => 'package', 'color' => 'text-amber-600'],
-                                ['route' => 'admin.promotions.index', 'label' => __('admin.menu.promotions'), 'icon' => 'megaphone', 'color' => 'text-rose-600'],
                                 ['route' => 'admin.recharge-requests.index', 'label' => __('admin.menu.recharge_requests'), 'icon' => 'circle-plus', 'color' => 'text-emerald-600'],
                                 ['route' => 'admin.withdrawal-requests.index', 'label' => __('admin.menu.withdrawal_requests'), 'icon' => 'circle-arrow-out', 'color' => 'text-orange-600'],
                             ] as $link)

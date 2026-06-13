@@ -23,7 +23,10 @@ class AdminOrdersSearchTest extends TestCase
         $admin = User::factory()->create(['status' => 'active']);
         $admin->assignRole('admin');
 
-        $buyer = User::factory()->create(['status' => 'active']);
+        $buyer = User::factory()->create([
+            'status' => 'active',
+            'name' => '0356674288 Buyer',
+        ]);
         Wallet::query()->create(['user_id' => $buyer->id, 'balance' => 1000]);
 
         $sellerA = User::factory()->create(['status' => 'active']);
@@ -72,16 +75,14 @@ class AdminOrdersSearchTest extends TestCase
             ->get(route('admin.orders.index', ['q' => 'tesst']))
             ->assertOk()
             ->assertSee('tesst')
-            ->assertSee('ORD-T...')
-            ->assertDontSee('ORD-O...')
+            ->assertSee('0356674288 Buyer')
             ->assertDontSee('Other Shop');
 
         $this->actingAs($admin)
             ->get(route('admin.orders.index', ['shop_id' => $shopA->id, 'q' => 'tesst']))
             ->assertOk()
             ->assertSee('tesst')
-            ->assertSee('ORD-T...')
-            ->assertDontSee('ORD-O...')
+            ->assertSee('0356674288 Buyer')
             ->assertDontSee('Other Shop');
     }
 

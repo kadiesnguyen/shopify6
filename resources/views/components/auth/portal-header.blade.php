@@ -1,16 +1,18 @@
 @php
     use App\Support\AppLocale;
+    use App\Support\SiteSettings;
 
     $locales = AppLocale::configured();
     $currentLocale = AppLocale::display();
     $currentMeta = AppLocale::currentMeta() ?? [];
-    $logo = asset(config('landing.portal_logo', 'images/portal/logo.jpg'));
+    $logo = SiteSettings::logoUrl();
+    $brandName = SiteSettings::websiteTitle();
 @endphp
 
 <header class="bg-brand text-white shadow-sm">
     <div class="mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
         <a href="{{ route('landing.home') }}" class="inline-flex rounded-md bg-white px-2.5 py-1.5">
-            <img src="{{ $logo }}" alt="{{ config('landing.brand_name', 'Shopify') }}" class="h-6 w-auto max-w-[7rem] object-contain object-left" width="112" height="24">
+            <img src="{{ $logo }}" alt="{{ $brandName }}" class="h-6 w-auto max-w-[7rem] object-contain object-left" width="112" height="24">
         </a>
 
         <div class="relative" x-data="{ open: false }">

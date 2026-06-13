@@ -112,7 +112,12 @@ class SiteSettings
             return null;
         }
 
-        return Storage::disk('public')->url($path);
+        return self::publicStorageUrl($path);
+    }
+
+    public static function publicStorageUrl(string $path): string
+    {
+        return '/storage/'.ltrim($path, '/');
     }
 
     public static function assetUrl(string $key, string $fallback): string
@@ -131,7 +136,7 @@ class SiteSettings
             return asset($path);
         }
 
-        return Storage::disk('public')->url($path);
+        return self::publicStorageUrl($path);
     }
 
     public static function deleteStoredFile(?string $path): void
