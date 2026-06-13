@@ -8,8 +8,11 @@ use App\Http\Requests\Admin\UploadCmsImageRequest;
 use App\Support\CmsPages;
 use App\Support\RichTextSanitizer;
 use App\Support\SiteSettings;
+use App\Support\Storage\PublicUploadStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class SettingsController extends Controller
@@ -82,7 +85,13 @@ class SettingsController extends Controller
         }
 
         $previous = SiteSettings::get($settingKey);
-        $path = $request->file($field)->store('site-settings', 'public');
+        $path = PublicUploadStorage::store($request->file($field), 'site-settings');
+
+        if (! Storage::disk('public')->exists($path)) {
+            throw ValidationException::withMessages([
+                $field => [__('admin.settings.upload_failed')],
+            ]);
+        }
 
         SiteSettings::set($settingKey, $path);
         SiteSettings::deleteStoredFile($previous);

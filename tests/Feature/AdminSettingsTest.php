@@ -98,6 +98,24 @@ class AdminSettingsTest extends TestCase
         Storage::disk('public')->assertExists(SiteSettings::get(SiteSettings::KEY_SEO_OG_IMAGE));
     }
 
+    public function test_admin_can_upload_svg_logo_and_ico_favicon(): void
+    {
+        Storage::fake('public');
+
+        $logo = UploadedFile::fake()->create('logo.svg', 5, 'image/svg+xml');
+        $favicon = UploadedFile::fake()->create('favicon.ico', 5, 'image/x-icon');
+
+        $this->actingAs($this->admin)
+            ->put('/admin/settings', [
+                'logo' => $logo,
+                'favicon' => $favicon,
+            ])
+            ->assertRedirect(route('admin.settings.edit', ['tab' => 'general']));
+
+        Storage::disk('public')->assertExists(SiteSettings::get(SiteSettings::KEY_LOGO));
+        Storage::disk('public')->assertExists(SiteSettings::get(SiteSettings::KEY_FAVICON));
+    }
+
     public function test_member_cannot_access_settings(): void
     {
         $member = User::factory()->create(['status' => 'active']);

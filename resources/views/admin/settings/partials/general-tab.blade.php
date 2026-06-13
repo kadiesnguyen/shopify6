@@ -43,16 +43,15 @@
             <label for="logo" class="mb-1.5 block text-sm font-medium text-slate-700">
                 {{ __('admin.settings.logo') }}
             </label>
-            @if ($settings['logo_path'])
-                <img src="{{ $logoUrl }}" alt="" class="mb-2 h-10 w-auto rounded border border-slate-200 object-contain">
-            @endif
+            <img src="{{ $logoUrl }}" alt="" class="mb-2 h-10 w-auto rounded border border-slate-200 object-contain">
             <input
                 id="logo"
                 name="logo"
                 type="file"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,.svg"
                 class="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
             >
+            <p class="mt-1 text-xs text-slate-500">{{ __('admin.settings.logo_hint') }}</p>
             @error('logo')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
@@ -67,9 +66,10 @@
                 id="favicon"
                 name="favicon"
                 type="file"
-                accept="image/*,.ico"
+                accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,image/x-icon,.ico,.svg"
                 class="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200"
             >
+            <p class="mt-1 text-xs text-slate-500">{{ __('admin.settings.favicon_hint') }}</p>
             @error('favicon')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror

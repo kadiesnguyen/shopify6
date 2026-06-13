@@ -9,6 +9,17 @@
 @section('content')
     <x-admin.page-header :title="__('admin.menu.settings')" />
 
+    @if ($errors->any())
+        <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <p class="font-semibold">{{ __('admin.settings.validation_failed') }}</p>
+            <ul class="mt-1 list-inside list-disc">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div
         class="max-w-4xl"
         x-data="{ tab: @js(old('active_tab', $activeTab)) }"
