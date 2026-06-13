@@ -1,9 +1,12 @@
 @php
-    $locales = config('landing.locales', [
-        'vi' => ['label' => 'Tiếng Việt', 'flag' => 'flags/vn.png'],
-        'en' => ['label' => 'English', 'flag' => 'flags/us.png'],
-    ]);
-    $currentLocale = app()->getLocale();
+    use App\Support\AppLocale;
+    use App\Support\SiteSettings;
+
+    $locales = AppLocale::configured();
+    $currentLocale = AppLocale::display();
+    $currentMeta = AppLocale::currentMeta() ?? [];
+    $portalLogo = SiteSettings::logoUrl();
+    $brandName = SiteSettings::websiteTitle();
 @endphp
 
 <header class="sticky top-0 z-40 border-b border-slate-200 bg-header-bg">
@@ -20,31 +23,33 @@
         </nav>
 
         <div class="flex items-center gap-2">
-            <div class="relative hidden sm:block" x-data="{ open: false }">
+            <div class="relative" x-data="{ open: false }">
                 <button
                     type="button"
                     @click="open = !open"
-                    class="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:border-brand/40"
+                    class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm text-slate-700 hover:border-brand/40"
                 >
-                    @if (! empty($locales[$currentLocale]['flag']))
-                        <img src="{{ asset('images/landing/'.$locales[$currentLocale]['flag']) }}" alt="" class="h-4 w-5 shrink-0 object-cover" width="20" height="16">
+                    <svg class="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m12.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5a17.92 17.92 0 01-8.716-2.247m0 0A8.966 8.966 0 013 12c0-1.105.203-2.162.572-3.132"/>
+                    </svg>
+                    @if (! empty($currentMeta['flag']))
+                        <img src="{{ asset('images/landing/'.$currentMeta['flag']) }}" alt="" class="h-4 w-5 shrink-0 object-cover" width="20" height="16">
                     @endif
-                    <span class="whitespace-nowrap">{{ $locales[$currentLocale]['label'] ?? strtoupper($currentLocale) }}</span>
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <span class="max-w-[7rem] truncate sm:max-w-none sm:whitespace-nowrap">{{ $currentMeta['label'] ?? strtoupper($currentLocale) }}</span>
+                    <svg class="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div
                     x-show="open"
                     x-cloak
                     @click.outside="open = false"
-                    class="absolute right-0 z-50 mt-1 min-w-max rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+                    class="absolute right-0 z-50 mt-1 max-h-64 min-w-max overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 text-gray-700 shadow-lg"
                 >
                     @foreach ($locales as $code => $locale)
                         <a
                             href="{{ route('locale.switch', $code) }}"
                             @class([
-                                'flex items-center gap-2 whitespace-nowrap px-4 py-2 text-sm hover:bg-slate-50',
+                                'flex items-center gap-2 whitespace-nowrap px-4 py-2 text-sm hover:bg-gray-50',
                                 'font-semibold text-brand' => $currentLocale === $code,
-                                'text-slate-700' => $currentLocale !== $code,
                             ])
                         >
                             @if (! empty($locale['flag']))
@@ -79,19 +84,24 @@
         x-cloak
         class="border-t border-slate-200 bg-white md:hidden"
     >
-        <nav class="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3 text-sm">
-            <div class="flex flex-wrap gap-2">
-                @foreach ($locales as $code => $locale)
-                    <a href="{{ route('locale.switch', $code) }}" class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs @if($currentLocale === $code) border-brand text-brand @else border-slate-200 @endif">
-                        @if (! empty($locale['flag']))
-                            <img src="{{ asset('images/landing/'.$locale['flag']) }}" alt="" class="h-3 w-4 object-cover">
-                        @endif
-                        {{ $locale['label'] ?? $code }}
-                    </a>
-                @endforeach
+        <div class="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-6">
+            <a href="{{ route('landing.home') }}" class="block">
+                <img
+                    src="{{ $portalLogo }}"
+                    alt="{{ $brandName }}"
+                    class="h-10 w-auto max-w-[12rem] object-contain"
+                    width="200"
+                    height="40"
+                >
+            </a>
+            <div class="flex w-full gap-2">
+                <a href="{{ route('auth.register') }}" class="flex-1 rounded-lg border border-brand px-4 py-2.5 text-center text-sm font-semibold text-brand">
+                    {{ __('messages.register') }}
+                </a>
+                <a href="{{ route('auth.login') }}" class="flex-1 rounded-lg bg-brand px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-brand-dark">
+                    {{ __('messages.login') }}
+                </a>
             </div>
-            <a href="{{ route('auth.login') }}" class="rounded-lg bg-brand px-4 py-2.5 text-center font-semibold text-white">{{ __('messages.login') }}</a>
-            <a href="{{ route('auth.register') }}" class="rounded-lg border border-brand px-4 py-2.5 text-center font-semibold text-brand">{{ __('messages.register') }}</a>
-        </nav>
+        </div>
     </div>
 </header>

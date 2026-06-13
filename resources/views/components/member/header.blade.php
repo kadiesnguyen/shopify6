@@ -1,12 +1,14 @@
 @php
+    use App\Support\AppLocale;
     use App\Support\Member\BellNotificationCache;
     use App\Support\SiteSettings;
     use Illuminate\Support\Str;
 
     $user = auth()->user();
     $unreadCount = BellNotificationCache::unreadCount($user->id);
-    $locales = config('landing.locales', []);
-    $currentLocale = app()->getLocale();
+    $locales = AppLocale::configured();
+    $currentLocale = AppLocale::display();
+    $currentMeta = AppLocale::currentMeta() ?? [];
     $logo = SiteSettings::logoUrl();
     $brandName = SiteSettings::websiteTitle();
     $displayName = $user->email ?: ($user->username ?? $user->name);
@@ -30,14 +32,17 @@
                 class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
             >
                 <x-member.icon name="globe" class="size-4 shrink-0" />
-                <span class="whitespace-nowrap">{{ $locales[$currentLocale]['label'] ?? strtoupper($currentLocale) }}</span>
+                @if (! empty($currentMeta['flag']))
+                    <img src="{{ asset('images/landing/'.$currentMeta['flag']) }}" alt="" class="h-4 w-5 shrink-0 object-cover" width="20" height="16">
+                @endif
+                <span class="whitespace-nowrap">{{ $currentMeta['label'] ?? strtoupper($currentLocale) }}</span>
                 <x-member.icon name="chevron-down" class="size-5 shrink-0" />
             </button>
             <div
                 x-show="open"
                 x-cloak
                 @click.outside="open = false"
-                class="absolute right-0 z-50 mt-1 min-w-max rounded-lg border border-gray-200 bg-white py-1 text-gray-700 shadow-lg"
+                class="absolute right-0 z-50 mt-1 max-h-64 min-w-max overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 text-gray-700 shadow-lg"
             >
                 @foreach ($locales as $code => $locale)
                     <a

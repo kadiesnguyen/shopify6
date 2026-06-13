@@ -5,19 +5,14 @@ return [
     'portal_logo' => 'images/portal/logo.jpg',
 
     'locales' => [
-        'vi' => ['label' => 'Tiếng Việt', 'flag' => 'flags/vn.png'],
-        'en' => ['label' => 'English', 'flag' => 'flags/us.png'],
-    ],
-
-    'locale_flags' => [
-        'vi' => 'flags/vn.png',
-        'en' => 'flags/us.png',
-        'es' => 'flags/es.png',
-        'fr-CA' => 'flags/ca.png',
-        'th' => 'flags/th.png',
-        'ms' => 'flags/my.png',
-        'zh-CN' => 'flags/cn.png',
-        'zh-TW' => 'flags/tw.png',
+        'vi' => ['label' => 'Tiếng Việt', 'flag' => 'flags/vn.png', 'content' => 'vi'],
+        'en' => ['label' => 'English', 'flag' => 'flags/us.png', 'content' => 'en'],
+        'es' => ['label' => 'Español', 'flag' => 'flags/es.png', 'content' => 'vi'],
+        'fr-CA' => ['label' => 'Français Canadien', 'flag' => 'flags/ca.png', 'content' => 'vi'],
+        'th' => ['label' => 'ไทย', 'flag' => 'flags/th.png', 'content' => 'vi'],
+        'ms' => ['label' => 'Bahasa Melayu', 'flag' => 'flags/my.png', 'content' => 'vi'],
+        'zh-CN' => ['label' => '简体中文', 'flag' => 'flags/cn.png', 'content' => 'vi'],
+        'zh-TW' => ['label' => '繁體中文', 'flag' => 'flags/tw.png', 'content' => 'vi'],
     ],
 
     'hero_slides' => [

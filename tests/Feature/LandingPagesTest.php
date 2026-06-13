@@ -21,6 +21,30 @@ class LandingPagesTest extends TestCase
         $response->assertSee('/images/landing/opportunities/case1.jpg', false);
     }
 
+    public function test_landing_shows_all_locale_options(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk()
+            ->assertSee('Español', false)
+            ->assertSee('Français Canadien', false)
+            ->assertSee('Bahasa Melayu', false)
+            ->assertSee('简体中文', false)
+            ->assertSee('繁體中文', false);
+    }
+
+    public function test_extra_locale_selection_shows_vietnamese_content(): void
+    {
+        $this->get('/locale/es')
+            ->assertRedirect();
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Español', false)
+            ->assertSee('Lợi Thế Của Chúng Tôi');
+        $this->assertSame('vi', app()->getLocale());
+    }
+
     public function test_default_locale_is_vietnamese(): void
     {
         $this->get('/')->assertOk()->assertSee('Lợi Thế Của Chúng Tôi');
