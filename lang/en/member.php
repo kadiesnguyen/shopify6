@@ -84,6 +84,7 @@ return [
         'distribute' => 'Distribute',
         'already_distributed' => 'Already distributed',
         'distributed_success' => 'Product distributed successfully.',
+        'distribute_failed' => 'Could not distribute product. Please try again.',
         'distribution_center_hint' => 'Distributing does not deduct from your wallet. When an order is placed, pay the purchase cost to admin manually. After the order is completed, purchase price + profit is credited to your wallet.',
         'distribution_locked' => 'Distribution is locked',
         'purchase_price' => 'Purchase price',

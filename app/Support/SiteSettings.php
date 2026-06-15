@@ -117,7 +117,7 @@ class SiteSettings
 
     public static function publicStorageUrl(string $path): string
     {
-        return '/storage/'.ltrim($path, '/');
+        return asset('storage/'.ltrim($path, '/'));
     }
 
     public static function assetUrl(string $key, string $fallback): string

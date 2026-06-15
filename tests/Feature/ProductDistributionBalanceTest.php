@@ -87,6 +87,20 @@ class ProductDistributionBalanceTest extends TestCase
         $this->assertSame(50.0, (float) $this->shopUser->wallet->fresh()->balance);
     }
 
+    public function test_distribution_store_returns_json_for_ajax_requests(): void
+    {
+        $this->actingAs($this->shopUser)
+            ->postJson(route('member.products.distributions.store'), [
+                'product_id' => $this->product->id,
+            ])
+            ->assertOk()
+            ->assertJson([
+                'product_id' => $this->product->id,
+            ]);
+
+        $this->assertDatabaseCount('product_distributions', 1);
+    }
+
     public function test_distribution_center_shows_purchase_selling_and_profit(): void
     {
         $this->actingAs($this->shopUser)

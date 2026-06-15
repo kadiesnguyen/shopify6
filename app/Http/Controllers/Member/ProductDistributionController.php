@@ -57,7 +57,7 @@ class ProductDistributionController extends Controller
         return view('member.products.distributions', compact('products', 'distributedIds', 'balance', 'sort'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $user = auth()->user();
 
@@ -76,6 +76,13 @@ class ProductDistributionController extends Controller
             ->findOrFail($validated['product_id']);
 
         $this->distributionService->distribute($user, $product);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'message' => __('member.products.distributed_success'),
+                'product_id' => $product->id,
+            ]);
+        }
 
         return redirect()
             ->route('member.products.distributions.index')

@@ -40,7 +40,7 @@
                         {{ __('member.products.already_distributed') }}
                     </span>
                 @elseif (auth()->user()->canSelfDistribute())
-                    <form method="POST" action="{{ route('member.products.distributions.store') }}">
+                    <form method="POST" action="{{ route('member.products.distributions.store') }}" class="distribution-form">
                         @csrf
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                         <button

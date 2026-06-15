@@ -84,6 +84,7 @@ return [
         'distribute' => 'Phân phối',
         'already_distributed' => 'Đã phân phối',
         'distributed_success' => 'Đã phân phối sản phẩm thành công.',
+        'distribute_failed' => 'Không thể phân phối sản phẩm. Vui lòng thử lại.',
         'distribution_center_hint' => 'Phân phối không trừ tiền ví. Khi có đơn hàng, cửa hàng thanh toán vốn cho admin. Sau khi đơn Hoàn thành, cửa hàng nhận giá mua + lợi nhuận vào ví.',
         'distribution_locked' => 'Phân phối đã bị khoá',
         'purchase_price' => 'Giá mua',

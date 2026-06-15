@@ -65,6 +65,62 @@
 @push('scripts')
     <script>
         (() => {
+            const distributeLabels = {
+                alreadyDistributed: @js(__('member.products.already_distributed')),
+                error: @js(__('member.products.distribute_failed')),
+            };
+
+            document.addEventListener('submit', async (event) => {
+                const form = event.target.closest('.distribution-form');
+
+                if (!form) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                const button = form.querySelector('button[type="submit"]');
+
+                if (!button || button.disabled) {
+                    return;
+                }
+
+                button.disabled = true;
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': form.querySelector('[name=_token]')?.value ?? '',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: new FormData(form),
+                    });
+
+                    if (response.ok) {
+                        const slot = form.parentElement;
+
+                        if (slot) {
+                            slot.innerHTML = `<span class="inline-flex w-full items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-xs font-semibold text-emerald-700">${distributeLabels.alreadyDistributed}</span>`;
+                        }
+
+                        return;
+                    }
+
+                    button.disabled = false;
+                    const payload = await response.json().catch(() => null);
+                    const message = payload?.message
+                        ?? Object.values(payload?.errors ?? {})?.flat()?.[0]
+                        ?? distributeLabels.error;
+
+                    window.alert(message);
+                } catch (_) {
+                    button.disabled = false;
+                    form.submit();
+                }
+            });
+
             const grid = document.getElementById('distribution-grid');
             const trigger = document.getElementById('distribution-trigger');
             const loader = document.getElementById('distribution-loader');

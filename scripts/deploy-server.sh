@@ -11,6 +11,13 @@ MYSQL_CONTAINER="${MYSQL_CONTAINER:-shopefy-mysql-1}"
 SKIP_GIT_PUSH="${SKIP_GIT_PUSH:-0}"
 SKIP_DB_EXPORT="${SKIP_DB_EXPORT:-0}"
 SKIP_DB_IMPORT="${SKIP_DB_IMPORT:-1}"
+if [[ -z "${SKIP_STORAGE_SYNC:-}" ]]; then
+    if [[ "$SKIP_DB_IMPORT" == "0" ]]; then
+        SKIP_STORAGE_SYNC=0
+    else
+        SKIP_STORAGE_SYNC=1
+    fi
+fi
 DUMP_FILE=""
 
 mkdir -p "$BACKUP_DIR"
@@ -165,12 +172,23 @@ echo "DB imported into $DB_DATABASE (skipped db:ensure-ready — full dump alrea
 REMOTE
 }
 
+sync_storage_to_server() {
+    if [[ "$SKIP_STORAGE_SYNC" == "1" ]]; then
+        log "Skip storage sync (default). Set SKIP_STORAGE_SYNC=0 after DB import to upload media files."
+        return
+    fi
+
+    log "Sync storage/app/public + public/uploads to server"
+    SSH_HOST="$SSH_HOST" REMOTE_PATH="$REMOTE_PATH" "$ROOT/scripts/sync-storage-to-server.sh"
+}
+
 main() {
     log "=== Deploy start ==="
     export_local_db
     git_push
     remote_pull_and_build
     import_db_on_server
+    sync_storage_to_server
     log "=== Deploy done ==="
     log "Site: https://shopjfy6.com"
 }

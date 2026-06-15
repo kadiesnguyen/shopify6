@@ -93,7 +93,6 @@
                 @if ($user->isShop())
                     <x-member.menu-link :href="route('member.financial-report.index')" icon="bar-chart" icon-color="text-cyan-600" icon-bg="bg-cyan-50" :label="__('member.my.financial_report')" />
                 @endif
-                <x-member.menu-link :href="route('member.contract.show')" icon="file-text" icon-color="text-gray-600" icon-bg="bg-gray-50" :label="__('member.my.about')" />
                 <form method="POST" action="{{ route('auth.logout') }}">
                     @csrf
                     <button type="submit" class="flex w-full items-center justify-between px-4 py-3 text-left transition hover:bg-gray-50">
