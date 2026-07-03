@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ShopIndustryRegistry;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -79,5 +80,40 @@ class ShopApplication extends Model
     public function isRegistration(): bool
     {
         return ($this->application_kind ?? self::KIND_REGISTRATION) === self::KIND_REGISTRATION;
+    }
+
+    public function industryLabel(): string
+    {
+        if (! filled($this->industry_id)) {
+            return '—';
+        }
+
+        return app(ShopIndustryRegistry::class)->industry((string) $this->industry_id)['name']
+            ?? (string) $this->industry_id;
+    }
+
+    public function industryRate(): ?int
+    {
+        if (! filled($this->industry_id)) {
+            return null;
+        }
+
+        return app(ShopIndustryRegistry::class)->industry((string) $this->industry_id)['rate'] ?? null;
+    }
+
+    public function businessCategoryLabels(): string
+    {
+        $ids = array_values(array_filter(array_map('intval', $this->business_category_ids ?? [])));
+
+        if ($ids === []) {
+            return '—';
+        }
+
+        $labels = Category::query()
+            ->whereIn('id', $ids)
+            ->orderBy('sort_order')
+            ->pluck('name');
+
+        return $labels->isNotEmpty() ? $labels->join('、') : '—';
     }
 }

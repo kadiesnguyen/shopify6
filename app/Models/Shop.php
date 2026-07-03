@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ShopIndustryRegistry;
 use App\Support\Storage\ShopDocumentStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -188,6 +189,32 @@ class Shop extends Model
     public function isBusiness(): bool
     {
         return $this->seller_type === self::TYPE_BUSINESS;
+    }
+
+    public function industryLabel(): string
+    {
+        if (! filled($this->industry_id)) {
+            return '—';
+        }
+
+        return app(ShopIndustryRegistry::class)->industry((string) $this->industry_id)['name']
+            ?? (string) $this->industry_id;
+    }
+
+    public function businessCategoryLabels(): string
+    {
+        $ids = array_values(array_filter(array_map('intval', $this->business_category_ids ?? [])));
+
+        if ($ids === []) {
+            return '—';
+        }
+
+        $labels = Category::query()
+            ->whereIn('id', $ids)
+            ->orderBy('sort_order')
+            ->pluck('name');
+
+        return $labels->isNotEmpty() ? $labels->join('、') : '—';
     }
 
     public function scopeFeatured($query)

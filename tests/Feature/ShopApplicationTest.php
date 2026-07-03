@@ -351,6 +351,32 @@ class ShopApplicationTest extends TestCase
         $this->assertDatabaseMissing('shop_applications', ['id' => $application->id]);
     }
 
+    public function test_admin_shop_application_index_shows_industry_fields(): void
+    {
+        $application = ShopApplication::query()->create([
+            'user_id' => $this->member->id,
+            'seller_type' => ShopApplication::TYPE_PERSONAL,
+            'industry_id' => 'fashion',
+            'business_category_ids' => [Category::query()->where('slug', 'thoi-trang')->value('id')],
+            'application_kind' => ShopApplication::KIND_REGISTRATION,
+            'shop_name' => 'Fashion Apply Shop',
+            'shop_description' => 'Mô tả cửa hàng thời trang',
+            'address' => '123 Street',
+            'country' => 'VN',
+            'phone' => '0901234567',
+            'real_name' => 'Nguyen Van A',
+            'id_number' => '001234567890',
+            'status' => ShopApplication::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.shop-applications.index'))
+            ->assertOk()
+            ->assertSee('Ngành thời trang')
+            ->assertSee('Mô tả cửa hàng thời trang')
+            ->assertSee('Thời trang');
+    }
+
     private function createPersonalShop(): Shop
     {
         $shop = Shop::query()->create([

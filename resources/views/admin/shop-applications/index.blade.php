@@ -55,6 +55,9 @@
                                 </td>
                                 <td class="px-3 py-2.5">
                                     <span class="cell-wrap font-medium text-slate-900">{{ $item->shop_name }}</span>
+                                    @if (filled($item->industry_id))
+                                        <span class="cell-truncate block text-xs text-slate-500" title="{{ $item->industryLabel() }}">{{ $item->industryLabel() }}</span>
+                                    @endif
                                 </td>
                                 <td class="px-3 py-2.5">
                                     <span class="cell-truncate" title="{{ $item->real_name }}">{{ $item->real_name }}</span>
@@ -118,6 +121,9 @@
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0 flex-1">
                             <p class="break-words font-medium text-slate-900">{{ $item->shop_name }}</p>
+                            @if (filled($item->industry_id))
+                                <p class="truncate text-xs text-slate-500">{{ $item->industryLabel() }}</p>
+                            @endif
                             <p class="truncate text-xs text-slate-500">{{ $item->user?->email }}</p>
                         </div>
                         <span @class([

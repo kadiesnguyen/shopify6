@@ -59,6 +59,22 @@
         {{-- Body --}}
         <div class="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
             <section class="mb-6">
+                <h4 class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ __('admin.shop_applications.section_industry') }}</h4>
+                <dl class="grid gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-4 sm:grid-cols-2">
+                    @foreach ([
+                        [__('admin.shop_applications.industry'), $item->industryLabel()],
+                        [__('admin.shop_applications.industry_rate'), $item->industryRate() !== null ? $item->industryRate().'‰' : '—'],
+                        [__('admin.shop_applications.business_categories'), $item->businessCategoryLabels()],
+                    ] as [$label, $value])
+                        <div @class(['min-w-0', 'sm:col-span-2' => $label === __('admin.shop_applications.business_categories')])>
+                            <dt class="text-xs font-medium text-slate-500">{{ $label }}</dt>
+                            <dd class="mt-0.5 break-words text-sm font-medium text-slate-900">{{ $value }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
+            </section>
+
+            <section class="mb-6">
                 <h4 class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ __('admin.shop_applications.section_shop_info') }}</h4>
                 <dl class="grid gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-4 sm:grid-cols-2">
                     @foreach ([
@@ -74,6 +90,10 @@
                             <dd class="mt-0.5 break-words text-sm font-medium text-slate-900">{{ $value }}</dd>
                         </div>
                     @endforeach
+                    <div class="min-w-0 sm:col-span-2">
+                        <dt class="text-xs font-medium text-slate-500">{{ __('admin.shop_applications.shop_description') }}</dt>
+                        <dd class="mt-0.5 whitespace-pre-line break-words text-sm font-medium text-slate-900">{{ filled($item->shop_description) ? $item->shop_description : '—' }}</dd>
+                    </div>
                     <div class="min-w-0 sm:col-span-2">
                         <dt class="text-xs font-medium text-slate-500">{{ __('admin.shop_applications.address') }}</dt>
                         <dd class="mt-0.5 break-words text-sm font-medium text-slate-900">{{ $item->address }}, {{ $item->country }}</dd>
