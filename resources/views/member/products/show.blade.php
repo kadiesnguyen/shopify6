@@ -15,6 +15,7 @@
         $displayShopName = $detail['shop']['name'] ?? null;
         $displayShopLogo = $detail['shop']['logo_url'] ?? null;
         $shopProductsUrl = $detail['shop']['products_url'] ?? null;
+        $shopUserId = $detail['shop']['user_id'] ?? null;
         $checkoutUrl = $product->stock > 0 ? route('member.checkout.show', $product) : '#';
         $canBuy = $product->stock > 0;
     @endphp
@@ -75,24 +76,40 @@
             </div>
         </div>
     @else
-        <div class="min-h-[var(--app-height,100dvh)] bg-gray-100 pb-[calc(8.5rem+env(safe-area-inset-bottom,0px))]">
-            <header class="fixed top-0 left-0 right-0 z-30 flex items-center bg-orange-500 px-4 py-3 text-white md:left-1/2 md:w-full md:max-w-[420px] md:-translate-x-1/2">
-                <a href="{{ $backUrl }}" class="flex shrink-0 items-center gap-1 rounded-lg p-1 no-underline hover:bg-white/10">
+        <div x-data="{ tab: 'goods' }" class="min-h-[var(--app-height,100dvh)] bg-gray-100 pb-[calc(10rem+env(safe-area-inset-bottom,0px))]">
+            <header class="fixed top-0 left-0 right-0 z-30 flex items-center bg-orange-500 px-2 py-3 text-white md:left-1/2 md:w-full md:max-w-[420px] md:-translate-x-1/2">
+                <a href="{{ $backUrl }}" class="flex shrink-0 items-center rounded-lg p-1 no-underline hover:bg-white/10" aria-label="{{ __('member.back') }}">
                     <x-member.icon name="chevron-left" class="size-5" />
-                    <span class="text-sm font-medium">{{ __('member.products.goods') }}</span>
                 </a>
-                <div class="flex flex-1 justify-end gap-3 text-sm">
-                    <button type="button" onclick="document.getElementById('pvReview')?.scrollIntoView({behavior:'smooth'})" class="font-medium opacity-95 hover:opacity-100">
+                <div class="flex flex-1 justify-center gap-4 text-sm">
+                    <button
+                        type="button"
+                        @click="tab = 'goods'"
+                        :class="tab === 'goods' ? 'border-b-2 border-white pb-0.5 font-semibold' : 'font-medium opacity-90'"
+                    >
+                        {{ __('member.products.goods') }}
+                    </button>
+                    <button
+                        type="button"
+                        @click="tab = 'reviews'"
+                        :class="tab === 'reviews' ? 'border-b-2 border-white pb-0.5 font-semibold' : 'font-medium opacity-90'"
+                    >
                         {{ __('member.products.reviews') }}
                     </button>
-                    <button type="button" onclick="document.getElementById('pvDetail')?.scrollIntoView({behavior:'smooth'})" class="font-medium opacity-95 hover:opacity-100">
+                    <button
+                        type="button"
+                        @click="tab = 'detail'"
+                        :class="tab === 'detail' ? 'border-b-2 border-white pb-0.5 font-semibold' : 'font-medium opacity-90'"
+                    >
                         {{ __('member.products.specs') }}
                     </button>
                 </div>
+                <span class="w-7 shrink-0" aria-hidden="true"></span>
             </header>
 
             @php($images = array_filter($detail['images'] ?? []))
             <div class="pt-12">
+                <div x-show="tab === 'goods'" x-cloak>
                 <div
                     x-data="{
                         idx: 0,
@@ -201,8 +218,9 @@
                         </a>
                     </div>
                 @endif
+                </div>
 
-                <div id="pvReview" class="mt-2 scroll-mt-14 bg-white px-4 py-3">
+                <div x-show="tab === 'reviews'" x-cloak class="mt-2 bg-white px-4 py-3">
                     <div class="flex w-full items-center justify-between text-left font-semibold text-gray-900">
                         <span>{{ __('member.products.reviews') }} {{ $reviewsCount }}+</span>
                         <x-member.icon name="chevron-right" class="size-4 text-gray-400" />
@@ -246,7 +264,8 @@
                     @endif
                 </div>
 
-                <div id="pvDetail" class="mt-2 scroll-mt-14 bg-white px-4 py-3">
+                <div x-show="tab === 'detail'" x-cloak>
+                <div class="mt-2 bg-white px-4 py-3">
                     <p class="mb-3 border-l-4 border-orange-500 pl-2 font-semibold text-gray-900">{{ __('member.products.specs') }}</p>
                     <dl class="space-y-0 text-sm">
                         @if ($displayShopName)
@@ -276,11 +295,18 @@
                         @endforeach
                     </ul>
                 </div>
+                </div>
             </div>
         </div>
 
         @push('product_buy_bar')
-            <x-member.product-buy-bar :checkout-url="$checkoutUrl" :can-buy="$canBuy" />
+            <x-member.product-buy-bar
+                :product-id="$product->id"
+                :shop-user-id="$shopUserId"
+                :shop-url="$shopProductsUrl"
+                :checkout-url="$checkoutUrl"
+                :can-buy="$canBuy"
+            />
         @endpush
     @endif
 @endsection

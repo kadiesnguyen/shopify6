@@ -120,6 +120,7 @@ return [
         'contact_support' => 'Contact support',
         'cart' => 'Cart',
         'my_short' => 'My',
+        'shop_short' => 'Store',
         'add_to_cart' => 'Add to cart',
         'buy_now' => 'Buy now',
     ],

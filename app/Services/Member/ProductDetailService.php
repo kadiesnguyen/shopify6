@@ -59,7 +59,7 @@ class ProductDetailService
         return $images ?: [$main];
     }
 
-    /** @return array{id: int, name: string, logo_url: ?string, products_url: string}|null */
+    /** @return array{id: int, user_id: int, name: string, logo_url: ?string, products_url: string}|null */
     private function resolveDisplayShop(Product $product, ?int $preferredShopId = null): ?array
     {
         $distributions = $product->distributions()
@@ -83,11 +83,12 @@ class ProductDetailService
         return $shop ? $this->shopPayload($shop) : null;
     }
 
-    /** @return array{id: int, name: string, logo_url: ?string, products_url: string} */
+    /** @return array{id: int, user_id: int, name: string, logo_url: ?string, products_url: string} */
     private function shopPayload(Shop $shop): array
     {
         return [
             'id' => $shop->id,
+            'user_id' => $shop->user_id,
             'name' => $shop->name,
             'logo_url' => $shop->displayLogoUrl(),
             'products_url' => route('member.products.index', [

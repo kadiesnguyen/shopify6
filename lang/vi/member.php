@@ -120,6 +120,7 @@ return [
         'contact_support' => 'Liên hệ hỗ trợ',
         'cart' => 'Giỏ',
         'my_short' => 'Của tôi',
+        'shop_short' => 'Cửa hàng',
         'add_to_cart' => 'Thêm vào giỏ hàng',
         'buy_now' => 'Mua ngay',
     ],
