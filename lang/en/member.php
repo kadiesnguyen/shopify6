@@ -121,6 +121,8 @@ return [
         'cart' => 'Cart',
         'my_short' => 'My',
         'shop_short' => 'Store',
+        'stock_on_hand' => 'Stock: :count',
+        'submit' => 'Submit',
         'add_to_cart' => 'Add to cart',
         'buy_now' => 'Buy now',
     ],
@@ -433,5 +435,21 @@ return [
     'carousel' => [
         'prev' => 'Previous',
         'next' => 'Next',
+    ],
+
+    'cart' => [
+        'total_items' => 'Total :count',
+        'manage' => 'Manage',
+        'empty' => 'Your cart is empty',
+        'go_shopping' => 'Go shopping',
+        'remove' => 'Remove',
+        'select_all' => 'Select all',
+        'checkout_total' => 'Total',
+        'checkout' => 'Checkout',
+        'added' => 'Added to cart',
+        'added_toast' => 'Added to cart successfully',
+        'add_failed' => 'Unable to add to cart',
+        'removed' => 'Removed from cart',
+        'empty_checkout' => 'Select at least one item to checkout',
     ],
 ];

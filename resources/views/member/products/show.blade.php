@@ -18,6 +18,8 @@
         $shopUserId = $detail['shop']['user_id'] ?? null;
         $checkoutUrl = $product->stock > 0 ? route('member.checkout.show', $product) : '#';
         $canBuy = $product->stock > 0;
+        $galleryImages = array_values(array_filter($detail['images'] ?? []));
+        $primaryImage = $galleryImages[0] ?? ($detail['image_url'] ?? null);
     @endphp
 
     @if ($isShopView)
@@ -302,6 +304,11 @@
         @push('product_buy_bar')
             <x-member.product-buy-bar
                 :product-id="$product->id"
+                :product-name="$product->name"
+                :selling-price="$sellingPrice"
+                :stock="$detail['stock']"
+                :image-url="$primaryImage"
+                :images="$galleryImages"
                 :shop-user-id="$shopUserId"
                 :shop-url="$shopProductsUrl"
                 :checkout-url="$checkoutUrl"

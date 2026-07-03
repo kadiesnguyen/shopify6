@@ -28,7 +28,7 @@ class CartController extends Controller
         return view('member.cart.index', compact('groups', 'total', 'itemCount'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $validated = $request->validate([
             'product_id' => ['required', 'exists:products,id'],
@@ -46,7 +46,15 @@ class CartController extends Controller
                 isset($validated['shop_user_id']) ? (int) $validated['shop_user_id'] : null,
             );
         } catch (\RuntimeException) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => __('member.cart.add_failed')], 422);
+            }
+
             return back()->withErrors(['cart' => __('member.cart.add_failed')]);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => __('member.cart.added_toast')]);
         }
 
         $redirect = $request->input('redirect', route('member.cart.index'));
