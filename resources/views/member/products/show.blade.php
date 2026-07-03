@@ -93,23 +93,62 @@
 
             @php($images = array_filter($detail['images'] ?? []))
             <div class="pt-12">
-                <div x-data="{ idx: 0, imgs: {{ json_encode($images, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}, startX: 0, swipe(d) { if (Math.abs(d) > 40) { if (d > 0 && this.idx < this.imgs.length - 1) this.idx++; else if (d < 0 && this.idx > 0) this.idx--; } } }" class="relative overflow-hidden bg-gray-200/80" @touchstart="startX = $event.touches[0].clientX" @touchend="swipe(startX - $event.changedTouches[0].clientX)" @mousedown="startX = $event.clientX" @mouseup="swipe(startX - $event.clientX)">
+                <div
+                    x-data="{
+                        idx: 0,
+                        imgs: {{ json_encode($images, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }},
+                        startX: 0,
+                        tracking: false,
+                        begin(clientX, el, pointerId) {
+                            this.tracking = true;
+                            this.startX = clientX;
+                            if (el?.setPointerCapture && pointerId != null) {
+                                el.setPointerCapture(pointerId);
+                            }
+                        },
+                        finish(clientX) {
+                            if (!this.tracking) return;
+                            this.tracking = false;
+                            const delta = this.startX - clientX;
+                            if (Math.abs(delta) < 40) return;
+                            if (delta > 0 && this.idx < this.imgs.length - 1) this.idx++;
+                            else if (delta < 0 && this.idx > 0) this.idx--;
+                        },
+                    }"
+                    class="relative overflow-hidden bg-gray-200/80 select-none touch-pan-y"
+                    style="touch-action: pan-y;"
+                    @pointerdown="begin($event.clientX, $el, $event.pointerId)"
+                    @pointerup="finish($event.clientX)"
+                    @pointercancel="tracking = false"
+                    @touchstart.passive="begin($event.touches[0].clientX, $el, null)"
+                    @touchend="finish($event.changedTouches[0].clientX)"
+                    @mousedown.prevent="begin($event.clientX, $el, null)"
+                    @mouseup="finish($event.clientX)"
+                    @mouseleave="if (tracking) finish($event.clientX)"
+                    @dragstart.prevent
+                >
                     @if ($images === [])
                         <div class="flex min-h-[280px] items-center justify-center">
                             <span class="text-sm text-gray-400">{{ __('member.products.no_image') }}</span>
                         </div>
                     @else
-                        <div class="flex transition-transform duration-300" :style="`transform: translateX(-${idx * 100}%)`">
+                        <div class="flex transition-transform duration-300 ease-out" :style="`transform: translateX(-${idx * 100}%)`">
                             <template x-for="(img, i) in imgs" :key="i">
                                 <div class="flex w-full shrink-0 items-center justify-center min-h-[280px]">
-                                    <img :src="img" alt="{{ $product->name }}" class="max-h-[360px] w-full object-contain">
+                                    <img :src="img" alt="{{ $product->name }}" draggable="false" class="max-h-[360px] w-full object-contain pointer-events-none">
                                 </div>
                             </template>
                         </div>
                         @if (count($images) > 1)
                             <div class="absolute top-3 left-0 right-0 z-20 flex justify-center gap-1.5">
                                 <template x-for="(img, i) in imgs" :key="i">
-                                    <span class="block h-1.5 w-1.5 rounded-full shadow-sm" :class="i === idx ? 'bg-orange-500' : 'bg-white/80'"></span>
+                                    <button
+                                        type="button"
+                                        class="block h-1.5 w-1.5 rounded-full shadow-sm"
+                                        :class="i === idx ? 'bg-orange-500' : 'bg-white/80'"
+                                        :aria-label="`${i + 1}`"
+                                        @click.stop="idx = i"
+                                    ></button>
                                 </template>
                             </div>
                         @endif
