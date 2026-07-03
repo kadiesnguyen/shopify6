@@ -12,7 +12,8 @@
 ])
 
 @php
-    $gallery = array_values(array_filter($images ?: ($imageUrl ? [$imageUrl] : [])));
+    $gallery = array_values(array_unique(array_filter($images ?: ($imageUrl ? [$imageUrl] : []))));
+    $thumbUrl = $gallery[0] ?? $imageUrl;
     $navOffset = 'calc(50px + env(safe-area-inset-bottom, 0px))';
     $buyBarOffset = 'calc(50px + 3.75rem + env(safe-area-inset-bottom, 0px))';
 @endphp
@@ -140,14 +141,14 @@
             </button>
 
             <div class="flex gap-3 px-4 pb-4 pt-5">
-                <div class="flex shrink-0 gap-2">
-                    @forelse (array_slice($gallery, 0, 2) as $thumb)
+                <div class="shrink-0">
+                    @if ($thumbUrl)
                         <div class="size-[72px] overflow-hidden rounded-md bg-gray-100">
-                            <img src="{{ $thumb }}" alt="{{ $productName }}" class="size-full object-cover">
+                            <img src="{{ $thumbUrl }}" alt="{{ $productName }}" class="size-full object-cover">
                         </div>
-                    @empty
+                    @else
                         <div class="flex size-[72px] items-center justify-center rounded-md bg-gray-100 text-xs text-gray-400">{{ __('member.products.no_image') }}</div>
-                    @endforelse
+                    @endif
                 </div>
                 <div class="min-w-0 flex-1 pr-8 pt-1">
                     <p class="text-[26px] font-bold leading-none text-[#fa3534]" x-text="money(unitPrice)"></p>
