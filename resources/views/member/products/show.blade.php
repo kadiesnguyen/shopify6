@@ -10,6 +10,7 @@
         $sellingPrice = $detail['selling_price'];
         $profit = $detail['profit'];
         $description = $detail['description'];
+        $descriptionHtml = $detail['description_html'] ?? false;
         $isRecommended = $detail['is_recommended'];
         $salesCount = $detail['sales_count'] ?? 0;
         $displayShopName = $detail['shop']['name'] ?? null;
@@ -220,6 +221,11 @@
                         </a>
                     </div>
                 @endif
+
+                <button type="button" @click="tab = 'reviews'" class="mt-2 flex w-full items-center justify-between bg-white px-4 py-3 text-left active:bg-gray-50">
+                    <span class="font-semibold text-gray-900">{{ __('member.products.reviews') }} {{ $reviewsCount }}+</span>
+                    <x-member.icon name="chevron-right" class="size-4 text-gray-400" />
+                </button>
                 </div>
 
                 <div x-show="tab === 'reviews'" x-cloak class="mt-2 bg-white px-4 py-3">
@@ -266,37 +272,15 @@
                     @endif
                 </div>
 
-                <div x-show="tab === 'detail'" x-cloak>
-                <div class="mt-2 bg-white px-4 py-3">
+                <div x-show="tab === 'detail'" x-cloak class="mt-2 bg-white px-4 py-4">
                     <p class="mb-3 border-l-4 border-orange-500 pl-2 font-semibold text-gray-900">{{ __('member.products.specs') }}</p>
-                    <dl class="space-y-0 text-sm">
-                        @if ($displayShopName)
-                            <div class="flex justify-between gap-4 border-b border-gray-100 py-2">
-                                <dt class="shrink-0 text-gray-500">{{ __('member.products.brand') }}</dt>
-                                <dd class="text-right font-medium text-gray-900">{{ $displayShopName }}</dd>
-                            </div>
-                        @endif
-                        <div class="flex justify-between gap-4 border-b border-gray-100 py-2">
-                            <dt class="shrink-0 text-gray-500">{{ __('member.products.inventory') }}</dt>
-                            <dd class="text-right font-medium text-gray-900">{{ number_format($detail['stock']) }}</dd>
-                        </div>
-                        <div class="flex justify-between gap-4 py-2">
-                            <dt class="shrink-0 text-gray-500">{{ __('member.products.price') }}</dt>
-                            <dd class="text-right font-medium text-gray-900">${{ number_format($sellingPrice, 2) }}</dd>
-                        </div>
-                    </dl>
-                </div>
-
-                <div class="mb-2 mt-2 bg-white px-4 py-4">
-                    <h2 class="mb-2 font-bold text-gray-900">{{ __('member.products.description') }}</h2>
-                    <ul class="list-disc space-y-2 pl-5 text-sm text-gray-700">
-                        @foreach (preg_split('/\r\n|\r|\n/', $description) as $line)
-                            @if (filled(trim($line)))
-                                <li>{{ trim($line) }}</li>
-                            @endif
-                        @endforeach
-                    </ul>
-                </div>
+                    @if ($descriptionHtml)
+                        <div class="product-detail-html text-sm leading-relaxed text-gray-800">{!! $description !!}</div>
+                    @elseif (filled(trim($description)) && trim($description) !== $product->name)
+                        <div class="whitespace-pre-line text-sm leading-relaxed text-gray-800">{{ $description }}</div>
+                    @else
+                        <p class="py-10 text-center text-sm text-gray-400">{{ __('member.products.no_detail') }}</p>
+                    @endif
                 </div>
             </div>
         </div>

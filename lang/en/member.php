@@ -123,6 +123,7 @@ return [
         'shop_short' => 'Store',
         'stock_on_hand' => 'Stock: :count',
         'submit' => 'Submit',
+        'no_detail' => 'No product details yet.',
         'add_to_cart' => 'Add to cart',
         'buy_now' => 'Buy now',
     ],

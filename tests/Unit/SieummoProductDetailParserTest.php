@@ -7,6 +7,19 @@ use Tests\TestCase;
 
 class SieummoProductDetailParserTest extends TestCase
 {
+    public function test_parses_description_html_from_list_markup(): void
+    {
+        $html = <<<'HTML'
+            <h2 class="font-bold text-gray-900 mb-2">Mô tả sản phẩm</h2>
+            <ul class="list-disc pl-5 space-y-2 text-sm text-gray-700"><li>Full product description here.</li></ul>
+        HTML;
+
+        $this->assertSame(
+            '<li>Full product description here.</li>',
+            (new SieummoProductDetailParser)->parseDescriptionHtml($html),
+        );
+    }
+
     public function test_parses_description_from_list_markup(): void
     {
         $html = <<<'HTML'

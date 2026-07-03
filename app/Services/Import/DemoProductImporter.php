@@ -319,7 +319,7 @@ class DemoProductImporter
         $sellingPrice = (float) ($demo['min_price'] ?? $goodsInfo['zs_shop_price'] ?? 0);
         $purchasePrice = round($sellingPrice * 0.595, 2);
         $commission = round($sellingPrice * 0.10, 2);
-        $description = $this->plainDescription($goodsInfo['goods_desc'] ?? null, $name);
+        $description = $this->htmlDescription($goodsInfo['goods_desc'] ?? null, $name);
 
         $imageUrls = [];
 
@@ -463,6 +463,18 @@ class DemoProductImporter
         Storage::disk('public')->put($storagePath, $response->body());
 
         return $storagePath;
+    }
+
+    private function htmlDescription(?string $html, string $fallback): string
+    {
+        if ($html === null || trim($html) === '') {
+            return $fallback;
+        }
+
+        $clean = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html) ?? $html;
+        $clean = trim($clean);
+
+        return $clean !== '' ? $clean : $fallback;
     }
 
     private function plainDescription(?string $html, string $fallback): string

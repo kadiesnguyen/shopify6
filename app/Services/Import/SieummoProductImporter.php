@@ -266,7 +266,8 @@ class SieummoProductImporter
             ->get(rtrim($sourceUrl, '/').'/product', ['id' => $productId, 'shop' => $shopId])
             ->body();
 
-        return $this->detailParser->parseDescription($html);
+        return $this->detailParser->parseDescriptionHtml($html)
+            ?? $this->detailParser->parseDescription($html);
     }
 
     private function downloadAsset(string $sourceUrl, string $path, string $folder): ?string

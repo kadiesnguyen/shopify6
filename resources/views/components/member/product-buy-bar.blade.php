@@ -135,45 +135,45 @@
         <div class="absolute inset-x-0 top-0 bg-black/40" style="bottom: {{ $navOffset }}" @click="closeCartSheet()"></div>
 
         <div class="absolute inset-x-0 z-10 rounded-t-2xl bg-white shadow-[0_-4px_24px_rgba(15,23,42,0.12)]" style="bottom: {{ $navOffset }}" @click.stop>
-            <button type="button" @click="closeCartSheet()" class="absolute right-3 top-3 z-10 p-1 text-gray-400" aria-label="{{ __('member.back') }}">
+            <button type="button" @click="closeCartSheet()" class="absolute right-4 top-4 z-10 text-gray-400" aria-label="{{ __('member.back') }}">
                 <x-member.icon name="x" class="size-5" />
             </button>
 
-            <div class="flex gap-3 px-4 pb-3 pt-4">
+            <div class="flex gap-3 px-4 pb-4 pt-5">
                 <div class="flex shrink-0 gap-2">
                     @forelse (array_slice($gallery, 0, 2) as $thumb)
-                        <div class="size-16 overflow-hidden rounded-md bg-gray-100">
+                        <div class="size-[72px] overflow-hidden rounded-md bg-gray-100">
                             <img src="{{ $thumb }}" alt="{{ $productName }}" class="size-full object-cover">
                         </div>
                     @empty
-                        <div class="flex size-16 items-center justify-center rounded-md bg-gray-100 text-xs text-gray-400">{{ __('member.products.no_image') }}</div>
+                        <div class="flex size-[72px] items-center justify-center rounded-md bg-gray-100 text-xs text-gray-400">{{ __('member.products.no_image') }}</div>
                     @endforelse
                 </div>
-                <div class="min-w-0 flex-1 pr-6">
-                    <p class="text-2xl font-bold text-[#fa3534]" x-text="money(unitPrice)"></p>
-                    <p class="mt-1 text-xs text-gray-500">{{ __('member.products.stock_on_hand', ['count' => number_format($stock)]) }}</p>
+                <div class="min-w-0 flex-1 pr-8 pt-1">
+                    <p class="text-[26px] font-bold leading-none text-[#fa3534]" x-text="money(unitPrice)"></p>
+                    <p class="mt-2 text-xs text-gray-600">{{ __('member.products.stock_on_hand', ['count' => number_format($stock)]) }}</p>
                 </div>
             </div>
 
-            <div class="flex items-center justify-between border-t border-gray-100 px-4 py-3">
-                <span class="text-sm text-gray-700">{{ __('member.checkout.quantity') }}</span>
+            <div class="flex items-center justify-between border-t border-gray-100 px-4 py-3.5">
+                <span class="text-sm text-gray-800">{{ __('member.checkout.quantity') }}</span>
                 <div class="flex items-center gap-2">
-                    <button type="button" @click="changeQty(-1)" class="flex size-8 items-center justify-center rounded-full border border-gray-200 text-gray-700 active:bg-gray-50 disabled:opacity-40" :disabled="qty <= 1">
+                    <button type="button" @click="changeQty(-1)" class="flex size-9 items-center justify-center rounded-full border border-gray-200 text-gray-700 active:bg-gray-50 disabled:opacity-40" :disabled="qty <= 1">
                         <x-member.icon name="minus" class="size-4" />
                     </button>
-                    <input type="number" min="1" :max="maxQty" x-model.number="qty" @input="setQty($event.target.value)" class="h-8 w-14 rounded-md border border-gray-200 bg-white text-center text-sm tabular-nums text-gray-900 outline-none">
-                    <button type="button" @click="changeQty(1)" class="flex size-8 items-center justify-center rounded-full border border-gray-200 text-gray-700 active:bg-gray-50 disabled:opacity-40" :disabled="qty >= maxQty">
+                    <input type="number" min="1" :max="maxQty" x-model.number="qty" @input="setQty($event.target.value)" class="h-9 w-16 rounded-md border border-gray-200 bg-white text-center text-sm tabular-nums text-gray-900 outline-none">
+                    <button type="button" @click="changeQty(1)" class="flex size-9 items-center justify-center rounded-full border border-gray-200 text-gray-700 active:bg-gray-50 disabled:opacity-40" :disabled="qty >= maxQty">
                         <x-member.icon name="plus" class="size-4" />
                     </button>
                 </div>
             </div>
 
-            <div class="px-4 pb-4 pt-1">
+            <div class="px-4 pb-5 pt-2">
                 <button
                     type="button"
                     @click="submitCart()"
                     :disabled="submitting"
-                    class="flex w-full items-center justify-center rounded-full bg-[#fa3534] py-3 text-base font-semibold text-white disabled:opacity-60"
+                    class="flex w-full items-center justify-center rounded-full bg-[#fa3534] py-3.5 text-base font-semibold text-white disabled:opacity-60"
                 >
                     {{ __('member.products.submit') }}
                 </button>

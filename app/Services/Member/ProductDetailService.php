@@ -28,6 +28,7 @@ class ProductDetailService
             'image_url' => $product->imageUrl(),
             'images' => $this->imageUrls($product),
             'description' => $description,
+            'description_html' => $this->isHtmlDescription($description),
             'purchase_price' => $purchasePrice,
             'selling_price' => $sellingPrice,
             'profit' => $profit,
@@ -37,6 +38,32 @@ class ProductDetailService
             'category' => $product->category?->name,
             'shop' => $this->resolveDisplayShop($product, $displayShopId),
         ];
+    }
+
+    public function needsHtmlUpgrade(Product $product, string $description): bool
+    {
+        return (bool) preg_match('/^demo-(\d+)$/', (string) $product->slug)
+            && ! $this->isHtmlDescription($description);
+    }
+
+    public function isRichDescription(string $description, string $productName): bool
+    {
+        $description = trim($description);
+
+        if ($description === '' || $description === $productName) {
+            return false;
+        }
+
+        if ($this->isHtmlDescription($description)) {
+            return strlen(trim(strip_tags($description))) > 40;
+        }
+
+        return strlen($description) > 80;
+    }
+
+    public function isHtmlDescription(string $description): bool
+    {
+        return (bool) preg_match('/<\s*(p|ul|ol|li|div|img|table|h[1-6]|br|strong|span)\b/i', $description);
     }
 
     /** @return list<string|null> */
@@ -102,19 +129,52 @@ class ProductDetailService
     {
         $current = trim((string) $product->description);
 
-        if ($current !== '' && $current !== $product->name) {
+        if ($this->isRichDescription($current, $product->name) && ! $this->needsHtmlUpgrade($product, $current)) {
             return $current;
         }
 
-        $fetched = $this->fetchDescriptionFromSieummo($product, $sourceUrl);
+        $fetched = $this->fetchRemoteDescription($product, $sourceUrl);
 
-        if ($fetched !== null && $fetched !== '' && $fetched !== $product->name) {
+        if ($fetched !== null && $fetched !== '' && $this->isRichDescription($fetched, $product->name)) {
             $product->update(['description' => $fetched]);
 
             return $fetched;
         }
 
         return $current !== '' ? $current : $product->name;
+    }
+
+    private function fetchRemoteDescription(Product $product, string $sourceUrl): ?string
+    {
+        if (preg_match('/^demo-(\d+)$/', (string) $product->slug, $match)) {
+            return $this->fetchDescriptionFromDemo((int) $match[1]);
+        }
+
+        return $this->fetchDescriptionFromSieummo($product, $sourceUrl);
+    }
+
+    private function fetchDescriptionFromDemo(int $goodsId): ?string
+    {
+        $endpoint = 'api/Goods/goodsInfo';
+        $secretKey = (string) config('services.demo_api.secret_key');
+        $baseUrl = rtrim((string) config('services.demo_api.base_url'), '/');
+
+        try {
+            $response = Http::asForm()->timeout(30)->post(
+                $baseUrl.'/'.$endpoint.'?lang='.config('services.demo_api.locale').'&t='.now()->getTimestampMs(),
+                [
+                    'api_token' => md5($endpoint.$secretKey),
+                    'client_id' => 1,
+                    'goods_id' => $goodsId,
+                ],
+            );
+
+            $html = $response->json('data.goodsinfo.goods_desc');
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return is_string($html) ? $this->sanitizeDescriptionHtml($html) : null;
     }
 
     private function fetchDescriptionFromSieummo(Product $product, string $sourceUrl): ?string
@@ -138,7 +198,15 @@ class ProductDetailService
             return null;
         }
 
-        return $this->parser->parseDescription($html);
+        $richHtml = $this->parser->parseDescriptionHtml($html);
+
+        if ($richHtml !== null && $richHtml !== '') {
+            return $this->sanitizeDescriptionHtml($richHtml);
+        }
+
+        $plain = $this->parser->parseDescription($html);
+
+        return $plain !== null && $plain !== '' ? $plain : null;
     }
 
     /** @return array{0: int, 1: int}|null */
@@ -155,5 +223,12 @@ class ProductDetailService
         }
 
         return [(int) $productMatch[1], (int) $shopMatch[1]];
+    }
+
+    private function sanitizeDescriptionHtml(string $html): string
+    {
+        $html = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html) ?? $html;
+
+        return trim($html);
     }
 }

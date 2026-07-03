@@ -303,6 +303,34 @@ body {
         bottom: calc(50px + env(safe-area-inset-bottom, 0px));
     }
 
+    .product-detail-html img {
+        max-width: 100%;
+        height: auto;
+        margin: 0.75rem 0;
+    }
+
+    .product-detail-html ul,
+    .product-detail-html ol {
+        margin: 0.5rem 0;
+        padding-left: 1.25rem;
+    }
+
+    .product-detail-html p {
+        margin: 0.5rem 0;
+    }
+
+    .product-detail-html table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+    }
+
+    .product-detail-html td,
+    .product-detail-html th {
+        border: 1px solid #e5e7eb;
+        padding: 0.375rem 0.5rem;
+    }
+
     .portal-bottom-nav__label {
         font-size: 10px;
         line-height: 1.25;

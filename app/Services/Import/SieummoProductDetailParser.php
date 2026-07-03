@@ -6,6 +6,19 @@ class SieummoProductDetailParser
 {
     public function parseDescription(string $html): ?string
     {
+        $rich = $this->parseDescriptionHtml($html);
+
+        if ($rich === null) {
+            return null;
+        }
+
+        $text = trim(html_entity_decode(strip_tags($rich), ENT_QUOTES | ENT_HTML5));
+
+        return $text !== '' ? $text : null;
+    }
+
+    public function parseDescriptionHtml(string $html): ?string
+    {
         $patterns = [
             '/<h2 class="font-bold text-gray-900 mb-2">Mô tả sản phẩm<\/h2>\s*<ul class="list-disc[^"]*">(.*?)<\/ul>/su',
             '/Mô tả sản phẩm<\/h2>\s*<ul class="list-disc[^"]*">(.*?)<\/ul>/su',
@@ -18,10 +31,10 @@ class SieummoProductDetailParser
                 continue;
             }
 
-            $text = trim(html_entity_decode(strip_tags($match[1]), ENT_QUOTES | ENT_HTML5));
+            $inner = trim($match[1]);
 
-            if ($text !== '') {
-                return $text;
+            if ($inner !== '') {
+                return $inner;
             }
         }
 

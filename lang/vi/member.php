@@ -123,6 +123,7 @@ return [
         'shop_short' => 'Cửa hàng',
         'stock_on_hand' => 'Hàng tồn kho : :countPhần',
         'submit' => 'Gửi đi',
+        'no_detail' => 'Chưa có thông tin chi tiết sản phẩm.',
         'add_to_cart' => 'Thêm vào giỏ hàng',
         'buy_now' => 'Mua ngay',
     ],
