@@ -101,7 +101,7 @@
                     </button>
                     <button
                         type="button"
-                        @click="tab = 'goods'; $nextTick(() => document.getElementById('productDetail')?.scrollIntoView({ behavior: 'smooth' }))"
+                        @click="tab = 'detail'"
                         :class="tab === 'detail' ? 'border-b-2 border-white pb-0.5 font-semibold' : 'font-medium opacity-90'"
                     >
                         {{ __('member.products.specs') }}
