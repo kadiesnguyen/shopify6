@@ -31,6 +31,9 @@ class BackfillProductDescriptionsCommand extends Command
 
         $products = $query->get();
 
+        $this->info('Building demo name index (one-time cache)...');
+        $details->warmDemoNameIndex();
+
         foreach ($products as $product) {
             $before = trim((string) $product->description);
 

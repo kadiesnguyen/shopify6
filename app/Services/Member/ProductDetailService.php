@@ -5,6 +5,7 @@ namespace App\Services\Member;
 use App\Models\Product;
 use App\Models\Shop;
 use App\Services\Import\SieummoProductDetailParser;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class ProductDetailService
@@ -150,26 +151,101 @@ class ProductDetailService
             return $this->fetchDescriptionFromDemo((int) $match[1]);
         }
 
-        return $this->fetchDescriptionFromSieummo($product, $sourceUrl);
+        $sieummo = $this->fetchDescriptionFromSieummo($product, $sourceUrl);
+
+        if ($sieummo !== null) {
+            return $sieummo;
+        }
+
+        $demoId = $this->demoGoodsIdForName($product->name);
+
+        return $demoId ? $this->fetchDescriptionFromDemo($demoId) : null;
+    }
+
+    public function warmDemoNameIndex(): void
+    {
+        Cache::forget('demo:goods-name-index');
+        $this->demoNameIndex();
+    }
+
+    private function demoGoodsIdForName(string $name): ?int
+    {
+        if (! Cache::has('demo:goods-name-index')) {
+            return null;
+        }
+
+        $key = mb_strtolower(trim(html_entity_decode($name, ENT_QUOTES | ENT_HTML5)));
+        $id = $this->demoNameIndex()[$key] ?? null;
+
+        return $id ? (int) $id : null;
+    }
+
+    /** @return array<string, int> */
+    private function demoNameIndex(): array
+    {
+        return Cache::remember('demo:goods-name-index', 3600, function (): array {
+            $index = [];
+            $categories = $this->demoApiCall('api/Category/index')['data']['cateres'] ?? [];
+
+            foreach ($categories as $category) {
+                $page = 1;
+
+                while (true) {
+                    $response = $this->demoApiCall('api/Goods/getCategoryGoodsList', [
+                        'cate_id' => $category['id'],
+                        'page' => $page,
+                    ]);
+                    $items = $response['data']['goodres'] ?? [];
+
+                    if (! is_array($items) || $items === []) {
+                        break;
+                    }
+
+                    foreach ($items as $item) {
+                        $label = html_entity_decode((string) ($item['goods_name'] ?? ''), ENT_QUOTES | ENT_HTML5);
+                        $lookup = mb_strtolower(trim($label));
+
+                        if ($lookup !== '') {
+                            $index[$lookup] = (int) $item['id'];
+                        }
+                    }
+
+                    if (count($items) < 10) {
+                        break;
+                    }
+
+                    $page++;
+                }
+            }
+
+            return $index;
+        });
+    }
+
+    /** @param  array<string, mixed>  $params */
+    private function demoApiCall(string $endpoint, array $params = []): array
+    {
+        $secretKey = (string) config('services.demo_api.secret_key');
+        $baseUrl = rtrim((string) config('services.demo_api.base_url'), '/');
+
+        $response = Http::asForm()->timeout(60)->post(
+            $baseUrl.'/'.$endpoint.'?lang='.config('services.demo_api.locale').'&t='.now()->getTimestampMs(),
+            array_merge([
+                'api_token' => md5($endpoint.$secretKey),
+                'client_id' => 1,
+            ], $params),
+        );
+
+        $json = $response->json();
+
+        return is_array($json) ? $json : [];
     }
 
     private function fetchDescriptionFromDemo(int $goodsId): ?string
     {
-        $endpoint = 'api/Goods/goodsInfo';
-        $secretKey = (string) config('services.demo_api.secret_key');
-        $baseUrl = rtrim((string) config('services.demo_api.base_url'), '/');
-
         try {
-            $response = Http::asForm()->timeout(30)->post(
-                $baseUrl.'/'.$endpoint.'?lang='.config('services.demo_api.locale').'&t='.now()->getTimestampMs(),
-                [
-                    'api_token' => md5($endpoint.$secretKey),
-                    'client_id' => 1,
-                    'goods_id' => $goodsId,
-                ],
-            );
-
-            $html = $response->json('data.goodsinfo.goods_desc');
+            $json = $this->demoApiCall('api/Goods/goodsInfo', ['goods_id' => $goodsId]);
+            $html = $json['data']['goodsinfo']['goods_desc'] ?? null;
         } catch (\Throwable) {
             return null;
         }
