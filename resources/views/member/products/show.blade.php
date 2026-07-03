@@ -79,7 +79,35 @@
             </div>
         </div>
     @else
-        <div x-data="{ tab: 'goods' }" class="min-h-[var(--app-height,100dvh)] bg-gray-100 pb-[calc(10rem+env(safe-area-inset-bottom,0px))]">
+        <div
+            x-data="{
+                section: 'goods',
+                headerOffset: 48,
+                scrollTo(id) {
+                    const el = document.getElementById(id);
+                    if (! el) return;
+                    const top = el.getBoundingClientRect().top + window.scrollY - this.headerOffset;
+                    window.scrollTo({ top, behavior: 'smooth' });
+                },
+                syncSection() {
+                    const offset = this.headerOffset + 4;
+                    const detail = document.getElementById('productDetail');
+                    const reviews = document.getElementById('productReviews');
+                    if (detail && detail.getBoundingClientRect().top <= offset) {
+                        this.section = 'detail';
+                    } else if (reviews && reviews.getBoundingClientRect().top <= offset) {
+                        this.section = 'reviews';
+                    } else {
+                        this.section = 'goods';
+                    }
+                },
+                init() {
+                    this.syncSection();
+                    window.addEventListener('scroll', () => this.syncSection(), { passive: true });
+                },
+            }"
+            class="min-h-[var(--app-height,100dvh)] bg-gray-100 pb-[calc(10rem+env(safe-area-inset-bottom,0px))]"
+        >
             <header class="fixed top-0 left-0 right-0 z-30 flex items-center bg-orange-500 px-2 py-3 text-white md:left-1/2 md:w-full md:max-w-[420px] md:-translate-x-1/2">
                 <a href="{{ $backUrl }}" class="flex shrink-0 items-center rounded-lg p-1 no-underline hover:bg-white/10" aria-label="{{ __('member.back') }}">
                     <x-member.icon name="chevron-left" class="size-5" />
@@ -87,22 +115,22 @@
                 <div class="flex flex-1 justify-center gap-4 text-sm">
                     <button
                         type="button"
-                        @click="tab = 'goods'"
-                        :class="tab === 'goods' ? 'border-b-2 border-white pb-0.5 font-semibold' : 'font-medium opacity-90'"
+                        @click="scrollTo('productGoods')"
+                        :class="section === 'goods' ? 'border-b-2 border-white pb-0.5 font-semibold' : 'font-medium opacity-90'"
                     >
                         {{ __('member.products.goods') }}
                     </button>
                     <button
                         type="button"
-                        @click="tab = 'reviews'"
-                        :class="tab === 'reviews' ? 'border-b-2 border-white pb-0.5 font-semibold' : 'font-medium opacity-90'"
+                        @click="scrollTo('productReviews')"
+                        :class="section === 'reviews' ? 'border-b-2 border-white pb-0.5 font-semibold' : 'font-medium opacity-90'"
                     >
                         {{ __('member.products.reviews') }}
                     </button>
                     <button
                         type="button"
-                        @click="tab = 'detail'"
-                        :class="tab === 'detail' ? 'border-b-2 border-white pb-0.5 font-semibold' : 'font-medium opacity-90'"
+                        @click="scrollTo('productDetail')"
+                        :class="section === 'detail' ? 'border-b-2 border-white pb-0.5 font-semibold' : 'font-medium opacity-90'"
                     >
                         {{ __('member.products.specs') }}
                     </button>
@@ -112,7 +140,7 @@
 
             @php($images = array_filter($detail['images'] ?? []))
             <div class="pt-12">
-                <div x-show="tab === 'goods'" x-cloak>
+                <section id="productGoods" class="scroll-mt-12">
                 <div
                     x-data="{
                         idx: 0,
@@ -222,18 +250,15 @@
                     </div>
                 @endif
 
-                <button type="button" @click="tab = 'reviews'" class="mt-2 flex w-full items-center justify-between bg-white px-4 py-3 text-left active:bg-gray-50">
+                <button type="button" @click="scrollTo('productReviews')" class="mt-2 flex w-full items-center justify-between bg-white px-4 py-3 text-left active:bg-gray-50">
                     <span class="font-semibold text-gray-900">{{ __('member.products.reviews') }} {{ $reviewsCount }}+</span>
                     <x-member.icon name="chevron-right" class="size-4 text-gray-400" />
                 </button>
+                </section>
 
-                @include('member.products.partials.detail-body')
-                </div>
-
-                <div x-show="tab === 'reviews'" x-cloak class="mt-2 bg-white px-4 py-3">
+                <section id="productReviews" class="scroll-mt-12 mt-2 bg-white px-4 py-3">
                     <div class="flex w-full items-center justify-between text-left font-semibold text-gray-900">
                         <span>{{ __('member.products.reviews') }} {{ $reviewsCount }}+</span>
-                        <x-member.icon name="chevron-right" class="size-4 text-gray-400" />
                     </div>
 
                     @if ($canReview)
@@ -272,11 +297,9 @@
                             @endforeach
                         </div>
                     @endif
-                </div>
+                </section>
 
-                <div x-show="tab === 'detail'" class="mt-2">
-                    @include('member.products.partials.detail-body')
-                </div>
+                @include('member.products.partials.detail-body')
             </div>
         </div>
 

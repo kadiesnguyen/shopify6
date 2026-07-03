@@ -1,4 +1,4 @@
-<div id="productDetail" class="mt-2 bg-white px-4 py-4">
+<div id="productDetail" class="scroll-mt-12 mt-2 bg-white px-4 py-4">
     <p class="mb-3 border-l-4 border-orange-500 pl-2 font-semibold text-gray-900">{{ __('member.products.specs') }}</p>
     @if ($descriptionHtml)
         <div class="product-detail-html text-sm leading-relaxed text-gray-800">{!! $description !!}</div>
