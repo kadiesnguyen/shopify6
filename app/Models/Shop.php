@@ -20,6 +20,8 @@ class Shop extends Model
     protected $fillable = [
         'user_id',
         'seller_type',
+        'industry_id',
+        'business_category_ids',
         'name',
         'slug',
         'description',
@@ -75,6 +77,7 @@ class Shop extends Model
             'order_status_seen_at' => 'array',
             'is_featured' => 'boolean',
             'featured_at' => 'datetime',
+            'business_category_ids' => 'array',
         ];
     }
 

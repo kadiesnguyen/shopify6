@@ -24,8 +24,11 @@ class ShopApplication extends Model
     protected $fillable = [
         'user_id',
         'seller_type',
+        'industry_id',
+        'business_category_ids',
         'application_kind',
         'shop_name',
+        'shop_description',
         'logo',
         'address',
         'country',
@@ -45,6 +48,7 @@ class ShopApplication extends Model
     {
         return [
             'reviewed_at' => 'datetime',
+            'business_category_ids' => 'array',
         ];
     }
 

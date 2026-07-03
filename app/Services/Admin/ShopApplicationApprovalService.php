@@ -70,7 +70,10 @@ class ShopApplicationApprovalService
         $shop = Shop::query()->create([
             'user_id' => $application->user_id,
             'seller_type' => $application->seller_type,
+            'industry_id' => $application->industry_id,
+            'business_category_ids' => $application->business_category_ids,
             'name' => $application->shop_name,
+            'description' => $application->shop_description,
             'slug' => $this->uniqueSlug($application->shop_name),
             'logo' => $application->logo,
             'address' => $application->address,
@@ -91,7 +94,10 @@ class ShopApplicationApprovalService
     {
         $payload = [
             'seller_type' => $application->seller_type,
+            'industry_id' => $application->industry_id,
+            'business_category_ids' => $application->business_category_ids,
             'name' => $application->shop_name,
+            'description' => $application->shop_description,
             'logo' => $application->logo ?? $shop->logo,
             'address' => $application->address,
             'country' => $application->country,
@@ -131,7 +137,10 @@ class ShopApplicationApprovalService
 
         $shop->update([
             'seller_type' => Shop::TYPE_BUSINESS,
+            'industry_id' => $application->industry_id ?? $shop->industry_id,
+            'business_category_ids' => $application->business_category_ids ?? $shop->business_category_ids,
             'name' => $application->shop_name,
+            'description' => $application->shop_description ?? $shop->description,
             'logo' => $application->logo ?? $shop->logo,
             'address' => $application->address,
             'country' => $application->country,

@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductDistribution;
 use App\Services\Member\ProductBuyableQuery;
 use App\Services\Member\ProductDistributionService;
+use App\Support\ShopIndustryRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class ProductDistributionController extends Controller
 {
     public function __construct(
         private readonly ProductDistributionService $distributionService,
+        private readonly ShopIndustryRegistry $industries,
     ) {}
 
     public function index(Request $request): View|JsonResponse
@@ -74,6 +76,18 @@ class ProductDistributionController extends Controller
         $product = Product::query()
             ->where('status', Product::STATUS_ACTIVE)
             ->findOrFail($validated['product_id']);
+
+        $shop = $user->shop;
+
+        if ($shop && ! $this->industries->shopAllowsProduct($shop, $product)) {
+            $message = __('member.products.industry_restricted');
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => $message], 422);
+            }
+
+            return back()->withErrors(['product_id' => $message]);
+        }
 
         $this->distributionService->distribute($user, $product);
 

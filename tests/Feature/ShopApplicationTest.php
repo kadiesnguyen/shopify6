@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
 use App\Models\Shop;
 use App\Models\ShopApplication;
 use App\Models\User;
@@ -30,6 +31,8 @@ class ShopApplicationTest extends TestCase
         Role::findOrCreate('admin');
         Role::findOrCreate('shop');
 
+        $this->seedIndustryCategories();
+
         $this->member = User::factory()->create(['status' => 'active']);
         $this->member->assignRole('member');
 
@@ -49,33 +52,52 @@ class ShopApplicationTest extends TestCase
         $this->actingAs($this->member)
             ->get(route('member.shop-application.create'))
             ->assertOk()
-            ->assertSee(__('member.shop_application.title'));
+            ->assertSee(__('member.shop_application.title'))
+            ->assertSee(__('member.shop_application.industry_placeholder'));
     }
 
     public function test_member_can_submit_personal_shop_application(): void
     {
         $this->actingAs($this->member)
-            ->post(route('member.shop-application.store'), [
-                'seller_type' => ShopApplication::TYPE_PERSONAL,
-                'shop_name' => 'My Shop',
-                'address' => '123 Street',
-                'country' => 'VN',
-                'phone' => '0901234567',
-                'real_name' => 'Nguyen Van A',
-                'id_number' => '001234567890',
-                'id_front' => UploadedFile::fake()->create('front.jpg', 100, 'image/jpeg'),
-                'id_back' => UploadedFile::fake()->create('back.jpg', 100, 'image/jpeg'),
-                'terms' => '1',
-            ])
+            ->post(route('member.shop-application.store'), $this->applicationPayload())
             ->assertRedirect(route('member.shop-application.create'));
 
         $this->assertDatabaseHas('shop_applications', [
             'user_id' => $this->member->id,
             'shop_name' => 'My Shop',
+            'shop_description' => 'Fashion shop description',
+            'industry_id' => 'fashion',
             'seller_type' => ShopApplication::TYPE_PERSONAL,
             'application_kind' => ShopApplication::KIND_REGISTRATION,
             'status' => ShopApplication::STATUS_PENDING,
         ]);
+    }
+
+    public function test_shop_application_rejects_business_category_outside_industry(): void
+    {
+        $electronicsCategoryId = Category::query()->where('slug', 'dien-thoai')->value('id');
+
+        $this->actingAs($this->member)
+            ->post(route('member.shop-application.store'), $this->applicationPayload([
+                'business_category_ids' => [$electronicsCategoryId],
+                'shop_name' => 'Bad Shop',
+                'shop_description' => 'Invalid categories',
+            ]))
+            ->assertSessionHasErrors('business_category_ids');
+    }
+
+    public function test_member_can_submit_comprehensive_shop_application(): void
+    {
+        $fashionCategoryId = Category::query()->where('slug', 'thoi-trang')->value('id');
+
+        $this->actingAs($this->member)
+            ->post(route('member.shop-application.store'), $this->applicationPayload([
+                'industry_id' => 'comprehensive',
+                'business_category_ids' => [$fashionCategoryId],
+                'shop_name' => 'Comprehensive Shop',
+                'shop_description' => 'All categories shop',
+            ]))
+            ->assertRedirect(route('member.shop-application.create'));
     }
 
     public function test_admin_can_approve_personal_shop_application(): void
@@ -83,8 +105,11 @@ class ShopApplicationTest extends TestCase
         $application = ShopApplication::query()->create([
             'user_id' => $this->member->id,
             'seller_type' => ShopApplication::TYPE_PERSONAL,
+            'industry_id' => 'fashion',
+            'business_category_ids' => [Category::query()->where('slug', 'thoi-trang')->value('id')],
             'application_kind' => ShopApplication::KIND_REGISTRATION,
             'shop_name' => 'Approved Shop',
+            'shop_description' => 'Approved shop description',
             'address' => '123 Street',
             'country' => 'VN',
             'phone' => '0901234567',
@@ -100,6 +125,7 @@ class ShopApplicationTest extends TestCase
         $this->assertDatabaseHas('shops', [
             'user_id' => $this->member->id,
             'name' => 'Approved Shop',
+            'industry_id' => 'fashion',
             'seller_type' => Shop::TYPE_PERSONAL,
         ]);
 
@@ -164,18 +190,11 @@ class ShopApplicationTest extends TestCase
         ]);
 
         $this->actingAs($this->member->fresh())
-            ->post(route('member.shop-application.store'), [
-                'seller_type' => ShopApplication::TYPE_PERSONAL,
+            ->post(route('member.shop-application.store'), $this->applicationPayload([
                 'shop_name' => 'Fresh Shop',
-                'address' => '123 Street',
-                'country' => 'VN',
                 'phone' => '0356674288',
                 'real_name' => 'Test User',
-                'id_number' => '001234567890',
-                'id_front' => UploadedFile::fake()->create('front.jpg', 100, 'image/jpeg'),
-                'id_back' => UploadedFile::fake()->create('back.jpg', 100, 'image/jpeg'),
-                'terms' => '1',
-            ])
+            ]))
             ->assertRedirect(route('member.shop-application.create'))
             ->assertSessionHasNoErrors();
 
@@ -193,18 +212,12 @@ class ShopApplicationTest extends TestCase
         $this->createPersonalShop();
 
         $this->actingAs($this->member)
-            ->post(route('member.shop-application.store'), [
+            ->post(route('member.shop-application.store'), $this->applicationPayload([
                 'seller_type' => ShopApplication::TYPE_BUSINESS,
                 'shop_name' => 'Upgraded Shop',
                 'address' => '456 Street',
-                'country' => 'VN',
-                'phone' => '0901234567',
-                'real_name' => 'Nguyen Van A',
                 'id_number' => 'GP123456',
-                'id_front' => UploadedFile::fake()->create('front.jpg', 100, 'image/jpeg'),
-                'id_back' => UploadedFile::fake()->create('back.jpg', 100, 'image/jpeg'),
-                'terms' => '1',
-            ])
+            ]))
             ->assertRedirect(route('member.shop-application.create'));
 
         $this->assertDatabaseHas('shop_applications', [
@@ -343,6 +356,8 @@ class ShopApplicationTest extends TestCase
         $shop = Shop::query()->create([
             'user_id' => $this->member->id,
             'seller_type' => Shop::TYPE_PERSONAL,
+            'industry_id' => 'fashion',
+            'business_category_ids' => [Category::query()->where('slug', 'thoi-trang')->value('id')],
             'name' => 'Personal Shop',
             'slug' => 'personal-shop',
             'status' => Shop::STATUS_ACTIVE,
@@ -350,5 +365,40 @@ class ShopApplicationTest extends TestCase
         $this->member->assignRole('shop');
 
         return $shop;
+    }
+
+    /** @param  array<string, mixed>  $overrides */
+    private function applicationPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'seller_type' => ShopApplication::TYPE_PERSONAL,
+            'industry_id' => 'fashion',
+            'business_category_ids' => [Category::query()->where('slug', 'thoi-trang')->value('id')],
+            'shop_name' => 'My Shop',
+            'shop_description' => 'Fashion shop description',
+            'address' => '123 Street',
+            'country' => 'VN',
+            'phone' => '0901234567',
+            'real_name' => 'Nguyen Van A',
+            'id_number' => '001234567890',
+            'id_front' => UploadedFile::fake()->create('front.jpg', 100, 'image/jpeg'),
+            'id_back' => UploadedFile::fake()->create('back.jpg', 100, 'image/jpeg'),
+            'terms' => '1',
+        ], $overrides);
+    }
+
+    private function seedIndustryCategories(): void
+    {
+        foreach ([
+            ['name' => 'Thời trang', 'slug' => 'thoi-trang'],
+            ['name' => 'Điện Thoại', 'slug' => 'dien-thoai'],
+            ['name' => 'Mỹ Phẩm', 'slug' => 'my-pham'],
+            ['name' => 'Khác', 'slug' => 'khac'],
+        ] as $category) {
+            Category::query()->firstOrCreate(
+                ['slug' => $category['slug']],
+                ['name' => $category['name'], 'status' => 'active'],
+            );
+        }
     }
 }

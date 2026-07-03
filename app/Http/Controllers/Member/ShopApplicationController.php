@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Member;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Member\ShopApplicationRequest;
 use App\Models\ShopApplication;
+use App\Support\ShopIndustryRegistry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class ShopApplicationController extends Controller
 {
+    public function __construct(private readonly ShopIndustryRegistry $industries) {}
+
     public function create(): View|RedirectResponse
     {
         $user = auth()->user();
@@ -41,6 +44,7 @@ class ShopApplicationController extends Controller
             'defaultSellerType' => $mode === ShopApplication::KIND_UPGRADE
                 ? ShopApplication::TYPE_BUSINESS
                 : ShopApplication::TYPE_PERSONAL,
+            'industries' => $this->industries->industries(),
         ]);
     }
 
@@ -76,6 +80,7 @@ class ShopApplicationController extends Controller
         }
 
         $data = collect($request->validated())->except(['logo', 'id_front', 'id_back', 'terms'])->all();
+        $data['business_category_ids'] = array_values(array_map('intval', $data['business_category_ids'] ?? []));
 
         if ($request->hasFile('logo')) {
             $data['logo'] = $request->file('logo')->store('shop-applications/logos', 'public');
