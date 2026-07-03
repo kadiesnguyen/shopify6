@@ -249,17 +249,13 @@
                         </a>
                     </div>
                 @endif
-
-                <button type="button" @click="scrollTo('productReviews')" class="mt-2 flex w-full items-center justify-between bg-white px-4 py-3 text-left active:bg-gray-50">
-                    <span class="font-semibold text-gray-900">{{ __('member.products.reviews') }} {{ $reviewsCount }}+</span>
-                    <x-member.icon name="chevron-right" class="size-4 text-gray-400" />
-                </button>
                 </section>
 
                 <section id="productReviews" class="scroll-mt-12 mt-2 bg-white px-4 py-3">
-                    <div class="flex w-full items-center justify-between text-left font-semibold text-gray-900">
-                        <span>{{ __('member.products.reviews') }} {{ $reviewsCount }}+</span>
-                    </div>
+                    <button type="button" @click="scrollTo('productReviews')" class="flex w-full items-center justify-between text-left active:bg-gray-50">
+                        <span class="font-semibold text-gray-900">{{ __('member.products.reviews') }} {{ $reviewsCount }}+</span>
+                        <x-member.icon name="chevron-right" class="size-4 text-gray-400" />
+                    </button>
 
                     @if ($canReview)
                         <form method="POST" action="{{ route('member.reviews.store') }}" class="mt-3 space-y-2 rounded-lg bg-gray-50 p-3">
