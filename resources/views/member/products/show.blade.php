@@ -101,7 +101,7 @@
                     </button>
                     <button
                         type="button"
-                        @click="tab = 'detail'"
+                        @click="tab = 'goods'; $nextTick(() => document.getElementById('productDetail')?.scrollIntoView({ behavior: 'smooth' }))"
                         :class="tab === 'detail' ? 'border-b-2 border-white pb-0.5 font-semibold' : 'font-medium opacity-90'"
                     >
                         {{ __('member.products.specs') }}
@@ -226,6 +226,8 @@
                     <span class="font-semibold text-gray-900">{{ __('member.products.reviews') }} {{ $reviewsCount }}+</span>
                     <x-member.icon name="chevron-right" class="size-4 text-gray-400" />
                 </button>
+
+                @include('member.products.partials.detail-body')
                 </div>
 
                 <div x-show="tab === 'reviews'" x-cloak class="mt-2 bg-white px-4 py-3">
@@ -272,15 +274,8 @@
                     @endif
                 </div>
 
-                <div x-show="tab === 'detail'" x-cloak class="mt-2 bg-white px-4 py-4">
-                    <p class="mb-3 border-l-4 border-orange-500 pl-2 font-semibold text-gray-900">{{ __('member.products.specs') }}</p>
-                    @if ($descriptionHtml)
-                        <div class="product-detail-html text-sm leading-relaxed text-gray-800">{!! $description !!}</div>
-                    @elseif (filled(trim($description)) && trim($description) !== $product->name)
-                        <div class="whitespace-pre-line text-sm leading-relaxed text-gray-800">{{ $description }}</div>
-                    @else
-                        <p class="py-10 text-center text-sm text-gray-400">{{ __('member.products.no_detail') }}</p>
-                    @endif
+                <div x-show="tab === 'detail'" class="mt-2">
+                    @include('member.products.partials.detail-body')
                 </div>
             </div>
         </div>
