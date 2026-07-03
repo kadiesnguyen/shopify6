@@ -3,7 +3,7 @@
     'canBuy' => true,
 ])
 
-<div class="portal-product-buy-bar fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] z-[55] border-t border-gray-200 bg-white px-2 py-2 md:left-1/2 md:w-full md:max-w-[420px] md:-translate-x-1/2">
+<div class="portal-product-buy-bar fixed inset-x-0 bottom-[calc(50px+env(safe-area-inset-bottom,0px))] z-[55] border-t border-gray-200 bg-white px-2 py-2 md:left-1/2 md:w-full md:max-w-[420px] md:-translate-x-1/2">
     <div class="flex items-stretch gap-2">
         <div class="flex shrink-0 gap-1 border-r border-gray-100 pr-2">
             <a href="{{ route('member.chat.index') }}" class="flex w-14 flex-col items-center justify-center text-[10px] leading-tight text-gray-600 no-underline active:opacity-70">

@@ -4,58 +4,33 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\Member\PortalProductDisplayService;
+use App\Services\Member\ProductBuyableQuery;
 use App\Support\Member\ShopOrderStatusBadges;
-use App\Services\Member\ShopDashboardService;
 use Illuminate\View\View;
 
 class MyController extends Controller
 {
-    public function __construct(private readonly ShopDashboardService $shopDashboard) {}
+    public function __construct(
+        private readonly PortalProductDisplayService $portalProductDisplay,
+    ) {}
 
     public function index(): View
     {
-        $user = auth()->user()->load(['wallet', 'shop']);
+        $user = auth()->user()->load('shop');
         $isSeller = $user->isShop();
-
-        $baseOrders = Order::query()
-            ->when($isSeller, fn ($query) => $query->where('seller_id', $user->id), fn ($query) => $query->where('user_id', $user->id));
 
         $statusCounts = $isSeller && $user->shop
             ? ShopOrderStatusBadges::unseenCounts($user->shop, $user->id)
-            : (clone $baseOrders)
+            : Order::query()
+                ->where('user_id', $user->id)
                 ->selectRaw('status, count(*) as total')
                 ->groupBy('status')
                 ->pluck('total', 'status');
 
-        $pendingPaymentTotal = (float) (clone $baseOrders)
-            ->where('status', Order::STATUS_PENDING_PAYMENT)
-            ->sum($isSeller ? 'purchase_cost' : 'total');
+        $feedProducts = ProductBuyableQuery::portalFeaturedProducts(8);
+        $this->portalProductDisplay->applyShopLabels($feedProducts, featuredOnly: true);
 
-        $completedOrders = (clone $baseOrders)
-            ->where('status', Order::STATUS_COMPLETED);
-
-        $completedProfit = (float) (clone $completedOrders)->sum('commission');
-        $profit = $isSeller
-            ? (float) (clone $baseOrders)->where('status', '!=', Order::STATUS_CANCELLED)->sum('commission')
-            : $completedProfit;
-        $totalIncome = $completedProfit + (float) (clone $completedOrders)->sum($isSeller ? 'purchase_cost' : 'total');
-
-        $walletBalance = (float) ($user->wallet?->balance ?? 0);
-        $shopStats = null;
-
-        if ($isSeller && $user->shop) {
-            $shopStats = $this->shopDashboard->statsFor($user);
-            $walletBalance = $user->shop->resolveDisplayAmount($walletBalance, 'display_balance');
-        }
-
-        return view('member.my.index', compact(
-            'user',
-            'statusCounts',
-            'pendingPaymentTotal',
-            'totalIncome',
-            'walletBalance',
-            'profit',
-            'shopStats',
-        ));
+        return view('member.my.index', compact('user', 'statusCounts', 'feedProducts'));
     }
 }

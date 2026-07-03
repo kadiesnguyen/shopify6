@@ -11,7 +11,7 @@
             : ($rechargeEntryUrl ?? route('member.wallet.recharge'));
     @endphp
 
-    <div class="min-h-[var(--app-height,100dvh)] bg-gray-50 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
+    <div class="min-h-[var(--app-height,100dvh)] bg-gray-50 pb-[calc(50px+env(safe-area-inset-bottom))]">
         <header class="sticky top-[3.75rem] z-10 flex items-center justify-center border-b border-gray-100 bg-white px-4 py-3">
             <a href="{{ $backUrl }}" class="absolute left-2 flex size-10 items-center justify-center text-gray-700 no-underline" aria-label="{{ __('member.back') }}">
                 <x-member.icon name="chevron-left" class="size-6" />

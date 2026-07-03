@@ -16,32 +16,27 @@ return [
         [
             'label_key' => 'member.actions.start_selling',
             'route' => 'member.shop-application.create',
-            'icon' => 'store',
-            'color' => 'bg-violet-600',
+            'image' => 'images/portal/quick/start-selling.jpg',
         ],
         [
             'label_key' => 'member.actions.promotions',
             'route' => 'member.promotions.index',
-            'icon' => 'ticket-percent',
-            'color' => 'bg-rose-500',
+            'image' => 'images/portal/quick/promotions.png',
         ],
         [
-            'label_key' => 'member.actions.register',
+            'label_key' => 'member.actions.register_goods',
             'route' => 'auth.register',
-            'icon' => 'gem',
-            'color' => 'bg-amber-400',
+            'image' => 'images/portal/quick/register.png',
         ],
         [
             'label_key' => 'member.actions.loyalty',
             'route' => 'member.my.index',
-            'icon' => 'crown',
-            'color' => 'bg-amber-500',
+            'image' => 'images/portal/quick/loyalty.png',
         ],
         [
             'label_key' => 'member.actions.support',
             'route' => 'member.chat.index',
-            'icon' => 'headset',
-            'color' => 'bg-red-500',
+            'image' => 'images/portal/quick/cskh.png',
         ],
     ],
 ];

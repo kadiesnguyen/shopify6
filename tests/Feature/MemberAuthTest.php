@@ -90,6 +90,11 @@ class MemberAuthTest extends TestCase
 
         $firstSessionId = session()->getId();
 
+        // Simulate a second device: start from a fresh session, otherwise the
+        // guest middleware short-circuits the login POST.
+        $this->flushSession();
+        auth()->logout();
+
         $this->post(route('auth.login'), [
             'login' => 'member@shopefy.test',
             'password' => 'password',

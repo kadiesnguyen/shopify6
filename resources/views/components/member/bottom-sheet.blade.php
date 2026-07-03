@@ -3,7 +3,7 @@
     'title',
 ])
 
-@php($navOffset = 'calc(4.5rem + env(safe-area-inset-bottom))')
+@php($navOffset = 'calc(50px + env(safe-area-inset-bottom))')
 
 <div
     x-show="{{ $show }}"

@@ -17,6 +17,8 @@ return [
         'withdrawal_requests' => 'Yêu cầu rút',
         'promotions' => 'Thẻ quảng cáo',
         'chat' => 'Chat CSKH',
+        'complaints' => 'Khiếu nại',
+        'reviews' => 'Đánh giá sản phẩm',
         'settings' => 'Cài đặt',
     ],
 
@@ -470,5 +472,30 @@ return [
         'save_password' => 'Lưu mật khẩu',
         'password_updated' => 'Đã cập nhật mật khẩu.',
         'current_password_invalid' => 'Mật khẩu hiện tại không đúng.',
+    ],
+
+    'complaints' => [
+        'title' => 'Khiếu nại thành viên',
+        'subject' => 'Tiêu đề',
+        'status_pending' => 'Chờ xử lý',
+        'status_resolved' => 'Đã xử lý',
+        'resolve' => 'Đánh dấu đã xử lý',
+        'resolved_status' => 'Đã đánh dấu khiếu nại là đã xử lý.',
+        'deleted' => 'Đã xóa khiếu nại.',
+        'empty' => 'Không có khiếu nại.',
+    ],
+
+    'reviews' => [
+        'title' => 'Đánh giá sản phẩm',
+        'product' => 'Sản phẩm',
+        'rating' => 'Điểm',
+        'body' => 'Nội dung',
+        'status_published' => 'Hiển thị',
+        'status_hidden' => 'Đã ẩn',
+        'hide' => 'Ẩn',
+        'publish' => 'Hiện',
+        'status_updated' => 'Đã cập nhật trạng thái đánh giá.',
+        'deleted' => 'Đã xóa đánh giá.',
+        'empty' => 'Không có đánh giá.',
     ],
 ];

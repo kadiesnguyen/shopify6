@@ -16,6 +16,7 @@ class AdminUserSearchTest extends TestCase
     {
         Role::findOrCreate('admin');
         Role::findOrCreate('shop');
+        Role::findOrCreate('member');
 
         $admin = User::factory()->create(['status' => 'active']);
         $admin->assignRole('admin');
@@ -52,6 +53,7 @@ class AdminUserSearchTest extends TestCase
     {
         Role::findOrCreate('admin');
         Role::findOrCreate('shop');
+        Role::findOrCreate('member');
 
         $admin = User::factory()->create(['status' => 'active']);
         $admin->assignRole('admin');
@@ -84,6 +86,7 @@ class AdminUserSearchTest extends TestCase
     public function test_admin_users_index_filters_by_user_id_from_suggest(): void
     {
         Role::findOrCreate('admin');
+        Role::findOrCreate('member');
 
         $admin = User::factory()->create(['status' => 'active']);
         $admin->assignRole('admin');

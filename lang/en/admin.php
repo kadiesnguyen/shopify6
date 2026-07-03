@@ -17,6 +17,8 @@ return [
         'withdrawal_requests' => 'Withdrawal requests',
         'promotions' => 'Promotion cards',
         'chat' => 'Customer chat',
+        'complaints' => 'Complaints',
+        'reviews' => 'Product reviews',
         'settings' => 'Settings',
     ],
 
@@ -437,5 +439,30 @@ return [
         'save_password' => 'Save password',
         'password_updated' => 'Password updated.',
         'current_password_invalid' => 'Current password is incorrect.',
+    ],
+
+    'complaints' => [
+        'title' => 'Member complaints',
+        'subject' => 'Subject',
+        'status_pending' => 'Pending',
+        'status_resolved' => 'Resolved',
+        'resolve' => 'Mark resolved',
+        'resolved_status' => 'Complaint marked as resolved.',
+        'deleted' => 'Complaint deleted.',
+        'empty' => 'No complaints.',
+    ],
+
+    'reviews' => [
+        'title' => 'Product reviews',
+        'product' => 'Product',
+        'rating' => 'Rating',
+        'body' => 'Content',
+        'status_published' => 'Published',
+        'status_hidden' => 'Hidden',
+        'hide' => 'Hide',
+        'publish' => 'Publish',
+        'status_updated' => 'Review status updated.',
+        'deleted' => 'Review deleted.',
+        'empty' => 'No reviews.',
     ],
 ];

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Member;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductDistribution;
+use App\Models\ProductReview;
 use App\Models\Shop;
 use App\Models\User;
 use App\Services\Member\PortalProductDisplayService;
@@ -90,12 +91,27 @@ class ProductController extends Controller
             ->where('product_id', $product->id)
             ->exists();
 
+        $reviews = ProductReview::query()
+            ->published()
+            ->where('product_id', $product->id)
+            ->with('user:id,name')
+            ->latest()
+            ->limit(10)
+            ->get();
+        $reviewsCount = ProductReview::query()->published()->where('product_id', $product->id)->count();
+        $canReview = ! $isShopView
+            && ProductReview::qualifyingOrderId($user->id, $product->id) !== null
+            && ! ProductReview::query()->where('user_id', $user->id)->where('product_id', $product->id)->exists();
+
         return view('member.products.show', compact(
             'product',
             'detail',
             'backUrl',
             'isShopView',
             'isDistributed',
+            'reviews',
+            'reviewsCount',
+            'canReview',
         ));
     }
 

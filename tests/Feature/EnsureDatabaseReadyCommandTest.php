@@ -27,7 +27,7 @@ class EnsureDatabaseReadyCommandTest extends TestCase
             ->assertSuccessful();
 
         $this->assertDatabaseHas('users', ['email' => 'admin@shopi.com']);
-        $this->assertDatabaseHas('users', ['email' => 'member@shopefy.test']);
+        $this->assertDatabaseHas('users', ['username' => 'member']);
     }
 
     public function test_ensure_ready_preserves_existing_users(): void

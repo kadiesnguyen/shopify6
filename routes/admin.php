@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ChatController;
+use App\Http\Controllers\Admin\ComplaintController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InviteCodeController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PasswordChangeRequestController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductReviewController;
 use App\Http\Controllers\Admin\PromotionController;
 use App\Http\Controllers\Admin\RechargeMethodController;
 use App\Http\Controllers\Admin\RechargeRequestController;
@@ -92,6 +94,14 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/withdrawal-requests', [WithdrawalRequestController::class, 'index'])->name('withdrawal-requests.index');
         Route::post('/withdrawal-requests/{withdrawalRequest}/approve', [WithdrawalRequestController::class, 'approve'])->name('withdrawal-requests.approve');
         Route::post('/withdrawal-requests/{withdrawalRequest}/reject', [WithdrawalRequestController::class, 'reject'])->name('withdrawal-requests.reject');
+
+        Route::get('/complaints', [ComplaintController::class, 'index'])->name('complaints.index');
+        Route::post('/complaints/{complaint}/resolve', [ComplaintController::class, 'resolve'])->name('complaints.resolve');
+        Route::delete('/complaints/{complaint}', [ComplaintController::class, 'destroy'])->name('complaints.destroy');
+
+        Route::get('/reviews', [ProductReviewController::class, 'index'])->name('reviews.index');
+        Route::patch('/reviews/{review}/toggle-status', [ProductReviewController::class, 'toggleStatus'])->name('reviews.toggle-status');
+        Route::delete('/reviews/{review}', [ProductReviewController::class, 'destroy'])->name('reviews.destroy');
 
         Route::get('/password-change-requests', [PasswordChangeRequestController::class, 'index'])->name('password-change-requests.index');
         Route::post('/password-change-requests/{passwordChangeRequest}/approve', [PasswordChangeRequestController::class, 'approve'])->name('password-change-requests.approve');

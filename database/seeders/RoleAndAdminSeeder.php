@@ -16,23 +16,20 @@ class RoleAndAdminSeeder extends Seeder
         $memberRole = Role::findOrCreate('member');
         Role::findOrCreate('shop');
 
-        $admin = User::query()->firstOrCreate(
-            ['email' => 'admin@shopi.com'],
-            [
-                'username' => 'admin',
-                'user_code' => 'U000001',
-                'name' => 'Admin',
-                'phone' => null,
+        // Match by username OR email so re-seeding never trips a unique
+        // constraint, and never reset an existing account's password.
+        $admin = User::query()
+            ->where('username', 'admin')
+            ->orWhere('email', 'admin@shopi.com')
+            ->first() ?? new User([
+                'email' => 'admin@shopi.com',
                 'password' => Hash::make('Abc@123123'),
-                'status' => 'active',
-            ],
-        );
+            ]);
         $admin->fill([
             'username' => 'admin',
             'user_code' => 'U000001',
             'name' => 'Admin',
             'status' => 'active',
-            'password' => Hash::make('Abc@123123'),
         ])->save();
         $admin->syncRoles([$adminRole]);
 
@@ -41,17 +38,13 @@ class RoleAndAdminSeeder extends Seeder
             ['balance' => 0, 'balance_pending' => 0, 'balance_frozen' => 0],
         );
 
-        $member = User::query()->firstOrCreate(
-            ['email' => 'member@shopefy.test'],
-            [
-                'username' => 'member',
-                'user_code' => 'U000002',
-                'name' => 'Member',
-                'phone' => '+84901234567',
+        $member = User::query()
+            ->where('username', 'member')
+            ->orWhere('email', 'member@shopefy.test')
+            ->first() ?? new User([
+                'email' => 'member@shopefy.test',
                 'password' => Hash::make('password'),
-                'status' => 'active',
-            ],
-        );
+            ]);
         $member->fill([
             'username' => 'member',
             'user_code' => 'U000002',

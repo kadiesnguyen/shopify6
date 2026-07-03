@@ -47,7 +47,7 @@ class ShopDashboardTest extends TestCase
             ->assertDontSee('$999.99');
     }
 
-    public function test_shop_role_sees_shop_data_on_my_page(): void
+    public function test_shop_role_sees_shop_data_on_shop_hub(): void
     {
         Role::findOrCreate('shop');
         $this->member->assignRole('shop');
@@ -62,18 +62,25 @@ class ShopDashboardTest extends TestCase
             'star_rating' => 4.5,
         ]);
 
+        // My page shows shop identity + link to shop hub (reference layout).
         $this->actingAs($this->member->fresh())
             ->get(route('member.my.index'))
             ->assertOk()
             ->assertSee('Demo Shop')
+            ->assertSee(__('member.my.shop_manage'))
+            ->assertDontSee(__('member.shop_dashboard.store_data'));
+
+        // Shop hub carries the store data + chart.
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.shop-hub.index'))
+            ->assertOk()
             ->assertSee(__('member.shop_dashboard.store_data'))
             ->assertSee(__('member.shop_dashboard.sales_chart'))
             ->assertSee('$999.99')
-            ->assertSee('42')
-            ->assertDontSee(__('member.my.shop_dashboard'));
+            ->assertSee('42');
     }
 
-    public function test_shop_dashboard_route_redirects_to_my_page(): void
+    public function test_shop_dashboard_route_redirects_to_shop_hub(): void
     {
         Role::findOrCreate('shop');
         $this->member->assignRole('shop');
@@ -87,7 +94,7 @@ class ShopDashboardTest extends TestCase
 
         $this->actingAs($this->member)
             ->get(route('member.shop-dashboard.index'))
-            ->assertRedirect(route('member.my.index'));
+            ->assertRedirect(route('member.shop-hub.index'));
     }
 
     public function test_shop_dashboard_service_uses_display_overrides(): void
@@ -174,10 +181,18 @@ class ShopDashboardTest extends TestCase
             'payment_method' => 'wallet',
         ]);
 
+        // My page badge counts fall back to seller order queries without a shop row.
         $this->actingAs($this->member)
             ->get(route('member.my.index'))
             ->assertOk()
-            ->assertSee('$150.00');
+            ->assertSee(__('member.my.merchant_pending_payment'))
+            ->assertSee(route('member.seller.orders.index', ['status' => 'pending_payment']), false);
+
+        // Shop hub still opens and shows order-derived metrics.
+        $this->actingAs($this->member)
+            ->get(route('member.shop-hub.index'))
+            ->assertOk()
+            ->assertSee(__('member.shop_dashboard.store_data'));
     }
 
     public function test_seller_orders_page_requires_shop(): void

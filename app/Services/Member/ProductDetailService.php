@@ -14,7 +14,7 @@ class ProductDetailService
     /** @return array<string, mixed> */
     public function resolve(Product $product, string $sourceUrl = 'https://sieummo.vn', ?int $displayShopId = null): array
     {
-        $product->loadMissing(['category', 'shop'])->loadCount('orderItems');
+        $product->loadMissing(['category', 'shop', 'images'])->loadCount('orderItems');
 
         $purchasePrice = (float) $product->purchase_price;
         $sellingPrice = (float) $product->selling_price;
@@ -23,9 +23,10 @@ class ProductDetailService
         $isRecommended = $product->distributions()->available()->exists();
 
         return [
-            'product' => $product->fresh(['category', 'shop']),
+            'product' => $product->fresh(['category', 'shop', 'images']),
             'name' => $product->name,
             'image_url' => $product->imageUrl(),
+            'images' => $this->imageUrls($product),
             'description' => $description,
             'purchase_price' => $purchasePrice,
             'selling_price' => $sellingPrice,
@@ -36,6 +37,26 @@ class ProductDetailService
             'category' => $product->category?->name,
             'shop' => $this->resolveDisplayShop($product, $displayShopId),
         ];
+    }
+
+    /** @return list<string|null> */
+    private function imageUrls(Product $product): array
+    {
+        $images = [];
+
+        $main = $product->imageUrl();
+        if ($main) {
+            $images[] = $main;
+        }
+
+        foreach ($product->images as $image) {
+            $url = $image->imageUrl();
+            if ($url && $url !== $main) {
+                $images[] = $url;
+            }
+        }
+
+        return $images ?: [$main];
     }
 
     /** @return array{id: int, name: string, logo_url: ?string, products_url: string}|null */

@@ -3,22 +3,29 @@
 return [
     'nav' => [
         'home' => 'Trang chủ',
+        'categories' => 'Phân loại',
+        'cart' => 'Giỏ hàng',
         'products' => 'Sản phẩm',
         'customers' => 'Khách hàng',
         'support' => 'CSKH',
         'orders' => 'Đơn hàng',
-        'my' => 'Của Tôi',
+        'my' => 'Của tôi',
     ],
+
+    'guess_you_like' => 'Đoán là bạn thích.',
+    'pick_quality' => 'Chọn hàng tốt',
 
     'actions' => [
         'start_selling' => 'Bắt đầu bán',
         'promotions' => 'Khuyến mại',
-        'register' => 'Đăng ký',
+        'register' => 'Đăng ký hàng',
+        'register_goods' => 'Đăng ký hàng',
         'loyalty' => 'Điểm tích lũy',
         'support' => 'CSKH',
     ],
 
     'search' => [
+        'combined' => 'Vui lòng nhập từ khóa sản phẩm/cửa hàng',
         'products' => 'Tìm kiếm sản phẩm...',
         'shops' => 'Tìm theo tên shop... (Enter để tìm)',
         'products_alt' => 'Nhập từ khóa tìm kiếm',
@@ -103,6 +110,7 @@ return [
         'goods' => 'Hàng hóa',
         'reviews' => 'Đánh giá',
         'no_reviews' => 'Chưa có bình luận',
+        'no_image' => 'Chưa có ảnh',
         'shipping' => 'Vận chuyển',
         'shipping_fee' => 'Chi phí vận chuyển',
         'free_shipping' => 'Miễn phí',
@@ -150,6 +158,18 @@ return [
     'my' => [
         'payment_warning' => 'Vui lòng thanh toán đơn hàng trong vòng 24 giờ.',
         'payment_warning_long' => 'Kính gửi các nhà bán hàng, vui lòng chú ý thời gian thanh toán đơn hàng. Nếu đơn không thanh toán trong 24 giờ, điểm uy tín sẽ bị ảnh hưởng.',
+        'my_orders' => 'Đơn của tôi',
+        'view_all' => 'Xem tất cả',
+        'merchant_badge' => 'Thương gia',
+        'merchant_pending_payment' => 'Đang chờ thanh toán',
+        'merchant_shipping' => 'Vận chuyển',
+        'merchant_in_transit' => 'Đăng vận chuyển',
+        'merchant_completed' => 'Đơn hoàn thành',
+        'merchant_after_sales' => 'Sau bán hàng',
+        'shop_manage' => 'Quản lý cửa hàng',
+        'my_wallet' => 'Ví của tôi',
+        'my_reviews' => 'Đánh giá của tôi',
+        'complaints' => 'Khiếu nại',
         'to_pay' => 'Chờ thanh toán',
         'to_pickup' => 'Chờ lấy hàng',
         'in_transit' => 'Đang giao',
@@ -353,7 +373,56 @@ return [
         'submitted_at' => 'Ngày gửi',
     ],
 
+    'carousel' => [
+        'prev' => 'Trước',
+        'next' => 'Sau',
+    ],
+
+    'cart' => [
+        'total_items' => 'Tổng cộng :count',
+        'manage' => 'Quản lý',
+        'empty' => 'Giỏ hàng trống',
+        'go_shopping' => 'Mua sắm ngay',
+        'remove' => 'Xóa',
+        'select_all' => 'Chọn tất cả',
+        'checkout_total' => 'Tổng thanh toán',
+        'checkout' => 'Thanh toán',
+        'added' => 'Đã thêm vào giỏ hàng',
+        'add_failed' => 'Không thể thêm vào giỏ hàng',
+        'removed' => 'Đã xóa khỏi giỏ hàng',
+        'empty_checkout' => 'Chọn ít nhất một sản phẩm để thanh toán',
+    ],
+
+    'shop_hub' => [
+        'title' => 'Quản lý cửa hàng',
+    ],
+
+    'settings' => [
+        'title' => 'Thiết lập',
+    ],
+
+    'reviews' => [
+        'title' => 'Đánh giá của tôi',
+        'empty' => 'Chưa có đánh giá',
+        'submitted' => 'Đã gửi đánh giá',
+        'already_reviewed' => 'Bạn đã đánh giá sản phẩm này.',
+        'purchase_required' => 'Chỉ có thể đánh giá sản phẩm đã mua và nhận hàng.',
+        'body_placeholder' => 'Chia sẻ cảm nhận về sản phẩm...',
+        'submit' => 'Gửi đánh giá',
+    ],
+
+    'complaints' => [
+        'title' => 'Khiếu nại',
+        'subject' => 'Tiêu đề',
+        'body' => 'Nội dung',
+        'submit' => 'Gửi khiếu nại',
+        'empty' => 'Chưa có khiếu nại',
+        'submitted' => 'Đã gửi khiếu nại',
+    ],
+
     'wallet' => [
+        'hub_title' => 'Ví của tôi',
+        'withdrawal_records' => 'Lịch sử rút tiền',
         'recharge_title' => 'Nạp tiền',
         'withdraw_title' => 'Rút tiền',
         'recharge_method' => 'Phương thức nạp tiền',
@@ -419,9 +488,4 @@ return [
     ],
 
     'back' => 'Quay lại',
-
-    'carousel' => [
-        'prev' => 'Trước',
-        'next' => 'Sau',
-    ],
 ];

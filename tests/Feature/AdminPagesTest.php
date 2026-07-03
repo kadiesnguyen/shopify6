@@ -150,7 +150,7 @@ class AdminPagesTest extends TestCase
 
     public function test_admin_can_view_and_manage_shop_product_distributions(): void
     {
-        Role::create(['name' => 'shop']);
+        Role::findOrCreate('shop');
 
         $shopOwner = User::factory()->create(['status' => 'active', 'phone' => '0901234567']);
         $shopOwner->assignRole(['member', 'shop']);

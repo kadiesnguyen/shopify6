@@ -9,6 +9,6 @@ class ShopDashboardController extends Controller
 {
     public function index(): RedirectResponse
     {
-        return redirect()->route('member.my.index');
+        return redirect()->route('member.shop-hub.index');
     }
 }

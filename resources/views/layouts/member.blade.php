@@ -27,7 +27,7 @@
 
         <main @class([
             'min-w-0 flex flex-col',
-            'min-h-[calc(var(--app-height,100dvh)-4.5rem)] pb-[calc(4.5rem+env(safe-area-inset-bottom))]' => ! View::hasSection('portal_chat_page'),
+            'min-h-[calc(var(--app-height,100dvh)-50px)] pb-[calc(50px+env(safe-area-inset-bottom))]' => ! View::hasSection('portal_chat_page'),
             'h-dvh max-h-dvh overflow-hidden pb-0' => View::hasSection('portal_chat_page'),
             'pt-[3.75rem]' => ! View::hasSection('hide_portal_header'),
             'bg-gray-50' => View::hasSection('portal_gray_bg') || View::hasSection('portal_chat_page'),

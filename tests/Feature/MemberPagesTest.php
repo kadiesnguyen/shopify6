@@ -65,7 +65,12 @@ class MemberPagesTest extends TestCase
         $this->actingAs($this->member)
             ->get('/home')
             ->assertOk()
-            ->assertSee(__('member.products_for_you'));
+            ->assertSee(__('member.guess_you_like'))
+            ->assertSee(__('member.pick_quality'))
+            ->assertSee(__('member.nav.home'))
+            ->assertSee(__('member.nav.categories'))
+            ->assertSee(__('member.nav.cart'))
+            ->assertSee(__('member.nav.my'));
     }
 
     public function test_member_products_and_orders_pages(): void
@@ -560,12 +565,11 @@ class MemberPagesTest extends TestCase
             'updated_at' => now()->subMinutes(5),
         ]);
 
+        // Reference-style home cards show only image, name, and price.
         $this->actingAs($this->member)
             ->get(route('member.home'))
             ->assertOk()
-            ->assertSee('Latest Distributor Label Product')
-            ->assertSee('Tesst Distributor Shop')
-            ->assertDontSee('Owner Platform Shop');
+            ->assertSee('Latest Distributor Label Product');
 
         $this->actingAs($this->member)
             ->get(route('member.products.index'))
@@ -758,8 +762,8 @@ class MemberPagesTest extends TestCase
         $this->actingAs($this->member)
             ->get('/home/my')
             ->assertOk()
-            ->assertSee(__('member.my.order_management'))
-            ->assertSee(__('member.my.recharge'));
+            ->assertSee(__('member.my.my_orders'))
+            ->assertSee(__('member.my.my_wallet'));
 
         $this->actingAs($this->member)
             ->get('/home/recharge')
@@ -819,7 +823,9 @@ class MemberPagesTest extends TestCase
         $this->actingAs($shopUser)
             ->get('/home/my')
             ->assertOk()
-            ->assertSee(__('member.my.order_management'));
+            ->assertSee(__('member.my.my_orders'))
+            ->assertSee(__('member.my.merchant_pending_payment'))
+            ->assertSee(__('member.my.shop_manage'));
     }
 
     public function test_member_can_submit_bank_withdrawal_request(): void
@@ -1377,11 +1383,16 @@ class MemberPagesTest extends TestCase
             'sort_order' => 99,
         ]);
 
-        $this->actingAs($this->member)
-            ->get('/home/recharge')
-            ->assertOk()
-            ->assertSee($disabled->name)
-            ->assertSee(route('member.chat.index'), false);
+        $response = $this->actingAs($this->member)
+            ->get('/home/recharge');
+
+        $response->assertOk()
+            ->assertSee($disabled->name);
+
+        $this->assertStringContainsString(
+            str_replace('/', '\\/', route('member.chat.index')),
+            $response->getContent(),
+        );
     }
 
     public function test_member_cannot_view_financial_report_page(): void
@@ -1417,7 +1428,7 @@ class MemberPagesTest extends TestCase
         $this->actingAs($this->member->fresh())
             ->get(route('member.my.index'))
             ->assertOk()
-            ->assertSee(__('member.my.financial_report'));
+            ->assertDontSee(__('member.my.financial_report'));
     }
 
     public function test_financial_report_shows_seller_profit_totals(): void
@@ -1462,52 +1473,26 @@ class MemberPagesTest extends TestCase
             ->assertSee(__('member.my.total_income'));
     }
 
-    public function test_my_page_shop_financial_metrics_follow_pending_profit_income_formula(): void
+    public function test_my_page_matches_reference_merchant_layout(): void
     {
         $this->member->assignRole('shop');
 
-        $shop = Shop::query()->create([
+        Shop::query()->create([
             'user_id' => $this->member->id,
-            'name' => 'My Finance Shop',
-            'slug' => 'my-finance-shop',
+            'name' => 'My Layout Shop',
+            'slug' => 'my-layout-shop',
+            'seller_type' => Shop::TYPE_BUSINESS,
             'status' => 'active',
         ]);
 
-        $buyer = User::factory()->create(['status' => 'active']);
-
-        Order::query()->create([
-            'user_id' => $buyer->id,
-            'shop_id' => $shop->id,
-            'seller_id' => $this->member->id,
-            'order_no' => 'ORD-MY-PENDING-001',
-            'total' => 300,
-            'purchase_cost' => 250,
-            'commission' => 50,
-            'status' => Order::STATUS_PENDING_PAYMENT,
-            'payment_method' => 'wallet',
-            'paid_at' => now(),
-        ]);
-
-        Order::query()->create([
-            'user_id' => $buyer->id,
-            'shop_id' => $shop->id,
-            'seller_id' => $this->member->id,
-            'order_no' => 'ORD-MY-COMPLETE-001',
-            'total' => 300,
-            'purchase_cost' => 250,
-            'commission' => 50,
-            'status' => Order::STATUS_COMPLETED,
-            'payment_method' => 'wallet',
-            'paid_at' => now(),
-            'completed_at' => now(),
-        ]);
-
-        $this->actingAs($this->member)
+        // Reference merchant my page: orders card, merchant badge, menu grid, feed — no wallet card.
+        $this->actingAs($this->member->fresh())
             ->get(route('member.my.index'))
             ->assertOk()
-            ->assertSee('$250.00')
-            ->assertSee('$100.00')
-            ->assertSee(__('member.my.total_income'))
-            ->assertDontSee(__('member.my.transactions'));
+            ->assertSee(__('member.my.merchant_badge'))
+            ->assertSee(__('member.my.merchant_pending_payment'))
+            ->assertSee(__('member.my.shop_manage'))
+            ->assertDontSee(__('member.my.pending_payment_amount'))
+            ->assertDontSee(__('member.my.total_income'));
     }
 }

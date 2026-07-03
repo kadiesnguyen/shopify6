@@ -11,8 +11,19 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
+        $role = $request->string('role', 'buyer')->toString();
+        $userId = auth()->id();
+
+        $query = Order::query()->with(['items', 'shop']);
+
+        if ($role === 'seller') {
+            $query->where('seller_id', $userId);
+        } else {
+            $query->where('user_id', $userId);
+        }
+
         $orders = $this->paginateQuery(
-            Order::query()->with(['items', 'shop'])->where('user_id', auth()->id()),
+            $query,
             $request,
             searchColumns: ['order_no'],
             filterable: ['status'],
@@ -25,7 +36,10 @@ class OrderController extends Controller
     public function show(int $order): OrderResource
     {
         $model = Order::query()->with(['items', 'shop'])->findOrFail($order);
-        abort_unless($model->user_id === auth()->id(), 403);
+        abort_unless(
+            $model->user_id === auth()->id() || $model->seller_id === auth()->id(),
+            403,
+        );
 
         return new OrderResource($model);
     }

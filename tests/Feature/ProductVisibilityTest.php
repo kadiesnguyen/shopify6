@@ -191,6 +191,17 @@ class ProductVisibilityTest extends TestCase
 
         $this->distributeAsShop($this->shopUser);
 
+        // With a fund password set, the buyer reaches the checkout page.
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.checkout.show', $this->product))
+            ->assertOk();
+    }
+
+    public function test_checkout_requires_payment_password(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+
+        // No fund password yet: gate redirects to set-payment-password first.
         $this->actingAs($this->member->fresh())
             ->get(route('member.checkout.show', $this->product))
             ->assertRedirect(route('member.payment-password.create', [

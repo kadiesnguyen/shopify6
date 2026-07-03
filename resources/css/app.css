@@ -289,17 +289,22 @@ body {
         @apply relative min-w-0;
     }
 
+    /* Reference site renders with the browser default serif stack */
+    .portal-app {
+        font-family: 'Times New Roman', 'Tinos', 'Liberation Serif', serif;
+    }
+
     .portal-bottom-nav {
         font-family: inherit;
         font-size: 16px;
     }
 
     .portal-product-buy-bar {
-        bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+        bottom: calc(50px + env(safe-area-inset-bottom, 0px));
     }
 
     .portal-bottom-nav__label {
-        font-size: 16px;
+        font-size: 10px;
         line-height: 1.25;
     }
 
@@ -351,7 +356,7 @@ body {
 
     .portal-checkout-dock {
         @apply fixed inset-x-0 z-40 flex items-center gap-3 border-t border-gray-100 bg-white px-4 py-3 md:left-1/2 md:right-auto md:w-full md:max-w-[420px] md:-translate-x-1/2;
-        bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+        bottom: calc(50px + env(safe-area-inset-bottom, 0px));
     }
 
     .portal-checkout-shell {

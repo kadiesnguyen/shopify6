@@ -14,6 +14,7 @@ class ProductDetailResource extends JsonResource
             'name' => $this->resource['name'],
             'slug' => $this->resource['product']->slug,
             'image_url' => $this->resource['image_url'],
+            'images' => $this->resource['images'] ?? [],
             'description' => $this->resource['description'],
             'purchase_price' => $this->resource['purchase_price'],
             'selling_price' => $this->resource['selling_price'],

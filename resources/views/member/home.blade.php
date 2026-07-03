@@ -1,43 +1,35 @@
 @extends('layouts.member')
 
 @section('title', __('member.nav.home'))
+@section('hide_portal_header', '1')
 @section('full_bleed', '1')
 
 @section('content')
-    <x-member.banner-carousel :banners="$banners" />
+    {{-- Reference: hero banner with search bar overlaid on top --}}
+    <div class="relative">
+        <x-member.banner-carousel :banners="$banners" />
+        <x-member.home-header />
+    </div>
 
     <x-member.quick-actions />
 
-    <form method="GET" action="{{ route('member.home') }}" class="mt-3 space-y-2 px-4">
-        <x-member.search-field
-            name="q"
-            :value="request('q')"
-            :placeholder="__('member.search.products')"
-            :autocomplete="true"
-            suggest-target="product"
-            suggest-context="portal"
-            icon="search"
-        />
-        <x-member.search-field
-            name="shop"
-            :value="request('shop')"
-            :placeholder="__('member.search.shops')"
-            :autocomplete="true"
-            suggest-target="shop"
-            suggest-context="portal"
-            hidden-field-name="shop_id"
-            :hidden-field-value="request('shop_id')"
-            icon="store"
-        />
-    </form>
+    {{-- Reference: secondary brand banner strip below the quick menu --}}
+    <div class="px-[7px] pt-4">
+        <img src="{{ asset('images/portal/banners/brand-banner.jpg') }}" alt="" class="w-full" loading="lazy">
+    </div>
 
-    <section class="px-4 pt-4">
-        <h2 class="mb-3 text-base font-bold text-gray-900">{{ __('member.products_for_you') }}</h2>
+    <div class="mt-3.5 h-3.5 bg-[#f4f4f4]"></div>
+
+    <section class="bg-[#f5f5f5] pb-4">
+        <div class="flex items-center gap-2 px-3 pb-1 pt-2">
+            <h2 class="text-lg font-bold text-[#444]">{{ __('member.guess_you_like') }}</h2>
+            <span class="rounded-bl-[10px] rounded-tr-[10px] bg-[#ff4444] px-1.5 py-px text-[10px] text-white">{{ __('member.pick_quality') }}</span>
+        </div>
 
         @if ($products->isEmpty())
-            <x-ui.empty-state :title="__('member.no_products')" class="rounded-xl bg-gray-50" />
+            <x-ui.empty-state :title="__('member.no_products')" class="mx-3 rounded-xl bg-white" />
         @else
-            <div class="ui-content-grid">
+            <div class="grid grid-cols-2 gap-2 px-2">
                 @foreach ($products as $index => $product)
                     <x-member.product-card :product="$product" :image-eager="$index < 4" />
                 @endforeach

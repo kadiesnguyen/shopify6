@@ -21,6 +21,26 @@ class WalletController extends Controller
         return new WalletResource($wallet);
     }
 
+    public function summary(): JsonResponse
+    {
+        $user = auth()->user()->load('wallet');
+        $wallet = $user->wallet ?? $user->wallet()->create([
+            'balance' => 0,
+            'balance_pending' => 0,
+            'balance_frozen' => 0,
+        ]);
+
+        return response()->json([
+            'wallet' => new WalletResource($wallet),
+            'links' => [
+                'recharge' => route('member.wallet.recharge'),
+                'withdrawal' => route('member.wallet.withdrawal'),
+                'fund_records' => route('member.wallet.fund-records'),
+                'withdrawal_records' => route('member.wallet.withdrawal-records'),
+            ],
+        ]);
+    }
+
     public function recharge(Request $request): JsonResponse
     {
         $data = $request->validate([

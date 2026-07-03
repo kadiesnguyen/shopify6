@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'demo_api' => [
+        'base_url' => env('DEMO_API_BASE_URL', 'https://ayyvv.piaob.com/'),
+        'secret_key' => env('DEMO_API_SECRET_KEY', 'yiling6670238160ravntyoneapp7926'),
+        'locale' => env('DEMO_API_LOCALE', 'vnm'),
+    ],
+
 ];

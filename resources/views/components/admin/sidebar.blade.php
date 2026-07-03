@@ -11,6 +11,8 @@
         ['route' => 'admin.withdrawal-requests.index', 'label' => __('admin.menu.withdrawal_requests'), 'icon' => 'request-out', 'patterns' => ['admin.withdrawal-requests.*']],
         ['route' => 'admin.shop-applications.index', 'label' => __('admin.menu.shop_applications'), 'icon' => 'shop', 'patterns' => ['admin.shop-applications.*']],
         ['route' => 'admin.chat.index', 'label' => __('admin.menu.chat'), 'icon' => 'chat', 'patterns' => ['admin.chat.*']],
+        ['route' => 'admin.complaints.index', 'label' => __('admin.menu.complaints'), 'icon' => 'request-in', 'patterns' => ['admin.complaints.*']],
+        ['route' => 'admin.reviews.index', 'label' => __('admin.menu.reviews'), 'icon' => 'products', 'patterns' => ['admin.reviews.*']],
         ['route' => 'admin.settings.edit', 'label' => __('admin.menu.settings'), 'icon' => 'settings', 'patterns' => ['admin.settings.*']],
     ];
 @endphp

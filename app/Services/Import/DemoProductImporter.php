@@ -1,0 +1,498 @@
+<?php
+
+namespace App\Services\Import;
+
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductDistribution;
+use App\Models\Shop;
+use App\Models\User;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use RuntimeException;
+use Spatie\Permission\Models\Role;
+
+class DemoProductImporter
+{
+    private const DEFAULT_STOCK = 100;
+
+    private string $baseUrl;
+
+    private string $secretKey;
+
+    private string $locale;
+
+    /** @var array<string, array{category: Category, created: bool}> */
+    private array $categoryCache = [];
+
+    /** @var array<string, array{shop: Shop, created: bool}> */
+    private array $shopCache = [];
+
+    public function __construct()
+    {
+        $this->secretKey = (string) config('services.demo_api.secret_key');
+        $this->locale = (string) config('services.demo_api.locale');
+    }
+
+    /**
+     * @return array{parsed: int, created: int, updated: int, shops: int, categories: int}
+     */
+    public function import(
+        string $sourceUrl,
+        bool $dryRun = false,
+        ?int $limit = null,
+        bool $skipImages = false,
+        int $sleepMs = 100,
+    ): array {
+        $this->baseUrl = rtrim($sourceUrl === '' ? (string) config('services.demo_api.base_url') : $sourceUrl, '/');
+        set_time_limit(0);
+
+        $admin = User::role('admin')->first() ?? User::query()->first();
+
+        if (! $admin) {
+            throw new RuntimeException('No admin user found. Run db:seed first.');
+        }
+
+        Role::findOrCreate('member');
+        Role::findOrCreate('shop');
+
+        $stats = [
+            'parsed' => 0,
+            'created' => 0,
+            'updated' => 0,
+            'shops' => 0,
+            'categories' => 0,
+        ];
+
+        $categories = $this->categories();
+
+        if ($categories === []) {
+            throw new RuntimeException('No categories returned from demo API.');
+        }
+
+        $productsById = [];
+
+        foreach ($categories as $demoCategory) {
+            $localCategory = $this->resolveCategory($demoCategory);
+
+            if ($localCategory['created']) {
+                $stats['categories']++;
+            }
+
+            $page = 1;
+
+            while (true) {
+                $response = $this->call('api/Goods/getCategoryGoodsList', [
+                    'cate_id' => $demoCategory['id'],
+                    'page' => $page,
+                ]);
+
+                $items = $response['data']['goodres'] ?? [];
+
+                if (! is_array($items) || $items === []) {
+                    break;
+                }
+
+                foreach ($items as $item) {
+                    $id = (int) $item['id'];
+
+                    if (! isset($productsById[$id])) {
+                        $productsById[$id] = [
+                            'demo' => $item,
+                            'category_id' => $localCategory['category']->id,
+                        ];
+                        $stats['parsed']++;
+                    }
+                }
+
+                if (count($items) < 10) {
+                    break;
+                }
+
+                $page++;
+
+                if ($limit !== null && count($productsById) >= $limit) {
+                    break 2;
+                }
+            }
+        }
+
+        if ($limit !== null) {
+            $productsById = array_slice($productsById, 0, $limit, true);
+        }
+
+        if ($productsById === []) {
+            throw new RuntimeException('No products parsed from demo API.');
+        }
+
+        if ($dryRun) {
+            return $stats;
+        }
+
+        $index = 0;
+
+        foreach ($productsById as $id => $meta) {
+            try {
+                $detail = $this->call('api/Goods/goodsInfo', ['goods_id' => $id]);
+            } catch (RuntimeException $exception) {
+                $this->line("Skipping product {$id}: {$exception->getMessage()}");
+
+                continue;
+            }
+
+            $goodsInfo = $detail['data']['goodsinfo'] ?? null;
+            $gpres = $detail['data']['gpres'] ?? [];
+
+            if ($sleepMs > 0) {
+                usleep($sleepMs * 1000);
+            }
+
+            try {
+                $shop = $this->resolveShop((int) $meta['demo']['shop_id'], $skipImages);
+            } catch (RuntimeException $exception) {
+                $this->line("Skipping product {$id}: {$exception->getMessage()}");
+
+                continue;
+            }
+
+            if ($shop['created']) {
+                $stats['shops']++;
+            }
+
+            $result = $this->resolveProduct($meta, $goodsInfo, $gpres, $shop['shop'], $admin, $skipImages);
+
+            if ($result['created']) {
+                $stats['created']++;
+            } else {
+                $stats['updated']++;
+            }
+
+            $index++;
+
+            if ($index % 25 === 0) {
+                gc_collect_cycles();
+            }
+        }
+
+        return $stats;
+    }
+
+    /** @return list<array{id: int, cate_name: string}> */
+    private function categories(): array
+    {
+        $response = $this->call('api/Category/index');
+
+        return $response['data']['cateres'] ?? [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    private function call(string $endpoint, array $params = []): array
+    {
+        $token = md5($endpoint.$this->secretKey);
+        $data = array_merge(['api_token' => $token, 'client_id' => 1], $params);
+        $t = now()->getTimestampMs();
+        $url = $this->baseUrl.'/'.$endpoint.'?lang='.$this->locale.'&t='.$t;
+
+        $response = Http::asForm()->timeout(60)->post($url, $data);
+
+        if (! $response->successful()) {
+            throw new RuntimeException("Demo API request failed: {$endpoint} (HTTP {$response->status()})");
+        }
+
+        $json = $response->json();
+
+        if (! is_array($json) || ($json['status'] ?? 0) !== 200) {
+            $message = $json['mess'] ?? 'Unknown error';
+            throw new RuntimeException("Demo API error for {$endpoint}: {$message}");
+        }
+
+        return $json;
+    }
+
+    /**
+     * @param  array{id: int, cate_name: string}  $demoCategory
+     * @return array{category: Category, created: bool}
+     */
+    private function resolveCategory(array $demoCategory): array
+    {
+        $slug = 'demo-cate-'.$demoCategory['id'];
+
+        if (isset($this->categoryCache[$slug])) {
+            return $this->categoryCache[$slug];
+        }
+
+        $category = Category::query()->updateOrCreate(
+            ['slug' => $slug],
+            [
+                'name' => $demoCategory['cate_name'],
+                'status' => Category::STATUS_ACTIVE,
+                'sort_order' => Category::query()->max('sort_order') + 1,
+            ],
+        );
+
+        $this->categoryCache[$slug] = [
+            'category' => $category,
+            'created' => $category->wasRecentlyCreated,
+        ];
+
+        return $this->categoryCache[$slug];
+    }
+
+    /**
+     * @return array{shop: Shop, created: bool}
+     */
+    private function resolveShop(int $demoShopId, bool $skipImages): array
+    {
+        $key = (string) $demoShopId;
+
+        if (isset($this->shopCache[$key])) {
+            return $this->shopCache[$key];
+        }
+
+        $response = $this->call('api/Shops/getShopInfo', ['shop_id' => $demoShopId]);
+        $shopInfo = $response['data']['shops'] ?? [];
+        $shopName = $shopInfo['shop_name'] ?? 'Shop '.$demoShopId;
+
+        $email = 'shop-'.$demoShopId.'@import.shopefy.local';
+
+        $owner = User::query()->firstOrCreate(
+            ['email' => $email],
+            [
+                'username' => 'shop-'.$demoShopId,
+                'user_code' => 'DP'.str_pad((string) $demoShopId, 6, '0', STR_PAD_LEFT),
+                'name' => $shopName,
+                'phone' => null,
+                'password' => 'password',
+                'status' => 'active',
+            ],
+        );
+
+        $owner->syncRoles([Role::findOrCreate('member'), Role::findOrCreate('shop')]);
+
+        $logoPath = null;
+
+        if (! $skipImages && ! empty($shopInfo['logo'])) {
+            $logoPath = $this->downloadImage($shopInfo['logo'], 'shops/demo');
+        }
+
+        $shop = Shop::query()->updateOrCreate(
+            ['slug' => 'shop-'.$demoShopId],
+            [
+                'user_id' => $owner->id,
+                'name' => $shopName,
+                'description' => $shopInfo['shop_desc'] ?? 'Imported from demo shop',
+                'logo' => $logoPath,
+                'status' => Shop::STATUS_ACTIVE,
+            ],
+        );
+
+        $this->shopCache[$key] = [
+            'shop' => $shop,
+            'created' => $shop->wasRecentlyCreated,
+        ];
+
+        return $this->shopCache[$key];
+    }
+
+    /**
+     * @param  array<string, mixed>  $meta
+     * @param  array<string, mixed>|null  $goodsInfo
+     * @param  list<array<string, mixed>>  $gpres
+     * @return array{product: Product, created: bool}
+     */
+    private function resolveProduct(
+        array $meta,
+        ?array $goodsInfo,
+        array $gpres,
+        Shop $shop,
+        User $admin,
+        bool $skipImages,
+    ): array {
+        $demo = $meta['demo'];
+        $slug = 'demo-'.$demo['id'];
+        $name = html_entity_decode((string) $demo['goods_name'], ENT_QUOTES | ENT_HTML5);
+        $name = Str::limit($name, 250, '');
+        $sellingPrice = (float) ($demo['min_price'] ?? $goodsInfo['zs_shop_price'] ?? 0);
+        $purchasePrice = round($sellingPrice * 0.595, 2);
+        $commission = round($sellingPrice * 0.10, 2);
+        $description = $this->plainDescription($goodsInfo['goods_desc'] ?? null, $name);
+
+        $imageUrls = [];
+
+        if (! empty($demo['thumb_url'])) {
+            $imageUrls[] = $demo['thumb_url'];
+        }
+
+        foreach ($gpres as $pic) {
+            $url = $pic['img_url'] ?? null;
+
+            if ($url && ! in_array($url, $imageUrls, true)) {
+                $imageUrls[] = $url;
+            }
+        }
+
+        $mainImagePath = null;
+        $imagePaths = [];
+
+        if (! $skipImages && $imageUrls !== []) {
+            foreach ($imageUrls as $index => $url) {
+                $path = $this->downloadImage($url, 'products/demo');
+
+                if ($path === null) {
+                    continue;
+                }
+
+                if ($index === 0) {
+                    $mainImagePath = $path;
+                }
+
+                $imagePaths[] = ['path' => $path, 'sort' => $index];
+            }
+        }
+
+        $payload = [
+            'category_id' => $meta['category_id'],
+            'shop_id' => $shop->id,
+            'user_id' => $admin->id,
+            'name' => $name,
+            'description' => $description,
+            'selling_price' => $sellingPrice,
+            'purchase_price' => $purchasePrice,
+            'commission' => $commission,
+            'commission_type' => 'fixed',
+            'stock' => self::DEFAULT_STOCK,
+            'status' => Product::STATUS_ACTIVE,
+        ];
+
+        if ($mainImagePath) {
+            $payload['image'] = $mainImagePath;
+        }
+
+        $product = Product::query()->where('slug', $slug)->first();
+
+        if ($product) {
+            $product->update($payload);
+            $created = false;
+        } else {
+            $product = Product::query()->create(array_merge($payload, ['slug' => $slug]));
+            $created = true;
+        }
+
+        $this->syncImages($product, $imagePaths);
+        $this->ensureDistribution($shop, $product, $sellingPrice, $purchasePrice, $commission);
+
+        return ['product' => $product, 'created' => $created];
+    }
+
+    /** @param  list<array{path: string, sort: int}>  $imagePaths */
+    private function syncImages(Product $product, array $imagePaths): void
+    {
+        $product->images()->delete();
+
+        foreach ($imagePaths as $item) {
+            $product->images()->create([
+                'image' => $item['path'],
+                'sort_order' => $item['sort'],
+            ]);
+        }
+    }
+
+    private function ensureDistribution(
+        Shop $shop,
+        Product $product,
+        float $sellingPrice,
+        float $purchasePrice,
+        float $commission,
+    ): void {
+        $owner = $shop->user;
+
+        if (! $owner) {
+            return;
+        }
+
+        ProductDistribution::query()->updateOrCreate(
+            [
+                'user_id' => $owner->id,
+                'product_id' => $product->id,
+            ],
+            [
+                'selling_price' => $sellingPrice,
+                'purchase_price' => $purchasePrice,
+                'commission' => $commission,
+                'commission_type' => ProductDistribution::COMMISSION_FIXED,
+                'status' => ProductDistribution::STATUS_AVAILABLE,
+                'is_featured' => true,
+                'featured_at' => now(),
+            ],
+        );
+    }
+
+    private function downloadImage(string $url, string $folder): ?string
+    {
+        $url = trim($url);
+
+        if ($url === '') {
+            return null;
+        }
+
+        // ponytail: filenames come from URL basenames; collisions across different
+        // products/images are ignored because the demo source rarely reuses names.
+        // Upgrade: prepend product/hash or use a content-addressed store if needed.
+        $filename = basename(parse_url($url, PHP_URL_PATH) ?: 'asset.bin');
+
+        if ($filename === '' || $filename === 'asset.bin') {
+            $filename = md5($url).'.jpg';
+        }
+
+        $storagePath = $folder.'/'.$filename;
+
+        if (Storage::disk('public')->exists($storagePath)) {
+            return $storagePath;
+        }
+
+        $response = Http::timeout(60)->get($url);
+
+        if (! $response->successful()) {
+            return null;
+        }
+
+        Storage::disk('public')->put($storagePath, $response->body());
+
+        return $storagePath;
+    }
+
+    private function plainDescription(?string $html, string $fallback): string
+    {
+        if ($html === null || $html === '') {
+            return $fallback;
+        }
+
+        $text = preg_replace('/<\/(p|li|div|h[1-6])>/iu', "\n", $html);
+        $text = strip_tags($text ?? '');
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5);
+        $lines = preg_split('/\r\n|\r|\n/', $text);
+        $clean = [];
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+
+            if ($line !== '') {
+                $clean[] = $line;
+            }
+        }
+
+        return $clean !== [] ? implode("\n", $clean) : $fallback;
+    }
+
+    private function line(string $message): void
+    {
+        if (app()->runningInConsole()) {
+            // Allow the command to decide whether to surface this; for now we use the logger.
+            logger()->info($message);
+        }
+    }
+}

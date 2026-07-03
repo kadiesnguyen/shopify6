@@ -75,7 +75,6 @@ class AuthApiTest extends TestCase
 
         $this->actingAs($user, 'sanctum')
             ->getJson('/api/member/dashboard')
-            ->assertOk()
-            ->assertJsonStructure(['wallet', 'order_counts', 'products']);
+            ->assertStatus(410);
     }
 }

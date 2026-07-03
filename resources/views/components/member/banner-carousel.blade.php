@@ -1,4 +1,4 @@
-@props(['banners' => collect()])
+@props(['banners' => collect(), 'rounded' => false])
 
 @php
     $slides = $banners->isNotEmpty()
@@ -16,12 +16,11 @@
 
 @if ($slides->isNotEmpty())
     <section
-        class="relative overflow-hidden bg-black"
+        {{ $attributes->class(['relative overflow-hidden bg-gray-100', 'rounded-[11px]' => $rounded]) }}
         x-data="{
             current: 0,
             total: {{ $slides->count() }},
             timer: null,
-            prev() { this.current = (this.current - 1 + this.total) % this.total },
             next() { this.current = (this.current + 1) % this.total },
             goTo(index) { this.current = index },
             start() { this.timer = setInterval(() => this.next(), 5000) },
@@ -31,7 +30,8 @@
         @mouseenter="stop()"
         @mouseleave="start()"
     >
-        <div class="relative h-[min(48dvh,440px)] min-h-[200px] w-full overflow-hidden">
+        {{-- Reference: full-bleed 2:1 banner, dash indicators, no arrows --}}
+        <div class="relative aspect-[2/1] w-full overflow-hidden">
             @foreach ($slides as $index => $slide)
                 <img
                     src="{{ $slide['image'] }}"
@@ -45,34 +45,19 @@
                 >
             @endforeach
 
-            <button
-                type="button"
-                @click="prev()"
-                class="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm transition hover:bg-white/30"
-                aria-label="{{ __('member.carousel.prev') }}"
-            >
-                <x-member.icon name="chevron-left" class="size-5" />
-            </button>
-            <button
-                type="button"
-                @click="next()"
-                class="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/20 p-2 text-white backdrop-blur-sm transition hover:bg-white/30"
-                aria-label="{{ __('member.carousel.next') }}"
-            >
-                <x-member.icon name="chevron-right" class="size-5" />
-            </button>
-
-            <div class="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
-                @foreach ($slides as $index => $slide)
-                    <button
-                        type="button"
-                        @click="goTo({{ $index }})"
-                        :class="current === {{ $index }} ? 'bg-white w-6' : 'bg-white/50 w-2'"
-                        class="h-2 rounded-full transition-all"
-                        aria-label="Slide {{ $index + 1 }}"
-                    ></button>
-                @endforeach
-            </div>
+            @if ($slides->count() > 1)
+                <div class="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+                    @foreach ($slides as $index => $slide)
+                        <button
+                            type="button"
+                            @click="goTo({{ $index }})"
+                            :class="current === {{ $index }} ? 'bg-gray-100' : 'bg-gray-400/70'"
+                            class="h-1 w-4 rounded-sm transition-colors"
+                            aria-label="Slide {{ $index + 1 }}"
+                        ></button>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </section>
 @endif

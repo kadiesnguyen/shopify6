@@ -3,6 +3,8 @@
 return [
     'nav' => [
         'home' => 'Home',
+        'categories' => 'Categories',
+        'cart' => 'Cart',
         'products' => 'Products',
         'customers' => 'Customers',
         'support' => 'Support',
@@ -10,15 +12,20 @@ return [
         'my' => 'My',
     ],
 
+    'guess_you_like' => 'Guess you like.',
+    'pick_quality' => 'Quality picks',
+
     'actions' => [
         'start_selling' => 'Start selling',
         'promotions' => 'Promotions',
         'register' => 'Register',
+        'register_goods' => 'Register goods',
         'loyalty' => 'Loyalty points',
         'support' => 'Support',
     ],
 
     'search' => [
+        'combined' => 'Search products or shops',
         'products' => 'Search products...',
         'shops' => 'Search by shop name... (Press Enter)',
         'products_alt' => 'Enter search keyword',
@@ -103,6 +110,7 @@ return [
         'goods' => 'Product',
         'reviews' => 'Reviews',
         'no_reviews' => 'No reviews yet',
+        'no_image' => 'No image',
         'shipping' => 'Shipping',
         'shipping_fee' => 'Shipping fee',
         'free_shipping' => 'Free',

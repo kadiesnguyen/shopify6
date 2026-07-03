@@ -1,9 +1,7 @@
-@props(['product', 'detailFrom' => 'home', 'imageEager' => false])
+@props(['product', 'detailFrom' => 'home', 'imageEager' => false, 'showMallBadge' => true])
 
 @php
     $displayShopId = $product->getAttribute('display_shop_id');
-    $displayShopName = $product->getAttribute('display_shop_name') ?: $product->shop?->name;
-    $displayShopLogo = $product->getAttribute('display_shop_logo') ?: $product->shop?->displayLogoUrl();
     $productImageUrl = $product->imageUrl();
     $detailParams = array_filter([
         'product' => $product,
@@ -13,8 +11,13 @@
     $detailUrl = route('member.products.show', $detailParams);
 @endphp
 
-<article class="flex h-full min-w-0 flex-col overflow-hidden rounded-xl bg-white shadow-sm">
-    <a href="{{ $detailUrl }}" class="relative block aspect-square min-w-0 overflow-hidden bg-gray-100">
+{{-- Reference goodsCard: white, square corners, MALL ribbon overhanging the left edge --}}
+<article class="relative flex h-full min-w-0 flex-col bg-white">
+    @if ($showMallBadge)
+        <span class="absolute -left-[5px] top-[5px] z-10 rounded-r bg-[#ff4243] px-1.5 py-px text-[11px] font-semibold text-white">MALL</span>
+    @endif
+
+    <a href="{{ $detailUrl }}" class="block aspect-square min-w-0 overflow-hidden bg-gray-100">
         @if ($productImageUrl)
             <x-ui.lazy-image
                 :src="$productImageUrl"
@@ -31,39 +34,10 @@
         @endif
     </a>
 
-    <div class="flex min-w-0 flex-1 flex-col p-3">
-        <a href="{{ $detailUrl }}" class="mb-1.5 block truncate text-sm font-bold leading-tight text-gray-900 no-underline">{{ $product->name }}</a>
-
-        @if ($displayShopName)
-            <div class="mb-2 flex min-w-0 items-center gap-2 rounded-lg bg-gray-50 px-1 py-1.5">
-                @if ($displayShopLogo)
-                    <x-ui.lazy-image
-                        :src="$displayShopLogo"
-                        alt=""
-                        class="size-6 rounded-full object-cover"
-                        wrapper-class="size-6 shrink-0 rounded-full"
-                    />
-                @else
-                    <span class="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700">
-                        {{ strtoupper(substr($displayShopName, 0, 1)) }}
-                    </span>
-                @endif
-                <span class="truncate text-xs text-gray-600">{{ $displayShopName }}</span>
-            </div>
-        @endif
-
-        <p class="text-base font-bold text-emerald-600">${{ number_format($product->selling_price, 2) }}</p>
-        <p class="text-xs text-gray-500">{{ __('member.stock') }}: {{ $product->stock }}</p>
-
-        <a
-            href="{{ route('member.checkout.show', $product) }}"
-            @class([
-                'mt-auto flex w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700',
-                'pointer-events-none opacity-50' => $product->stock < 1,
-            ])
-        >
-            <x-member.icon name="shopping-cart" class="size-4" />
-            {{ __('member.buy') }}
-        </a>
+    <div class="flex min-w-0 flex-1 flex-col p-2">
+        <a href="{{ $detailUrl }}" class="line-clamp-2 min-h-[2.4rem] text-[13px] leading-snug text-[#444] no-underline">{{ $product->name }}</a>
+        <p class="mt-1 text-[#ed5435]">
+            <span class="text-[11px]">$</span><span class="text-lg font-semibold">{{ number_format($product->selling_price, 2) }}</span>
+        </p>
     </div>
 </article>

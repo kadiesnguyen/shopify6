@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\Member\CartController;
+use App\Http\Controllers\Member\CategoryBrowseController;
 use App\Http\Controllers\Member\ChatController;
 use App\Http\Controllers\Member\CheckoutController;
+use App\Http\Controllers\Member\ComplaintController;
 use App\Http\Controllers\Member\ContractController;
 use App\Http\Controllers\Member\CustomerController;
 use App\Http\Controllers\Member\FinancialReportController;
@@ -13,8 +16,11 @@ use App\Http\Controllers\Member\PaymentPasswordController;
 use App\Http\Controllers\Member\ProductController;
 use App\Http\Controllers\Member\ProductDistributionController;
 use App\Http\Controllers\Member\ProductSearchSuggestionController;
+use App\Http\Controllers\Member\ReviewController;
 use App\Http\Controllers\Member\SellerOrderController;
+use App\Http\Controllers\Member\SettingsController;
 use App\Http\Controllers\Member\ShopDashboardController;
+use App\Http\Controllers\Member\ShopHubController;
 use App\Http\Controllers\Member\ProfileController;
 use App\Http\Controllers\Member\PromotionController;
 use App\Http\Controllers\Member\ShopApplicationController;
@@ -25,6 +31,15 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('home')->name('member.')->middleware(['member'])->group(function (): void {
     Route::get('/', [HomeController::class, 'index'])->name('home');
 
+    Route::get('/categories', [CategoryBrowseController::class, 'index'])->name('categories.index');
+
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+    Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
+    Route::post('/cart/select-all', [CartController::class, 'selectAll'])->name('cart.select-all');
+    Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
+    Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/distributions', [ProductDistributionController::class, 'index'])->name('products.distributions.index');
     Route::post('/products/distributions', [ProductDistributionController::class, 'store'])->name('products.distributions.store');
@@ -33,6 +48,7 @@ Route::prefix('home')->name('member.')->middleware(['member'])->group(function (
     Route::get('/search/suggestions', ProductSearchSuggestionController::class)->name('search.suggestions');
 
     Route::get('/shop-dashboard', [ShopDashboardController::class, 'index'])->name('shop-dashboard.index');
+    Route::get('/shop-hub', [ShopHubController::class, 'index'])->name('shop-hub.index');
     Route::get('/seller/orders', [SellerOrderController::class, 'index'])->name('seller.orders.index');
     Route::get('/products/{product}/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::post('/products/{product}/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
@@ -63,6 +79,7 @@ Route::prefix('home')->name('member.')->middleware(['member'])->group(function (
     Route::get('/my/change-payment-password', [PaymentPasswordController::class, 'edit'])->name('payment-password.edit');
     Route::put('/my/change-payment-password', [PaymentPasswordController::class, 'update'])->name('payment-password.update');
 
+    Route::get('/wallet', [WalletController::class, 'hub'])->name('wallet.hub');
     Route::get('/recharge', [WalletController::class, 'recharge'])->name('wallet.recharge');
     Route::post('/recharge', [WalletController::class, 'storeRecharge'])->name('wallet.recharge.store');
     Route::get('/withdrawal', [WalletController::class, 'withdrawal'])->name('wallet.withdrawal');
@@ -70,6 +87,12 @@ Route::prefix('home')->name('member.')->middleware(['member'])->group(function (
     Route::get('/withdrawal-records', [WalletController::class, 'withdrawalRecords'])->name('wallet.withdrawal-records');
     Route::get('/fund-records', [WalletController::class, 'fundRecords'])->name('wallet.fund-records');
     Route::get('/my/financial-report', [FinancialReportController::class, 'index'])->name('financial-report.index');
+
+    Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::get('/complaints', [ComplaintController::class, 'index'])->name('complaints.index');
+    Route::post('/complaints', [ComplaintController::class, 'store'])->name('complaints.store');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
 
     Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions.index');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

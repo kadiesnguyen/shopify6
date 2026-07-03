@@ -19,6 +19,11 @@ class WalletController extends Controller
 {
     public function __construct(private readonly WithdrawalQuoteService $withdrawalQuote) {}
 
+    public function hub(): View
+    {
+        return view('member.wallet.hub');
+    }
+
     public function recharge(): View|RedirectResponse
     {
         if (! RechargeMethod::hasActive()) {

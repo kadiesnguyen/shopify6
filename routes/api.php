@@ -1,20 +1,29 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Api\Admin\ComplaintController as AdminComplaintController;
 use App\Http\Controllers\Api\Admin\ContentController;
 use App\Http\Controllers\Api\Admin\LanguageController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Api\Admin\ProductReviewController as AdminProductReviewController;
 use App\Http\Controllers\Api\Admin\PromotionController as AdminPromotionController;
 use App\Http\Controllers\Api\Admin\TransactionController as AdminTransactionController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\WalletController as AdminWalletController;
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Member\CartController as MemberCartController;
+use App\Http\Controllers\Api\Member\CategoryController as MemberCategoryController;
+use App\Http\Controllers\Api\Member\ComplaintController as MemberComplaintController;
 use App\Http\Controllers\Api\Member\DashboardController as MemberDashboardController;
+use App\Http\Controllers\Api\Member\HomeController as MemberHomeController;
+use App\Http\Controllers\Api\Member\MySummaryController;
 use App\Http\Controllers\Api\Member\ProductController as MemberProductController;
 use App\Http\Controllers\Api\Member\NotificationController as MemberNotificationController;
 use App\Http\Controllers\Api\Member\OrderController as MemberOrderController;
 use App\Http\Controllers\Api\Member\PromotionController as MemberPromotionController;
+use App\Http\Controllers\Api\Member\ReviewController as MemberReviewController;
+use App\Http\Controllers\Api\Member\SearchSuggestionController;
 use App\Http\Controllers\Api\Member\TransactionController as MemberTransactionController;
 use App\Http\Controllers\Api\Member\WalletController as MemberWalletController;
 use App\Http\Controllers\Api\ProfileController;
@@ -33,12 +42,28 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::put('/profile', [ProfileController::class, 'update']);
 
     Route::middleware('member.api')->prefix('member')->name('api.member.')->group(function (): void {
+        Route::get('/home', [MemberHomeController::class, 'index']);
+        Route::get('/my', [MySummaryController::class, 'index']);
         Route::get('/dashboard', [MemberDashboardController::class, 'index']);
+        Route::get('/search/suggestions', SearchSuggestionController::class);
+        Route::get('/categories', [MemberCategoryController::class, 'index']);
+        Route::get('/categories/{category}/products', [MemberCategoryController::class, 'products']);
+        Route::get('/cart', [MemberCartController::class, 'index']);
+        Route::post('/cart', [MemberCartController::class, 'store']);
+        Route::patch('/cart/{cartItem}', [MemberCartController::class, 'update']);
+        Route::delete('/cart/{cartItem}', [MemberCartController::class, 'destroy']);
+        Route::post('/cart/select-all', [MemberCartController::class, 'selectAll']);
+        Route::post('/cart/checkout', [MemberCartController::class, 'checkout']);
         Route::get('/products/{product}', [MemberProductController::class, 'show'])->name('products.show');
         Route::get('/wallet', [MemberWalletController::class, 'show']);
+        Route::get('/wallet/summary', [MemberWalletController::class, 'summary']);
         Route::post('/wallet/recharge', [MemberWalletController::class, 'recharge']);
         Route::get('/orders', [MemberOrderController::class, 'index']);
         Route::get('/orders/{order}', [MemberOrderController::class, 'show']);
+        Route::get('/reviews', [MemberReviewController::class, 'index']);
+        Route::post('/reviews', [MemberReviewController::class, 'store']);
+        Route::get('/complaints', [MemberComplaintController::class, 'index']);
+        Route::post('/complaints', [MemberComplaintController::class, 'store']);
         Route::get('/transactions', [MemberTransactionController::class, 'index']);
         Route::get('/promotions', [MemberPromotionController::class, 'index']);
         Route::get('/notifications', [MemberNotificationController::class, 'index']);
@@ -70,6 +95,14 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
         Route::post('/promotions/bulk', [AdminPromotionController::class, 'bulk']);
         Route::apiResource('promotions', AdminPromotionController::class);
+
+        Route::get('/complaints', [AdminComplaintController::class, 'index']);
+        Route::patch('/complaints/{complaint}', [AdminComplaintController::class, 'update']);
+        Route::delete('/complaints/{complaint}', [AdminComplaintController::class, 'destroy']);
+
+        Route::get('/reviews', [AdminProductReviewController::class, 'index']);
+        Route::patch('/reviews/{review}', [AdminProductReviewController::class, 'update']);
+        Route::delete('/reviews/{review}', [AdminProductReviewController::class, 'destroy']);
 
         Route::get('/content/banners', [ContentController::class, 'banners']);
         Route::get('/content/pages', [ContentController::class, 'pages']);

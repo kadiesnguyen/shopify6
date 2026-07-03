@@ -3,10 +3,13 @@
 namespace Tests\Unit;
 
 use App\Support\SiteSettings;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class SiteSettingsAssetUrlTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_uploaded_logo_uses_relative_storage_url(): void
     {
         SiteSettings::set(SiteSettings::KEY_LOGO, 'site-settings/test-logo.png');

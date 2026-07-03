@@ -20,7 +20,7 @@
     @endphp
 
     @if ($isShopView)
-        <div class="min-h-[var(--app-height,100dvh)] bg-gray-50 pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
+        <div class="min-h-[var(--app-height,100dvh)] bg-gray-50 pb-[calc(50px+env(safe-area-inset-bottom))]">
             <header class="sticky top-0 z-10 bg-black text-white">
                 <div class="relative flex items-center justify-between px-4 py-3">
                     <a href="{{ $backUrl }}" class="relative z-10 flex shrink-0 items-center gap-1.5 text-white/90 no-underline">
@@ -91,10 +91,28 @@
                 </div>
             </header>
 
+            @php($images = array_filter($detail['images'] ?? []))
             <div class="pt-12">
-                <div class="flex min-h-[280px] items-center justify-center bg-gray-200/80">
-                    @if ($detail['image_url'])
-                        <img src="{{ $detail['image_url'] }}" alt="{{ $product->name }}" class="max-h-[360px] w-full object-contain">
+                <div x-data="{ idx: 0, imgs: {{ json_encode($images, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}, startX: 0, swipe(d) { if (Math.abs(d) > 40) { if (d > 0 && this.idx < this.imgs.length - 1) this.idx++; else if (d < 0 && this.idx > 0) this.idx--; } } }" class="relative overflow-hidden bg-gray-200/80" @touchstart="startX = $event.touches[0].clientX" @touchend="swipe(startX - $event.changedTouches[0].clientX)" @mousedown="startX = $event.clientX" @mouseup="swipe(startX - $event.clientX)">
+                    @if ($images === [])
+                        <div class="flex min-h-[280px] items-center justify-center">
+                            <span class="text-sm text-gray-400">{{ __('member.products.no_image') }}</span>
+                        </div>
+                    @else
+                        <div class="flex transition-transform duration-300" :style="`transform: translateX(-${idx * 100}%)`">
+                            <template x-for="(img, i) in imgs" :key="i">
+                                <div class="flex w-full shrink-0 items-center justify-center min-h-[280px]">
+                                    <img :src="img" alt="{{ $product->name }}" class="max-h-[360px] w-full object-contain">
+                                </div>
+                            </template>
+                        </div>
+                        @if (count($images) > 1)
+                            <div class="absolute top-3 left-0 right-0 z-20 flex justify-center gap-1.5">
+                                <template x-for="(img, i) in imgs" :key="i">
+                                    <span class="block h-1.5 w-1.5 rounded-full shadow-sm" :class="i === idx ? 'bg-orange-500' : 'bg-white/80'"></span>
+                                </template>
+                            </div>
+                        @endif
                     @endif
                 </div>
 
@@ -147,13 +165,46 @@
 
                 <div id="pvReview" class="mt-2 scroll-mt-14 bg-white px-4 py-3">
                     <div class="flex w-full items-center justify-between text-left font-semibold text-gray-900">
-                        <span>{{ __('member.products.reviews') }}</span>
+                        <span>{{ __('member.products.reviews') }} {{ $reviewsCount }}+</span>
                         <x-member.icon name="chevron-right" class="size-4 text-gray-400" />
                     </div>
-                    <div class="flex flex-col items-center py-8 text-gray-400">
-                        <x-member.icon name="message-square-off" class="mb-2 size-14 opacity-60" />
-                        <p class="text-sm">{{ __('member.products.no_reviews') }}</p>
-                    </div>
+
+                    @if ($canReview)
+                        <form method="POST" action="{{ route('member.reviews.store') }}" class="mt-3 space-y-2 rounded-lg bg-gray-50 p-3">
+                            @csrf
+                            <input type="hidden" name="product_id" value="{{ $product->id }}">
+                            <div class="flex items-center gap-1" x-data="{ rating: 5 }">
+                                <input type="hidden" name="rating" :value="rating">
+                                <template x-for="i in 5" :key="i">
+                                    <button type="button" @click="rating = i" class="text-xl" :class="i <= rating ? 'text-amber-400' : 'text-gray-300'">★</button>
+                                </template>
+                            </div>
+                            <textarea name="body" rows="2" maxlength="2000" placeholder="{{ __('member.reviews.body_placeholder') }}" class="w-full rounded-lg border-gray-200 text-sm"></textarea>
+                            <button type="submit" class="rounded-lg bg-[#fa3534] px-4 py-1.5 text-sm text-white">{{ __('member.reviews.submit') }}</button>
+                        </form>
+                    @endif
+
+                    @if ($reviews->isEmpty())
+                        <div class="flex flex-col items-center py-8 text-gray-400">
+                            <x-member.icon name="message-square-off" class="mb-2 size-14 opacity-60" />
+                            <p class="text-sm">{{ __('member.products.no_reviews') }}</p>
+                        </div>
+                    @else
+                        <div class="mt-3 space-y-3">
+                            @foreach ($reviews as $review)
+                                <article class="border-b border-gray-100 pb-3 last:border-0">
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-sm font-medium text-gray-900">{{ $review->user?->name ?? '—' }}</p>
+                                        <span class="text-xs text-gray-400">{{ $review->created_at->format('d/m/Y') }}</span>
+                                    </div>
+                                    <p class="text-amber-400">{{ str_repeat('★', $review->rating) }}</p>
+                                    @if ($review->body)
+                                        <p class="mt-1 text-sm text-gray-600">{{ $review->body }}</p>
+                                    @endif
+                                </article>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
 
                 <div id="pvDetail" class="mt-2 scroll-mt-14 bg-white px-4 py-3">
