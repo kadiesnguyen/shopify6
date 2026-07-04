@@ -98,8 +98,17 @@
                     <x-member.icon name="chevron-left" class="size-5" />
                 </button>
             @endif
-            <h1 class="absolute left-1/2 -translate-x-1/2 text-base font-semibold">
-                {{ $isUpgrade ? __('member.shop_application.upgrade_title') : __('member.shop_application.title') }}
+            <h1
+                class="absolute left-1/2 -translate-x-1/2 text-base font-semibold"
+                @unless($isUpgrade)
+                    x-text="step === 1 ? @js(__('member.shop_application.choose_type')) : @js(__('member.shop_application.fill_info'))"
+                @endunless
+            >
+                @if ($isUpgrade)
+                    {{ __('member.shop_application.upgrade_title') }}
+                @else
+                    {{ __('member.shop_application.choose_type') }}
+                @endif
             </h1>
         </header>
 
@@ -121,14 +130,14 @@
 
                 <div class="space-y-3">
                     <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 bg-white p-4">
-                        <input type="radio" name="seller_type_pick" value="personal" x-model="sellerType" class="mt-1 text-violet-600">
+                        <input type="radio" name="seller_type_pick" value="personal" x-model="sellerType" class="mt-1 text-orange-500">
                         <span>
                             <span class="block text-sm font-semibold text-gray-900">{{ __('member.shop_application.type_personal') }}</span>
                             <span class="mt-1 block text-xs text-gray-500">{{ __('member.shop_application.type_personal_hint') }}</span>
                         </span>
                     </label>
                     <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 bg-white p-4">
-                        <input type="radio" name="seller_type_pick" value="business" x-model="sellerType" class="mt-1 text-violet-600">
+                        <input type="radio" name="seller_type_pick" value="business" x-model="sellerType" class="mt-1 text-orange-500">
                         <span>
                             <span class="block text-sm font-semibold text-gray-900">{{ __('member.shop_application.type_business') }}</span>
                             <span class="mt-1 block text-xs text-gray-500">{{ __('member.shop_application.type_business_hint') }}</span>
@@ -139,9 +148,9 @@
                 <button
                     type="button"
                     @click="step = 2"
-                    class="mt-6 w-full rounded-lg bg-violet-600 py-3 text-sm font-semibold text-white hover:bg-violet-700"
+                    class="mt-6 w-full rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white hover:bg-orange-600"
                 >
-                    {{ __('member.shop_application.continue') }}
+                    {{ __('member.shop_application.submit_send') }}
                 </button>
                 <p class="mt-3 text-center text-xs text-gray-500">{{ __('member.shop_application.type_locked_hint') }}</p>
             </div>
@@ -260,13 +269,13 @@
             </div>
 
             <label class="mx-4 mt-4 flex items-start gap-2 text-sm text-gray-800">
-                <input type="checkbox" name="terms" value="1" required class="mt-0.5 rounded border-gray-300 text-violet-600" {{ old('terms') ? 'checked' : '' }}>
+                <input type="checkbox" name="terms" value="1" required class="mt-0.5 rounded border-gray-300 text-orange-500" {{ old('terms') ? 'checked' : '' }}>
                 <span>{{ __('member.shop_application.terms_agree') }}</span>
             </label>
             @error('terms')<p class="mx-4 mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
 
             <div class="p-4">
-                <button type="submit" class="w-full rounded-lg bg-violet-600 py-3 text-sm font-semibold text-white hover:bg-violet-700">
+                <button type="submit" class="w-full rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white hover:bg-orange-600">
                     {{ __('member.shop_application.submit_send') }}
                 </button>
             </div>
@@ -280,14 +289,14 @@
                 <div class="max-h-[70vh] w-full overflow-y-auto rounded-t-2xl bg-white p-4 md:max-w-md md:rounded-2xl">
                     <div class="mb-3 flex items-center justify-between">
                         <p class="text-sm font-semibold text-gray-900">{{ __('member.shop_application.business_categories_label') }}</p>
-                        <button type="button" class="text-sm text-violet-600" @click="businessOpen = false">{{ __('member.shop_application.done') }}</button>
+                        <button type="button" class="text-sm text-orange-500" @click="businessOpen = false">{{ __('member.shop_application.done') }}</button>
                     </div>
                     <div class="space-y-2">
                         <template x-for="category in currentCategories()" :key="category.id">
                             <label class="flex items-center gap-3 rounded-lg border border-gray-100 px-3 py-2.5">
                                 <input
                                     type="checkbox"
-                                    class="rounded border-gray-300 text-violet-600"
+                                    class="rounded border-gray-300 text-orange-500"
                                     :checked="categoryIds.includes(category.id)"
                                     @change="toggleCategory(category.id)"
                                 >

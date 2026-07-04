@@ -80,7 +80,7 @@ class ProductDistributionBalanceTest extends TestCase
             ->post(route('member.products.distributions.store'), [
                 'product_id' => $this->product->id,
             ])
-            ->assertRedirect(route('member.products.distributions.index'))
+            ->assertRedirect(route('member.products.manage.index'))
             ->assertSessionHas('status');
 
         $this->assertDatabaseCount('product_distributions', 1);
@@ -96,6 +96,7 @@ class ProductDistributionBalanceTest extends TestCase
             ->assertOk()
             ->assertJson([
                 'product_id' => $this->product->id,
+                'redirect' => route('member.products.manage.index'),
             ]);
 
         $this->assertDatabaseCount('product_distributions', 1);

@@ -141,6 +141,95 @@ class OrderSettlementTest extends TestCase
         ]);
     }
 
+    public function test_seller_confirm_platform_shipping_deducts_cost_and_moves_to_shipped(): void
+    {
+        $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
+        $balanceBeforeConfirm = (float) $this->seller->wallet->fresh()->balance;
+
+        app(OrderSettlementService::class)->confirmPlatformShipping($order->fresh());
+
+        $order->refresh();
+        $this->assertSame(Order::STATUS_SHIPPED, $order->status);
+        $this->assertNotNull($order->shipped_at);
+        $this->assertSame($balanceBeforeConfirm - 60.0, (float) $this->seller->wallet->fresh()->balance);
+        $this->assertDatabaseHas('transactions', [
+            'user_id' => $this->seller->id,
+            'type' => Transaction::TYPE_PRODUCT_COST,
+            'amount' => 60,
+            'reference' => $order->order_no.'-seller-cost',
+        ]);
+    }
+
+    public function test_seller_confirm_platform_shipping_fails_with_insufficient_balance(): void
+    {
+        $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
+        $this->seller->wallet->update(['balance' => 10]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('insufficient_balance');
+
+        app(OrderSettlementService::class)->confirmPlatformShipping($order->fresh());
+    }
+
+    public function test_cancelled_shipped_order_refunds_seller_product_cost(): void
+    {
+        $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
+        $balanceBeforeConfirm = (float) $this->seller->wallet->fresh()->balance;
+
+        app(OrderSettlementService::class)->confirmPlatformShipping($order->fresh());
+        $this->assertSame($balanceBeforeConfirm - 60.0, (float) $this->seller->wallet->fresh()->balance);
+
+        app(OrderSettlementService::class)->applyStatusChange(
+            $order->fresh(),
+            Order::STATUS_SHIPPED,
+            Order::STATUS_CANCELLED,
+        );
+
+        $this->assertSame($balanceBeforeConfirm, (float) $this->seller->wallet->fresh()->balance);
+        $this->assertDatabaseHas('transactions', [
+            'user_id' => $this->seller->id,
+            'reference' => $order->order_no.'-seller-cost-refund',
+        ]);
+    }
+
+    public function test_seller_confirm_shipping_web_moves_order_between_tabs(): void
+    {
+        $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
+
+        $this->actingAs($this->seller)
+            ->post(route('member.seller.orders.confirm-shipping', $order))
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $this->assertSame(Order::STATUS_SHIPPED, $order->fresh()->status);
+
+        $counts = \App\Support\Member\ShopOrderStatusBadges::sellerStatusCounts($this->seller->id);
+        $this->assertSame(0, $counts[Order::STATUS_AWAITING_PICKUP]);
+        $this->assertSame(1, $counts[Order::STATUS_SHIPPED]);
+    }
+
+    public function test_shipped_orders_auto_complete_after_delivery_window(): void
+    {
+        config(['portal.order_auto_complete_hours' => 1]);
+
+        $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
+        app(OrderSettlementService::class)->confirmPlatformShipping($order->fresh());
+
+        $order->update(['shipped_at' => now()->subMinutes(30)]);
+        $this->artisan('orders:auto-complete-shipped')->assertSuccessful();
+        $this->assertSame(Order::STATUS_SHIPPED, $order->fresh()->status);
+
+        $order->update(['shipped_at' => now()->subHours(2)]);
+        $balanceBeforeComplete = (float) $this->seller->wallet->fresh()->balance;
+
+        $this->artisan('orders:auto-complete-shipped')->assertSuccessful();
+
+        $order->refresh();
+        $this->assertSame(Order::STATUS_COMPLETED, $order->status);
+        $this->assertNotNull($order->completed_at);
+        $this->assertSame($balanceBeforeComplete + 100.0, (float) $this->seller->wallet->fresh()->balance);
+    }
+
     public function test_cancelled_order_refunds_buyer_without_returning_distribution_cost_to_seller(): void
     {
         $distribution = \App\Models\ProductDistribution::query()
@@ -293,9 +382,9 @@ class OrderSettlementTest extends TestCase
             $this->assertSame($next, $order->status);
 
             $this->actingAs($this->seller)
-                ->get(route('member.seller.orders.index'))
+                ->get(route('member.seller.orders.index', ['status' => $next]))
                 ->assertOk()
-                ->assertSee(__('member.orders.'.$next), false);
+                ->assertSee($order->order_no, false);
 
             $previous = $next;
         }

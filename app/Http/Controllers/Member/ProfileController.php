@@ -8,6 +8,7 @@ use App\Http\Requests\Member\MemberProfileAvatarRequest;
 use App\Http\Requests\Member\MemberProfileEmailRequest;
 use App\Http\Requests\Member\MemberProfileNameRequest;
 use App\Http\Requests\Member\MemberProfilePhoneRequest;
+use App\Http\Requests\Member\MemberProfileUpdateRequest;
 use App\Support\Storage\PublicUploadStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
@@ -20,6 +21,32 @@ class ProfileController extends Controller
         return view('member.profile.show', [
             'user' => auth()->user(),
         ]);
+    }
+
+    public function update(MemberProfileUpdateRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+        $data = $request->safe()->only(['name', 'gender', 'birthday']);
+
+        if ($request->hasFile('avatar')) {
+            $directory = 'avatars/'.$user->id;
+
+            PublicUploadStorage::delete($user->avatar);
+
+            $avatarPath = PublicUploadStorage::store($request->file('avatar'), $directory);
+            $data['avatar'] = $avatarPath;
+
+            if ($user->isShop() && $user->shop) {
+                PublicUploadStorage::delete($user->shop->logo);
+                $user->shop->update(['logo' => $avatarPath]);
+            }
+        }
+
+        $user->update($data);
+
+        return redirect()
+            ->route('member.profile.show')
+            ->with('status', __('member.profile.updated'));
     }
 
     public function updateAvatar(MemberProfileAvatarRequest $request): RedirectResponse
@@ -62,7 +89,7 @@ class ProfileController extends Controller
         ]);
 
         return redirect()
-            ->route('member.profile.show')
+            ->route('member.settings.change-account')
             ->with('status', __('member.profile.phone_updated'));
     }
 
@@ -74,7 +101,7 @@ class ProfileController extends Controller
         ])->save();
 
         return redirect()
-            ->route('member.profile.show')
+            ->route('member.settings.change-account')
             ->with('status', __('member.profile.email_updated_pending'));
     }
 
@@ -90,7 +117,7 @@ class ProfileController extends Controller
         ]);
 
         return redirect()
-            ->route('member.profile.show')
+            ->route('member.settings.index')
             ->with('status', __('member.profile.login_password_updated'));
     }
 }

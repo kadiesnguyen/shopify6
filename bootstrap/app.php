@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureAdminApi;
 use App\Http\Middleware\EnsureMember;
 use App\Http\Middleware\EnsureMemberApi;
 use App\Http\Middleware\SetLocale;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -50,5 +51,9 @@ return Application::configure(basePath: dirname(__DIR__))
         \App\Console\Commands\DbGuardCommand::class,
         \App\Console\Commands\DatabaseUpgradeCommand::class,
         \App\Console\Commands\EnsureDatabaseReadyCommand::class,
+        \App\Console\Commands\AutoCompleteShippedOrdersCommand::class,
     ])
+    ->withSchedule(function (Schedule $schedule): void {
+        $schedule->command('orders:auto-complete-shipped')->everyFiveMinutes();
+    })
     ->create();

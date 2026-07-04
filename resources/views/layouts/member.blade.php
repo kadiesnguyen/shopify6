@@ -46,7 +46,7 @@
                 'px-4' => ! View::hasSection('full_bleed'),
                 'flex min-h-0 flex-1 flex-col' => View::hasSection('portal_chat_page'),
             ])>
-                @if (session('status'))
+                @if (session('status') && ! View::hasSection('hide_status_alert'))
                     <x-ui.alert type="success" :message="session('status')" class="mb-4 !max-w-none" />
                 @endif
 

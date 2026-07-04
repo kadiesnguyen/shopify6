@@ -10,7 +10,21 @@
 
     <x-member.order-type-tabs active="seller" />
 
-    <x-member.order-tabs :status="$status" :status-counts="$statusCounts" route-name="member.seller.orders.index" />
+    <x-member.order-tabs
+        :status="$status"
+        :status-counts="$statusCounts"
+        route-name="member.seller.orders.index"
+        :show-pending-payment="false"
+        :tab-labels="[
+            'awaiting_pickup' => __('member.my.merchant_shipping'),
+            'shipped' => __('member.my.merchant_in_transit'),
+            'completed' => __('member.my.merchant_completed'),
+        ]"
+    />
+
+    @if ($errors->has('order'))
+        <p class="px-4 pb-2 text-sm text-[#fa3534]">{{ $errors->first('order') }}</p>
+    @endif
 
     <x-member.filter-toolbar
         class="px-4 pb-3"
@@ -37,7 +51,7 @@
     @else
         <div class="flex flex-col gap-3 px-4 pb-4">
             @foreach ($orders as $order)
-                <x-member.order-card :order="$order" />
+                <x-member.seller-order-card :order="$order" />
             @endforeach
         </div>
         <div class="px-4 pb-4">{{ $orders->links() }}</div>

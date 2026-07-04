@@ -98,4 +98,11 @@ class Product extends Model
             ? asset($this->image)
             : asset('storage/'.$this->image);
     }
+
+    public function displaySellingPrice(): float
+    {
+        $override = $this->getAttribute('display_selling_price');
+
+        return $override !== null ? (float) $override : (float) $this->selling_price;
+    }
 }

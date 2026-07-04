@@ -73,10 +73,19 @@ class ProductController extends Controller
     {
         abort_unless($this->canViewProduct($product, $request->user()), 404);
 
-        $detail = $this->productDetails->resolve($product, 'https://sieummo.vn', $request->integer('shop_id'));
+        $from = $request->string('from')->toString();
+        $user = $request->user();
+        $isShopView = in_array($from, ['manage', 'distribution'], true);
+        $shopOwnerUserId = $isShopView && $user->isShop() ? $user->id : null;
+
+        $detail = $this->productDetails->resolve(
+            $product,
+            'https://sieummo.vn',
+            $request->integer('shop_id'),
+            $shopOwnerUserId,
+        );
         $product = $detail['product'];
 
-        $from = $request->string('from')->toString();
         $backUrl = match ($from) {
             'manage' => route('member.products.manage.index'),
             'distribution' => route('member.products.distributions.index'),
@@ -84,8 +93,6 @@ class ProductController extends Controller
             default => route('member.products.index'),
         };
 
-        $user = $request->user();
-        $isShopView = in_array($from, ['manage', 'distribution'], true);
         $isDistributed = $isShopView && ProductDistribution::query()
             ->where('user_id', $user->id)
             ->where('product_id', $product->id)

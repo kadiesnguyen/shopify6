@@ -99,6 +99,14 @@
                     });
 
                     if (response.ok) {
+                        const payload = await response.json().catch(() => ({}));
+
+                        if (payload?.redirect) {
+                            window.location.href = payload.redirect;
+
+                            return;
+                        }
+
                         const slot = form.parentElement;
 
                         if (slot) {

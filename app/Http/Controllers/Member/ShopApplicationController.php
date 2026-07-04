@@ -31,9 +31,9 @@ class ShopApplicationController extends Controller
             ->first();
 
         if ($pending) {
-            return view('member.shop-application.status', [
-                'application' => $pending,
-            ]);
+            return redirect()
+                ->route('member.my.index')
+                ->with('status', __('member.shop_application.pending_exists'));
         }
 
         $mode = $this->applicationModeFor($user, $shop);
@@ -66,7 +66,7 @@ class ShopApplicationController extends Controller
 
         if ($hasPending) {
             return redirect()
-                ->route('member.shop-application.create')
+                ->route('member.my.index')
                 ->with('status', __('member.shop_application.pending_exists'));
         }
 
@@ -95,7 +95,7 @@ class ShopApplicationController extends Controller
         ShopApplication::query()->create($data);
 
         return redirect()
-            ->route('member.shop-application.create')
+            ->route('member.my.index')
             ->with('status', $mode === ShopApplication::KIND_UPGRADE
                 ? __('member.shop_application.upgrade_submitted')
                 : __('member.shop_application.submitted'));

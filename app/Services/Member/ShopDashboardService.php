@@ -3,6 +3,7 @@
 namespace App\Services\Member;
 
 use App\Models\Order;
+use App\Models\ProductReview;
 use App\Models\User;
 
 class ShopDashboardService
@@ -10,7 +11,7 @@ class ShopDashboardService
     /** @return array<string, mixed> */
     public function statsFor(User $user): array
     {
-        $user->loadMissing('shop');
+        $user->loadMissing(['shop', 'wallet']);
         $shop = $user->shop;
 
         $completedOrders = Order::query()
@@ -23,15 +24,31 @@ class ShopDashboardService
 
         $today = now()->startOfDay();
 
+        $totalOrders = (clone $activeOrders)->count();
         $totalSales = (float) (clone $completedOrders)->sum('total');
+        $availableBalance = (float) ($user->wallet?->balance ?? 0);
+        $completedOrderCount = (clone $completedOrders)->count();
+        $failedOrderCount = Order::query()
+            ->where('seller_id', $user->id)
+            ->where('status', Order::STATUS_CANCELLED)
+            ->count();
+        $orderReviewCount = $shop
+            ? ProductReview::query()
+                ->published()
+                ->whereHas('product', fn ($product) => $product->where('shop_id', $shop->id))
+                ->count()
+            : 0;
         $totalProfit = (float) (clone $completedOrders)->sum('commission');
         $ordersToday = (clone $activeOrders)->where('created_at', '>=', $today)->count();
         $salesToday = (float) (clone $completedOrders)->where('created_at', '>=', $today)->sum('total');
         $profitToday = (float) (clone $completedOrders)->where('created_at', '>=', $today)->sum('commission');
 
         $chart = $this->salesChart($user->id);
+        $monthlyChart = $this->monthlyOrderChart($user->id);
 
         if ($shop) {
+            $totalOrders = $shop->resolveDisplayInt($totalOrders, 'display_total_orders');
+            $availableBalance = $shop->resolveDisplayAmount($availableBalance, 'display_balance');
             $totalSales = $shop->resolveDisplayAmount($totalSales, 'display_total_sales');
             $totalProfit = $shop->resolveDisplayAmount($totalProfit, 'display_total_profit');
             $ordersToday = $shop->resolveDisplayInt($ordersToday, 'display_orders_today');
@@ -40,6 +57,11 @@ class ShopDashboardService
         }
 
         return [
+            'total_orders' => $totalOrders,
+            'available_balance' => $availableBalance,
+            'completed_orders' => $completedOrderCount,
+            'failed_orders' => $failedOrderCount,
+            'order_reviews' => $orderReviewCount,
             'total_sales' => $totalSales,
             'total_profit' => $totalProfit,
             'orders_today' => $ordersToday,
@@ -53,7 +75,30 @@ class ShopDashboardService
             'star_rating' => (float) ($shop?->star_rating ?? 0),
             'chart_labels' => $chart['labels'],
             'chart_sales' => $chart['sales'],
+            'monthly_chart_labels' => $monthlyChart['labels'],
+            'monthly_chart_orders' => $monthlyChart['orders'],
         ];
+    }
+
+    /** @return array{labels: list<string>, orders: list<int>} */
+    private function monthlyOrderChart(int $sellerId): array
+    {
+        $start = now()->startOfMonth();
+        $days = now()->day;
+        $labels = [];
+        $orders = [];
+
+        for ($i = 0; $i < $days; $i++) {
+            $day = $start->copy()->addDays($i);
+            $labels[] = $day->format('m-d');
+            $orders[] = Order::query()
+                ->where('seller_id', $sellerId)
+                ->where('status', '!=', Order::STATUS_CANCELLED)
+                ->whereDate('created_at', $day)
+                ->count();
+        }
+
+        return compact('labels', 'orders');
     }
 
     /** @return array{labels: list<string>, sales: list<float>} */

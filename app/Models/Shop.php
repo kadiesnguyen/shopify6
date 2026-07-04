@@ -7,6 +7,7 @@ use App\Support\Storage\ShopDocumentStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Shop extends Model
 {
@@ -26,6 +27,7 @@ class Shop extends Model
         'name',
         'slug',
         'description',
+        'keywords',
         'logo',
         'id_number',
         'id_front',
@@ -42,6 +44,7 @@ class Shop extends Model
         'display_total_income',
         'display_balance',
         'display_total_sales',
+        'display_total_orders',
         'display_total_profit',
         'display_orders_today',
         'display_sales_today',
@@ -68,6 +71,7 @@ class Shop extends Model
             'display_total_income' => 'decimal:2',
             'display_balance' => 'decimal:2',
             'display_total_sales' => 'decimal:2',
+            'display_total_orders' => 'integer',
             'display_total_profit' => 'decimal:2',
             'display_orders_today' => 'integer',
             'display_sales_today' => 'decimal:2',
@@ -118,7 +122,7 @@ class Shop extends Model
     {
         $column = match ($status) {
             'pending_payment' => 'display_pending_orders',
-            'shipped' => 'display_delivering_orders',
+            'awaiting_pickup' => 'display_delivering_orders',
             'received' => 'display_received_orders',
             'completed' => 'display_completed_orders',
             default => null,
@@ -129,6 +133,38 @@ class Shop extends Model
         }
 
         return (int) $this->{$column};
+    }
+
+    /** Admin-adjustable seller order tab counts for shop hub. */
+    public function orderStatusDisplayCounts(int $sellerUserId): Collection
+    {
+        $actual = Order::query()
+            ->where('seller_id', $sellerUserId)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $keys = [
+            Order::STATUS_PENDING_PAYMENT => 'pending_payment',
+            Order::STATUS_AWAITING_PICKUP => 'awaiting_pickup',
+            Order::STATUS_SHIPPED => 'shipped',
+            Order::STATUS_RECEIVED => 'received',
+            Order::STATUS_COMPLETED => 'completed',
+        ];
+
+        $counts = collect();
+
+        foreach ($keys as $orderStatus => $key) {
+            $calculated = (int) ($actual[$orderStatus] ?? 0);
+
+            if ($key === 'awaiting_pickup') {
+                $calculated += (int) ($actual[Order::STATUS_PENDING_PAYMENT] ?? 0);
+            }
+
+            $counts[$key] = $this->resolveDisplayCount($key, $calculated);
+        }
+
+        return $counts;
     }
 
     public function resolveDisplayAmount(?float $calculated, ?string $column): float
@@ -181,6 +217,27 @@ class Shop extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function subAccounts(): HasMany
+    {
+        return $this->hasMany(ShopSubAccount::class);
+    }
+
+    public function merchantLevel(): string
+    {
+        $score = (int) ($this->credit_score ?? 0);
+
+        return match (true) {
+            $score >= 85 => 'L3',
+            $score >= 60 => 'L2',
+            default => 'L1',
+        };
+    }
+
+    public function loyaltyPoints(int $completedOrders): int
+    {
+        return max(0, $completedOrders * 10);
+    }
+
     public function isPersonal(): bool
     {
         return ($this->seller_type ?? self::TYPE_PERSONAL) === self::TYPE_PERSONAL;
@@ -199,6 +256,15 @@ class Shop extends Model
 
         return app(ShopIndustryRegistry::class)->industry((string) $this->industry_id)['name']
             ?? (string) $this->industry_id;
+    }
+
+    public function industryRate(): ?int
+    {
+        if (! filled($this->industry_id)) {
+            return null;
+        }
+
+        return app(ShopIndustryRegistry::class)->industry((string) $this->industry_id)['rate'] ?? null;
     }
 
     public function businessCategoryLabels(): string

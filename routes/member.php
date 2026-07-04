@@ -21,6 +21,10 @@ use App\Http\Controllers\Member\SellerOrderController;
 use App\Http\Controllers\Member\SettingsController;
 use App\Http\Controllers\Member\ShopDashboardController;
 use App\Http\Controllers\Member\ShopHubController;
+use App\Http\Controllers\Member\ShopInfoController;
+use App\Http\Controllers\Member\SellerRefundController;
+use App\Http\Controllers\Member\ShopSubAccountController;
+use App\Http\Controllers\Member\PayoutAccountController;
 use App\Http\Controllers\Member\ProfileController;
 use App\Http\Controllers\Member\PromotionController;
 use App\Http\Controllers\Member\ShopApplicationController;
@@ -44,12 +48,24 @@ Route::prefix('home')->name('member.')->middleware(['member'])->group(function (
     Route::get('/products/distributions', [ProductDistributionController::class, 'index'])->name('products.distributions.index');
     Route::post('/products/distributions', [ProductDistributionController::class, 'store'])->name('products.distributions.store');
     Route::get('/products/manage', [ProductDistributionController::class, 'manage'])->name('products.manage.index');
+    Route::patch('/products/manage/{distribution}', [ProductDistributionController::class, 'update'])->name('products.manage.update');
     Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
     Route::get('/search/suggestions', ProductSearchSuggestionController::class)->name('search.suggestions');
 
     Route::get('/shop-dashboard', [ShopDashboardController::class, 'index'])->name('shop-dashboard.index');
     Route::get('/shop-hub', [ShopHubController::class, 'index'])->name('shop-hub.index');
+    Route::get('/shop-hub/menu', [ShopHubController::class, 'menu'])->name('shop-hub.menu');
+    Route::get('/shop-hub/rank', [ShopHubController::class, 'rank'])->name('shop-hub.rank');
+    Route::get('/shop-hub/reviews', [ShopHubController::class, 'reviews'])->name('shop-hub.reviews');
+    Route::get('/shop-hub/info', [ShopInfoController::class, 'edit'])->name('shop-hub.info');
+    Route::put('/shop-hub/info', [ShopInfoController::class, 'update'])->name('shop-hub.info.update');
+    Route::get('/shop-hub/sub-accounts', [ShopSubAccountController::class, 'index'])->name('shop-hub.sub-accounts.index');
+    Route::post('/shop-hub/sub-accounts', [ShopSubAccountController::class, 'store'])->name('shop-hub.sub-accounts.store');
+    Route::delete('/shop-hub/sub-accounts/{subAccount}', [ShopSubAccountController::class, 'destroy'])->name('shop-hub.sub-accounts.destroy');
+    Route::get('/seller/refunds', [SellerRefundController::class, 'index'])->name('seller.refunds.index');
+    Route::post('/seller/refunds', [SellerRefundController::class, 'store'])->name('seller.refunds.store');
     Route::get('/seller/orders', [SellerOrderController::class, 'index'])->name('seller.orders.index');
+    Route::post('/seller/orders/{order}/confirm-shipping', [SellerOrderController::class, 'confirmShipping'])->name('seller.orders.confirm-shipping');
     Route::get('/products/{product}/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::post('/products/{product}/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
@@ -62,6 +78,7 @@ Route::prefix('home')->name('member.')->middleware(['member'])->group(function (
 
     Route::get('/my', [MyController::class, 'index'])->name('my.index');
     Route::get('/my/personal', [ProfileController::class, 'show'])->name('profile.show');
+    Route::put('/my/personal', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/my/personal/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
     Route::put('/my/personal/name', [ProfileController::class, 'updateName'])->name('profile.name.update');
     Route::put('/my/personal/phone', [ProfileController::class, 'updatePhone'])->name('profile.phone.update');
@@ -86,6 +103,9 @@ Route::prefix('home')->name('member.')->middleware(['member'])->group(function (
     Route::post('/withdrawal', [WalletController::class, 'storeWithdrawal'])->name('wallet.withdrawal.store');
     Route::get('/withdrawal-records', [WalletController::class, 'withdrawalRecords'])->name('wallet.withdrawal-records');
     Route::get('/fund-records', [WalletController::class, 'fundRecords'])->name('wallet.fund-records');
+    Route::get('/payout-accounts', [PayoutAccountController::class, 'index'])->name('payout-accounts.index');
+    Route::post('/payout-accounts', [PayoutAccountController::class, 'store'])->name('payout-accounts.store');
+    Route::delete('/payout-accounts/{payoutAccount}', [PayoutAccountController::class, 'destroy'])->name('payout-accounts.destroy');
     Route::get('/my/financial-report', [FinancialReportController::class, 'index'])->name('financial-report.index');
 
     Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
@@ -93,6 +113,9 @@ Route::prefix('home')->name('member.')->middleware(['member'])->group(function (
     Route::get('/complaints', [ComplaintController::class, 'index'])->name('complaints.index');
     Route::post('/complaints', [ComplaintController::class, 'store'])->name('complaints.store');
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::get('/settings/language', [SettingsController::class, 'language'])->name('settings.language');
+    Route::get('/settings/bind-login', [SettingsController::class, 'bindLogin'])->name('settings.bind-login');
+    Route::get('/settings/change-account', [SettingsController::class, 'changeAccount'])->name('settings.change-account');
 
     Route::get('/promotions', [PromotionController::class, 'index'])->name('promotions.index');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

@@ -7,7 +7,7 @@
 @section('content')
     <div class="min-h-[var(--app-height,100dvh)] bg-gray-50 pb-24">
         <header class="sticky top-14 z-10 flex items-center justify-center border-b border-gray-100 bg-white px-4 py-3">
-            <a href="{{ $redirect ?: route('member.profile.show') }}" class="absolute left-2 flex size-10 items-center justify-center text-gray-700 no-underline">
+            <a href="{{ $redirect ?: route('member.settings.index') }}" class="absolute left-2 flex size-10 items-center justify-center text-gray-700 no-underline">
                 <x-member.icon name="chevron-left" class="size-6" />
             </a>
             <h1 class="text-base font-semibold text-gray-900">{{ __('member.profile.payment_password') }}</h1>

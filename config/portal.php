@@ -5,6 +5,9 @@ return [
     'logo' => 'images/portal/logo.jpg',
     'max_width' => '420px',
 
+    // ponytail: shipped → completed after N hours; override via ORDER_AUTO_COMPLETE_HOURS
+    'order_auto_complete_hours' => (int) env('ORDER_AUTO_COMPLETE_HOURS', 1),
+
     'banners' => [
         'images/portal/banners/banner1.jpg',
         'images/portal/banners/banner2.jpg',

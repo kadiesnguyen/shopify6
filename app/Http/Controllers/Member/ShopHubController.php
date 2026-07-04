@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
+use App\Models\ProductReview;
 use App\Services\Member\ShopDashboardService;
 use Illuminate\View\View;
 
@@ -12,12 +14,58 @@ class ShopHubController extends Controller
 
     public function index(): View
     {
+        return $this->render('member.shop-hub.index');
+    }
+
+    public function menu(): View
+    {
+        return $this->render('member.shop-hub.menu');
+    }
+
+    public function rank(): View
+    {
         $user = auth()->user()->load('shop');
-        // Shop role is enough: sellers without a shop row still get order-based stats.
+        abort_unless($user->isShop(), 403);
+
+        $shop = $user->shop;
+        $stats = $this->shopDashboard->statsFor($user);
+
+        return view('member.shop-hub.rank', compact('user', 'shop', 'stats'));
+    }
+
+    public function reviews(): View
+    {
+        $user = auth()->user()->load('shop');
+        abort_unless($user->isShop(), 403);
+
+        $reviews = ProductReview::query()
+            ->published()
+            ->with(['user', 'product'])
+            ->when(
+                $user->shop,
+                fn ($query) => $query->whereHas('product', fn ($product) => $product->where('shop_id', $user->shop->id)),
+                fn ($query) => $query->whereRaw('1 = 0'),
+            )
+            ->latest()
+            ->paginate(15);
+
+        return view('member.shop-hub.reviews', compact('user', 'reviews'));
+    }
+
+    private function render(string $view): View
+    {
+        $user = auth()->user()->load(['shop', 'wallet']);
         abort_unless($user->isShop(), 403);
 
         $stats = $this->shopDashboard->statsFor($user);
+        $statusCounts = $user->shop
+            ? $user->shop->orderStatusDisplayCounts($user->id)
+            : Order::query()
+                ->where('seller_id', $user->id)
+                ->selectRaw('status, count(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status');
 
-        return view('member.shop-hub.index', compact('user', 'stats'));
+        return view($view, compact('user', 'stats', 'statusCounts'));
     }
 }

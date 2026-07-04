@@ -4,12 +4,19 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\Member\OrderSettlementService;
 use App\Support\Member\ShopOrderStatusBadges;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use RuntimeException;
 
 class SellerOrderController extends Controller
 {
+    public function __construct(
+        private readonly OrderSettlementService $settlement,
+    ) {}
+
     public function index(Request $request): View
     {
         abort_unless(auth()->user()->isShop(), 403);
@@ -21,7 +28,11 @@ class SellerOrderController extends Controller
         $orders = Order::query()
             ->with(['items', 'shop', 'buyer'])
             ->where('seller_id', auth()->id())
-            ->when($status !== '', fn ($query) => $query->where('status', $status))
+            ->when(
+                $status === Order::STATUS_AWAITING_PICKUP,
+                fn ($query) => $query->whereIn('status', OrderSettlementService::SELLER_SHIP_CONFIRM_STATUSES),
+                fn ($query) => $query->when($status !== '', fn ($inner) => $inner->where('status', $status)),
+            )
             ->when($keyword !== '', fn ($query) => $query->whereHas(
                 'items',
                 fn ($q) => $q->where('product_name', 'like', "%{$keyword}%"),
@@ -34,12 +45,27 @@ class SellerOrderController extends Controller
             ShopOrderStatusBadges::markSeen($shop, $status, auth()->id());
         }
 
-        $statusCounts = Order::query()
-            ->where('seller_id', auth()->id())
-            ->selectRaw('status, count(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        $statusCounts = ShopOrderStatusBadges::sellerStatusCounts(auth()->id());
 
         return view('member.seller.orders.index', compact('orders', 'status', 'statusCounts'));
+    }
+
+    public function confirmShipping(Order $order): RedirectResponse
+    {
+        abort_unless(auth()->user()->isShop(), 403);
+        abort_unless($order->seller_id === auth()->id(), 403);
+
+        try {
+            $this->settlement->confirmPlatformShipping($order);
+        } catch (RuntimeException $exception) {
+            return back()->withErrors([
+                'order' => match ($exception->getMessage()) {
+                    'insufficient_balance' => __('member.orders.insufficient_balance'),
+                    default => __('member.orders.confirm_shipping_failed'),
+                },
+            ]);
+        }
+
+        return back()->with('status', __('member.orders.confirm_shipping_success'));
     }
 }

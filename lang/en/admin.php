@@ -192,6 +192,7 @@ return [
             'display_total_income' => 'Total income / sales (USD)',
             'display_balance' => 'Available balance (USD)',
             'display_total_sales' => 'Total sales (USD)',
+            'display_total_orders' => 'Total orders',
             'display_total_profit' => 'Total profit (USD)',
             'display_orders_today' => 'Orders sold today',
             'display_sales_today' => 'Sales today (USD)',

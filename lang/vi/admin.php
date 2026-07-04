@@ -201,6 +201,7 @@ return [
             'display_total_income' => 'Tổng thu nhập / doanh số (USD)',
             'display_balance' => 'Số dư khả dụng (USD)',
             'display_total_sales' => 'Tổng doanh số (USD)',
+            'display_total_orders' => 'Số đơn đặt hàng',
             'display_total_profit' => 'Tổng lợi nhuận (USD)',
             'display_orders_today' => 'Đơn hàng đã bán hôm nay',
             'display_sales_today' => 'Tổng doanh số hôm nay (USD)',

@@ -3,6 +3,7 @@
 namespace App\Services\Member;
 
 use App\Models\Product;
+use App\Models\ProductDistribution;
 use App\Models\Shop;
 use App\Services\Import\SieummoProductDetailParser;
 use Illuminate\Support\Facades\Cache;
@@ -13,12 +14,17 @@ class ProductDetailService
     public function __construct(private readonly SieummoProductDetailParser $parser) {}
 
     /** @return array<string, mixed> */
-    public function resolve(Product $product, string $sourceUrl = 'https://sieummo.vn', ?int $displayShopId = null): array
-    {
+    public function resolve(
+        Product $product,
+        string $sourceUrl = 'https://sieummo.vn',
+        ?int $displayShopId = null,
+        ?int $shopOwnerUserId = null,
+    ): array {
         $product->loadMissing(['category', 'shop', 'images'])->loadCount('orderItems');
 
-        $purchasePrice = (float) $product->purchase_price;
-        $sellingPrice = (float) $product->selling_price;
+        $distribution = $this->resolveDisplayDistribution($product, $displayShopId, $shopOwnerUserId);
+        $purchasePrice = (float) ($distribution?->purchase_price ?? $product->purchase_price);
+        $sellingPrice = (float) ($distribution?->selling_price ?? $product->selling_price);
         $profit = max(0, $sellingPrice - $purchasePrice);
         $description = $this->resolveDescription($product, $sourceUrl);
         $isRecommended = $product->distributions()->available()->exists();
@@ -124,6 +130,31 @@ class ProductDetailService
                 'shop' => $shop->name,
             ]),
         ];
+    }
+
+    private function resolveDisplayDistribution(
+        Product $product,
+        ?int $displayShopId = null,
+        ?int $shopOwnerUserId = null,
+    ): ?ProductDistribution {
+        if ($shopOwnerUserId) {
+            return ProductDistribution::query()
+                ->available()
+                ->where('product_id', $product->id)
+                ->where('user_id', $shopOwnerUserId)
+                ->first();
+        }
+
+        if ($displayShopId > 0) {
+            return ProductDistribution::query()
+                ->available()
+                ->where('product_id', $product->id)
+                ->whereHas('user.shop', fn ($query) => $query->whereKey($displayShopId))
+                ->orderByDesc('created_at')
+                ->first();
+        }
+
+        return null;
     }
 
     private function resolveDescription(Product $product, string $sourceUrl): string

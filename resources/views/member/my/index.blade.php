@@ -4,6 +4,7 @@
 @section('portal_gray_bg', '1')
 @section('hide_portal_header', '1')
 @section('full_bleed', '1')
+@section('hide_status_alert', '1')
 
 @section('content')
     @php
@@ -14,6 +15,7 @@
     @endphp
 
     <div class="bg-[#f4f4f4] pb-4">
+        <x-member.toast :message="$toastMessage ?? null" />
         {{-- Reference top-bg: green brand header image --}}
         <div
             class="relative h-[186px] bg-[#333] bg-cover bg-center px-4 pt-8"
@@ -46,7 +48,7 @@
                     @elseif ($user->isShop())
                         <span class="mt-1 inline-block rounded-full bg-white/25 px-2.5 py-px text-xs text-white">{{ __('member.shop_application.type_personal') }}</span>
                     @else
-                        <p class="truncate text-sm text-white/80">{{ $user->phone ?: $user->email }}</p>
+                        <span class="mt-1 inline-block rounded-full bg-white/25 px-2.5 py-px text-xs text-white">{{ __('member.my.regular_user') }}</span>
                     @endif
                 </div>
             </div>

@@ -25,7 +25,7 @@ class PaymentPasswordController extends Controller
         if ($user->hasPaymentPassword()) {
             $redirect = $request->string('redirect')->toString();
 
-            return redirect($redirect !== '' ? $redirect : route('member.profile.show'));
+            return redirect($redirect !== '' ? $redirect : route('member.settings.index'));
         }
 
         return view('member.payment-password.create', [
@@ -44,7 +44,7 @@ class PaymentPasswordController extends Controller
         }
 
         if ($user->hasPaymentPassword()) {
-            return redirect()->route('member.profile.show');
+            return redirect()->route('member.settings.index');
         }
 
         $user->update([
@@ -97,7 +97,7 @@ class PaymentPasswordController extends Controller
         ]);
 
         return redirect()
-            ->route('member.profile.show')
+            ->route('member.settings.index')
             ->with('status', __('member.profile.payment_password_updated'));
     }
 }

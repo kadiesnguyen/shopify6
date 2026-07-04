@@ -20,7 +20,7 @@ class AdminUserUpdateService
     /** @param  array<string, mixed>  $data */
     public function update(User $user, array $data): User
     {
-        $userData = Arr::only($data, ['username', 'user_code', 'name', 'email', 'phone', 'status']);
+        $userData = Arr::only($data, ['username', 'user_code', 'name', 'email', 'phone', 'gender', 'birthday', 'status']);
 
         if (! empty($data['password'])) {
             $userData['password'] = Hash::make($data['password']);
@@ -152,6 +152,7 @@ class AdminUserUpdateService
             'display_total_income' => 'display_total_income',
             'display_balance' => 'display_balance',
             'display_total_sales' => 'display_total_sales',
+            'display_total_orders' => 'display_total_orders',
             'display_total_profit' => 'display_total_profit',
             'display_orders_today' => 'display_orders_today',
             'display_sales_today' => 'display_sales_today',

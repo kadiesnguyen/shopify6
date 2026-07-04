@@ -37,7 +37,7 @@
     <div class="flex min-w-0 flex-1 flex-col p-2">
         <a href="{{ $detailUrl }}" class="line-clamp-2 min-h-[2.4rem] text-[13px] leading-snug text-[#444] no-underline">{{ $product->name }}</a>
         <p class="mt-1 text-[#ed5435]">
-            <span class="text-[11px]">$</span><span class="text-lg font-semibold">{{ number_format($product->selling_price, 2) }}</span>
+            <span class="text-[11px]">$</span><span class="text-lg font-semibold">{{ number_format($product->displaySellingPrice(), 2) }}</span>
         </p>
     </div>
 </article>

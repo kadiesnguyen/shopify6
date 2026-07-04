@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Member;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductDistribution;
-use App\Services\Member\ProductBuyableQuery;
 use App\Services\Member\ProductDistributionService;
 use App\Support\ShopIndustryRegistry;
 use Illuminate\Http\JsonResponse;
@@ -13,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use RuntimeException;
 
 class ProductDistributionController extends Controller
 {
@@ -95,11 +95,12 @@ class ProductDistributionController extends Controller
             return response()->json([
                 'message' => __('member.products.distributed_success'),
                 'product_id' => $product->id,
+                'redirect' => route('member.products.manage.index'),
             ]);
         }
 
         return redirect()
-            ->route('member.products.distributions.index')
+            ->route('member.products.manage.index')
             ->with('status', __('member.products.distributed_success'));
     }
 
@@ -108,12 +109,57 @@ class ProductDistributionController extends Controller
         abort_unless(auth()->user()->isShop(), 403);
         $keyword = trim($request->string('q')->toString());
 
-        $products = ProductBuyableQuery::forShop(auth()->id())
-            ->when($keyword !== '', fn ($query) => $query->where('name', 'like', "%{$keyword}%"))
+        $distributions = ProductDistribution::query()
+            ->where('user_id', auth()->id())
+            ->available()
+            ->with(['product.category', 'product.shop'])
+            ->when($keyword !== '', fn ($query) => $query->whereHas(
+                'product',
+                fn ($productQuery) => $productQuery->where('name', 'like', "%{$keyword}%"),
+            ))
             ->latest()
             ->paginate(12)
             ->withQueryString();
 
-        return view('member.products.manage', compact('products'));
+        return view('member.products.manage', compact('distributions'));
+    }
+
+    public function update(Request $request, ProductDistribution $distribution): RedirectResponse|JsonResponse
+    {
+        $user = auth()->user();
+
+        abort_unless($user->isShop(), 403);
+        abort_unless($distribution->user_id === $user->id, 404);
+
+        $validated = $request->validate([
+            'selling_price' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        try {
+            $this->distributionService->updateSellingPrice(
+                $distribution,
+                (float) $validated['selling_price'],
+            );
+        } catch (RuntimeException $exception) {
+            $message = match ($exception->getMessage()) {
+                'below_purchase' => __('member.products.price_below_purchase'),
+                'above_market' => __('member.products.price_above_market'),
+                default => __('member.products.price_update_failed'),
+            };
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => $message], 422);
+            }
+
+            return back()->withErrors(['selling_price' => $message]);
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['message' => __('member.products.price_updated')]);
+        }
+
+        return redirect()
+            ->route('member.products.manage.index')
+            ->with('status', __('member.products.price_updated'));
     }
 }

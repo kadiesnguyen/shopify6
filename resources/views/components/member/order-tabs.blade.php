@@ -4,6 +4,7 @@
     'routeName' => 'member.orders.index',
     'query' => [],
     'showPendingPayment' => true,
+    'tabLabels' => [],
 ])
 
 @php
@@ -71,6 +72,9 @@
 >
     <div x-ref="track" class="portal-order-tabs">
         @foreach ($tabs as $key => $label)
+            @php
+                $label = $tabLabels[$key] ?? $label;
+            @endphp
             <a
                 href="{{ route($routeName, collect($query)->merge([
                     'status' => $key ?: null,

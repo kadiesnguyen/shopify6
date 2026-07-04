@@ -88,6 +88,21 @@
             <input type="text" name="phone" value="{{ old('phone', $modalUser->phone) }}" class="w-full rounded-lg border-slate-300 text-sm">
             @error('phone')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
         </div>
+        <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('member.profile.gender') }}</label>
+            <select name="gender" class="w-full rounded-lg border-slate-300 text-sm">
+                <option value="">{{ __('member.profile.gender_placeholder') }}</option>
+                <option value="male" @selected(old('gender', $modalUser->gender) === 'male')>{{ __('member.profile.gender_male') }}</option>
+                <option value="female" @selected(old('gender', $modalUser->gender) === 'female')>{{ __('member.profile.gender_female') }}</option>
+                <option value="other" @selected(old('gender', $modalUser->gender) === 'other')>{{ __('member.profile.gender_other') }}</option>
+            </select>
+            @error('gender')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+        </div>
+        <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('member.profile.birthday') }}</label>
+            <input type="date" name="birthday" value="{{ old('birthday', $modalUser->birthday?->format('Y-m-d')) }}" class="w-full rounded-lg border-slate-300 text-sm">
+            @error('birthday')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+        </div>
     </div>
 
     <section class="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
@@ -241,6 +256,7 @@
             <div class="mt-4 grid gap-3 sm:grid-cols-2">
                 @foreach ([
                     ['name' => 'display_total_sales', 'label' => __('admin.users.actions.display_total_sales'), 'step' => '0.01'],
+                    ['name' => 'display_total_orders', 'label' => __('admin.users.actions.display_total_orders')],
                     ['name' => 'display_total_profit', 'label' => __('admin.users.actions.display_total_profit'), 'step' => '0.01'],
                     ['name' => 'display_orders_today', 'label' => __('admin.users.actions.display_orders_today')],
                     ['name' => 'display_sales_today', 'label' => __('admin.users.actions.display_sales_today'), 'step' => '0.01'],

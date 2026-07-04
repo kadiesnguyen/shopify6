@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['username', 'user_code', 'name', 'email', 'phone', 'avatar', 'password', 'payment_password', 'status', 'distribution_locked'])]
+#[Fillable(['username', 'user_code', 'name', 'email', 'phone', 'avatar', 'gender', 'birthday', 'password', 'payment_password', 'status', 'distribution_locked'])]
 #[Hidden(['password', 'payment_password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -32,6 +32,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'birthday' => 'date',
             'password' => 'hashed',
             'payment_password' => 'hashed',
             'distribution_locked' => 'boolean',
@@ -120,6 +121,11 @@ class User extends Authenticatable
     public function wallet(): HasOne
     {
         return $this->hasOne(Wallet::class);
+    }
+
+    public function payoutAccounts(): HasMany
+    {
+        return $this->hasMany(UserPayoutAccount::class);
     }
 
     public function orders(): HasMany

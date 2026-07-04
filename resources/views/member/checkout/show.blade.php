@@ -6,7 +6,7 @@
 
 @section('content')
     @php
-        $unitPrice = (float) $product->selling_price;
+        $unitPrice = (float) $product->displaySellingPrice();
         $walletBalance = (float) ($wallet->balance ?? 0);
     @endphp
 

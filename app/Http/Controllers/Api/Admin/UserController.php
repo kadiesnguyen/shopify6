@@ -87,6 +87,7 @@ class UserController extends Controller
             'display_total_income' => ['nullable', 'numeric', 'min:0'],
             'display_balance' => ['nullable', 'numeric', 'min:0'],
             'display_total_sales' => ['nullable', 'numeric', 'min:0'],
+            'display_total_orders' => ['nullable', 'integer', 'min:0'],
             'display_total_profit' => ['nullable', 'numeric', 'min:0'],
             'display_orders_today' => ['nullable', 'integer', 'min:0'],
             'display_sales_today' => ['nullable', 'numeric', 'min:0'],

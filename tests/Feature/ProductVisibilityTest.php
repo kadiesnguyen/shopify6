@@ -158,7 +158,7 @@ class ProductVisibilityTest extends TestCase
         $this->actingAs($this->shopUser)
             ->get('/home/products/manage')
             ->assertOk()
-            ->assertSee(__('member.products.management'), false);
+            ->assertSee(__('member.products.goods'), false);
     }
 
     public function test_shop_can_distribute_from_distribution_center(): void
@@ -172,13 +172,70 @@ class ProductVisibilityTest extends TestCase
             ->post(route('member.products.distributions.store'), [
                 'product_id' => $this->product->id,
             ])
-            ->assertRedirect(route('member.products.distributions.index'))
+            ->assertRedirect(route('member.products.manage.index'))
             ->assertSessionHas('status');
 
         $this->assertDatabaseHas('product_distributions', [
             'user_id' => $this->shopUser->id,
             'product_id' => $this->product->id,
         ]);
+    }
+
+    public function test_shop_can_update_distribution_selling_price(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+
+        $distribution = ProductDistribution::query()
+            ->where('user_id', $this->shopUser->id)
+            ->where('product_id', $this->product->id)
+            ->firstOrFail();
+
+        $this->actingAs($this->shopUser)
+            ->patch(route('member.products.manage.update', $distribution), [
+                'selling_price' => 23,
+            ])
+            ->assertRedirect(route('member.products.manage.index'))
+            ->assertSessionHas('status');
+
+        $this->assertEquals('23.00', $distribution->fresh()->selling_price);
+        $this->assertEquals('13.00', $distribution->fresh()->commission);
+    }
+
+    public function test_shop_storefront_shows_custom_distribution_price(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+
+        $distribution = ProductDistribution::query()
+            ->where('user_id', $this->shopUser->id)
+            ->where('product_id', $this->product->id)
+            ->firstOrFail();
+
+        $distribution->update(['selling_price' => 22, 'commission' => 12]);
+
+        $shop = Shop::query()->where('user_id', $this->shopUser->id)->firstOrFail();
+
+        $this->actingAs($this->member)
+            ->get(route('member.products.index', ['shop_id' => $shop->id]))
+            ->assertOk()
+            ->assertSee('$22.00', false);
+    }
+
+    public function test_shop_cannot_set_selling_price_above_market(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+
+        $distribution = ProductDistribution::query()
+            ->where('user_id', $this->shopUser->id)
+            ->where('product_id', $this->product->id)
+            ->firstOrFail();
+
+        $this->actingAs($this->shopUser)
+            ->from(route('member.products.manage.index'))
+            ->patch(route('member.products.manage.update', $distribution), [
+                'selling_price' => 99,
+            ])
+            ->assertRedirect(route('member.products.manage.index'))
+            ->assertSessionHasErrors('selling_price');
     }
 
     public function test_checkout_requires_shop_distribution(): void

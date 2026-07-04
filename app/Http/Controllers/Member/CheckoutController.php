@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ShippingAddress;
 use App\Services\Member\OrderService;
 use App\Services\Member\ProductBuyableQuery;
+use App\Services\Member\ProductDistributionService;
 use App\Support\Member\CheckoutGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,10 @@ use Illuminate\View\View;
 
 class CheckoutController extends Controller
 {
-    public function __construct(private readonly OrderService $orderService) {}
+    public function __construct(
+        private readonly OrderService $orderService,
+        private readonly ProductDistributionService $distributionService,
+    ) {}
 
     public function show(Product $product): View|RedirectResponse
     {
@@ -27,6 +31,8 @@ class CheckoutController extends Controller
         }
 
         $product->load(['shop', 'category']);
+        $unitPrice = $this->distributionService->previewOrderPrice($product) ?? (float) $product->selling_price;
+        $product->setAttribute('display_selling_price', $unitPrice);
 
         $address = ShippingAddress::query()
             ->where('user_id', auth()->id())
@@ -69,7 +75,8 @@ class CheckoutController extends Controller
         }
 
         $wallet = auth()->user()->wallet;
-        $total = $product->selling_price * $qty;
+        $unitPrice = $this->distributionService->previewOrderPrice($product) ?? (float) $product->selling_price;
+        $total = $unitPrice * $qty;
 
         if (! $wallet || $wallet->balance < $total) {
             return back()

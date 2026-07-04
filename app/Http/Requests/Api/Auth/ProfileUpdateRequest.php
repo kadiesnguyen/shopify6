@@ -19,6 +19,8 @@ class ProfileUpdateRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:120'],
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['sometimes', 'email', 'unique:users,email,'.$userId],
+            'gender' => ['sometimes', 'nullable', 'string', 'in:male,female,other'],
+            'birthday' => ['sometimes', 'nullable', 'date'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ];
     }

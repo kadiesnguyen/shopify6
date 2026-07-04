@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\ShopApplication;
 use App\Services\Member\PortalProductDisplayService;
 use App\Services\Member\ProductBuyableQuery;
 use App\Support\Member\ShopOrderStatusBadges;
@@ -31,6 +32,18 @@ class MyController extends Controller
         $feedProducts = ProductBuyableQuery::portalFeaturedProducts(8);
         $this->portalProductDisplay->applyShopLabels($feedProducts, featuredOnly: true);
 
-        return view('member.my.index', compact('user', 'statusCounts', 'feedProducts'));
+        $toastMessage = session('status');
+        if (! $toastMessage && ! $isSeller) {
+            $hasPendingApplication = ShopApplication::query()
+                ->where('user_id', $user->id)
+                ->where('status', ShopApplication::STATUS_PENDING)
+                ->exists();
+
+            if ($hasPendingApplication) {
+                $toastMessage = __('member.shop_application.pending_toast');
+            }
+        }
+
+        return view('member.my.index', compact('user', 'statusCounts', 'feedProducts', 'toastMessage'));
     }
 }

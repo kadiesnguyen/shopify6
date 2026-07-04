@@ -60,7 +60,13 @@ class ShopApplicationTest extends TestCase
     {
         $this->actingAs($this->member)
             ->post(route('member.shop-application.store'), $this->applicationPayload())
-            ->assertRedirect(route('member.shop-application.create'));
+            ->assertRedirect(route('member.my.index'))
+            ->assertSessionHas('status', __('member.shop_application.submitted'));
+
+        $this->actingAs($this->member)
+            ->get(route('member.my.index'))
+            ->assertOk()
+            ->assertSee(__('member.shop_application.submitted'), false);
 
         $this->assertDatabaseHas('shop_applications', [
             'user_id' => $this->member->id,
@@ -97,7 +103,50 @@ class ShopApplicationTest extends TestCase
                 'shop_name' => 'Comprehensive Shop',
                 'shop_description' => 'All categories shop',
             ]))
-            ->assertRedirect(route('member.shop-application.create'));
+            ->assertRedirect(route('member.my.index'));
+    }
+
+    public function test_member_with_pending_application_stays_on_my_page(): void
+    {
+        ShopApplication::query()->create([
+            'user_id' => $this->member->id,
+            'seller_type' => ShopApplication::TYPE_PERSONAL,
+            'application_kind' => ShopApplication::KIND_REGISTRATION,
+            'shop_name' => 'Pending Shop',
+            'address' => '123 Street',
+            'country' => 'VN',
+            'phone' => '0901234567',
+            'real_name' => 'Nguyen Van A',
+            'id_number' => '001234567890',
+            'status' => ShopApplication::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($this->member)
+            ->get(route('member.shop-application.create'))
+            ->assertRedirect(route('member.my.index'))
+            ->assertSessionHas('status', __('member.shop_application.pending_exists'));
+
+        $this->actingAs($this->member)
+            ->get(route('member.my.index'))
+            ->assertOk()
+            ->assertSee(__('member.shop_application.pending_exists'), false);
+
+        $this->actingAs($this->member)
+            ->get(route('member.my.index'))
+            ->assertOk()
+            ->assertSee(__('member.actions.start_selling'))
+            ->assertSee(__('member.my.regular_user'))
+            ->assertSee(__('member.shop_application.pending_toast'), false);
+    }
+
+    public function test_member_my_page_shows_start_selling_for_new_user(): void
+    {
+        $this->actingAs($this->member)
+            ->get(route('member.my.index'))
+            ->assertOk()
+            ->assertSee(__('member.actions.start_selling'))
+            ->assertSee(__('member.my.regular_user'))
+            ->assertDontSee(__('member.my.shop_manage'));
     }
 
     public function test_admin_can_approve_personal_shop_application(): void
@@ -195,7 +244,7 @@ class ShopApplicationTest extends TestCase
                 'phone' => '0356674288',
                 'real_name' => 'Test User',
             ]))
-            ->assertRedirect(route('member.shop-application.create'))
+            ->assertRedirect(route('member.my.index'))
             ->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('shop_applications', [
@@ -218,7 +267,7 @@ class ShopApplicationTest extends TestCase
                 'address' => '456 Street',
                 'id_number' => 'GP123456',
             ]))
-            ->assertRedirect(route('member.shop-application.create'));
+            ->assertRedirect(route('member.my.index'));
 
         $this->assertDatabaseHas('shop_applications', [
             'user_id' => $this->member->id,

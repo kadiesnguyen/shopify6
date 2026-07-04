@@ -70,14 +70,21 @@ class ShopDashboardTest extends TestCase
             ->assertSee(__('member.my.shop_manage'))
             ->assertDontSee(__('member.shop_dashboard.store_data'));
 
-        // Shop hub carries the store data + chart.
+        // Shop hub carries the merchant dashboard layout.
         $this->actingAs($this->member->fresh())
             ->get(route('member.shop-hub.index'))
             ->assertOk()
-            ->assertSee(__('member.shop_dashboard.store_data'))
-            ->assertSee(__('member.shop_dashboard.sales_chart'))
+            ->assertSee(__('member.shop_hub.overview'))
+            ->assertSee(__('member.shop_hub.order_rate_month'))
             ->assertSee('$999.99')
             ->assertSee('42');
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.shop-hub.menu'))
+            ->assertOk()
+            ->assertSee(__('member.shop_hub.section_shop'))
+            ->assertSee(__('member.shop_hub.section_account'))
+            ->assertSee(__('member.shop_hub.section_goods'));
     }
 
     public function test_shop_dashboard_route_redirects_to_shop_hub(): void
@@ -105,15 +112,45 @@ class ShopDashboardTest extends TestCase
             'slug' => 'demo-shop-2',
             'status' => 'active',
             'display_total_sales' => 500,
+            'display_total_orders' => 163,
+            'display_balance' => 57939.85,
             'display_orders_today' => 7,
         ]);
 
         $stats = app(\App\Services\Member\ShopDashboardService::class)->statsFor($this->member);
 
         $this->assertSame(500.0, $stats['total_sales']);
+        $this->assertSame(163, $stats['total_orders']);
+        $this->assertSame(57939.85, $stats['available_balance']);
         $this->assertSame(7, $stats['orders_today']);
         $this->assertCount(10, $stats['chart_labels']);
         $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $stats['chart_labels'][0]);
+        $this->assertArrayHasKey('monthly_chart_labels', $stats);
+    }
+
+    public function test_shop_hub_uses_admin_order_status_display_overrides(): void
+    {
+        Role::findOrCreate('shop');
+        $this->member->assignRole('shop');
+
+        $shop = Shop::query()->create([
+            'user_id' => $this->member->id,
+            'name' => 'Minh Store',
+            'slug' => 'minh-store',
+            'status' => 'active',
+            'display_delivering_orders' => 5,
+            'display_completed_orders' => 120,
+        ]);
+
+        $counts = $shop->orderStatusDisplayCounts($this->member->id);
+        $this->assertSame(5, $counts['awaiting_pickup']);
+        $this->assertSame(120, $counts['completed']);
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.shop-hub.index'))
+            ->assertOk()
+            ->assertSee('Minh Store')
+            ->assertSee('99+', false);
     }
 
     public function test_member_without_shop_does_not_see_shop_data_on_my_page(): void
@@ -192,13 +229,92 @@ class ShopDashboardTest extends TestCase
         $this->actingAs($this->member)
             ->get(route('member.shop-hub.index'))
             ->assertOk()
-            ->assertSee(__('member.shop_dashboard.store_data'));
+            ->assertSee(__('member.shop_hub.overview'));
     }
 
     public function test_seller_orders_page_requires_shop(): void
     {
         $this->actingAs($this->member)
             ->get(route('member.seller.orders.index'))
+            ->assertForbidden();
+    }
+
+    public function test_shop_hub_shows_seller_stats_and_subpages(): void
+    {
+        Role::findOrCreate('shop');
+        $this->member->assignRole('shop');
+
+        $shop = Shop::query()->create([
+            'user_id' => $this->member->id,
+            'name' => 'Demo Shop',
+            'slug' => 'demo-shop-stats',
+            'status' => 'active',
+            'industry_id' => 'general',
+            'credit_score' => 88,
+            'star_rating' => 4.0,
+        ]);
+
+        Order::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'shop_id' => $shop->id,
+            'seller_id' => $this->member->id,
+            'order_no' => 'ORD-COMPLETE-001',
+            'total' => 100,
+            'commission' => 10,
+            'purchase_cost' => 60,
+            'status' => Order::STATUS_COMPLETED,
+            'payment_method' => 'wallet',
+            'completed_at' => now(),
+        ]);
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.shop-hub.index'))
+            ->assertOk()
+            ->assertSee(__('member.shop_hub.completed_orders'))
+            ->assertSee(__('member.shop_hub.failed_orders'))
+            ->assertSee(__('member.shop_hub.order_reviews'))
+            ->assertSee('1', false);
+
+        $this->actingAs($this->member)
+            ->get(route('member.shop-hub.rank'))
+            ->assertOk()
+            ->assertSee(__('member.shop_hub.rank_title'))
+            ->assertSee('88');
+
+        $this->actingAs($this->member)
+            ->get(route('member.shop-hub.info'))
+            ->assertOk()
+            ->assertSee(__('member.shop_hub.info_title'))
+            ->assertSee('Demo Shop');
+
+        $this->actingAs($this->member)
+            ->put(route('member.shop-hub.info.update'), [
+                'name' => 'Updated Shop',
+                'description' => 'New description',
+                'keywords' => 'fashion, shoes',
+                'address' => '123 Street',
+                'contact_name' => 'Seller Name',
+                'phone' => '0901234567',
+            ])
+            ->assertRedirect(route('member.shop-hub.info'));
+
+        $shop->refresh();
+        $this->assertSame('Updated Shop', $shop->name);
+        $this->assertSame('fashion, shoes', $shop->keywords);
+
+        $this->actingAs($this->member)
+            ->get(route('member.shop-hub.reviews'))
+            ->assertOk()
+            ->assertSee(__('member.shop_hub.reviews_title'));
+    }
+
+    public function test_shop_info_requires_shop_row(): void
+    {
+        Role::findOrCreate('shop');
+        $this->member->assignRole('shop');
+
+        $this->actingAs($this->member)
+            ->get(route('member.shop-hub.info'))
             ->assertForbidden();
     }
 

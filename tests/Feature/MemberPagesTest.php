@@ -1041,7 +1041,7 @@ class MemberPagesTest extends TestCase
                 'password' => 'newpassword123',
                 'password_confirmation' => 'newpassword123',
             ])
-            ->assertRedirect(route('member.profile.show'))
+            ->assertRedirect(route('member.settings.index'))
             ->assertSessionHas('status');
 
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('newpassword123', $this->member->fresh()->password));
@@ -1057,32 +1057,69 @@ class MemberPagesTest extends TestCase
                 'payment_password' => '654321',
                 'payment_password_confirmation' => '654321',
             ])
-            ->assertRedirect(route('member.profile.show'))
+            ->assertRedirect(route('member.settings.index'))
             ->assertSessionHas('status');
 
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('654321', $this->member->fresh()->getRawOriginal('payment_password')));
     }
 
-    public function test_member_personal_page_matches_sieummo_sections(): void
+    public function test_member_can_update_combined_profile(): void
+    {
+        $this->actingAs($this->member)
+            ->put(route('member.profile.update'), [
+                'name' => 'Demo User',
+                'gender' => 'female',
+                'birthday' => '1990-05-15',
+            ])
+            ->assertRedirect(route('member.profile.show'))
+            ->assertSessionHas('status');
+
+        $this->member->refresh();
+        $this->assertSame('Demo User', $this->member->name);
+        $this->assertSame('female', $this->member->gender);
+        $this->assertSame('1990-05-15', $this->member->birthday?->format('Y-m-d'));
+    }
+
+    public function test_member_personal_page_matches_demo_user_info(): void
     {
         $this->member->update([
             'name' => 'Nguyen Van A',
             'phone' => '0901234567',
-            'email' => 'member@example.com',
+            'gender' => 'male',
+            'birthday' => '1995-03-20',
         ]);
 
         $this->actingAs($this->member)
             ->get(route('member.profile.show'))
             ->assertOk()
-            ->assertSee(__('member.profile.title'))
+            ->assertSee(__('member.profile.info_title'))
             ->assertSee(__('member.profile.avatar'))
-            ->assertSee(__('member.profile.full_name'))
-            ->assertSee(__('member.profile.phone_verification'))
-            ->assertSee(__('member.profile.email'))
-            ->assertSee(__('member.profile.payment_password'))
-            ->assertSee(__('member.profile.login_password'))
-            ->assertSee(__('member.profile.funds_password'))
-            ->assertSee(__('member.profile.verified'));
+            ->assertSee(__('member.profile.username'))
+            ->assertSee(__('member.profile.gender'))
+            ->assertSee(__('member.profile.birthday'))
+            ->assertSee(__('member.profile.confirm_changes'));
+    }
+
+    public function test_member_settings_page_matches_demo_sections(): void
+    {
+        $this->member->update([
+            'name' => 'Nguyen Van A',
+            'phone' => '0901234567',
+        ]);
+
+        $this->actingAs($this->member)
+            ->get(route('member.settings.index'))
+            ->assertOk()
+            ->assertSee(__('member.settings.title'))
+            ->assertSee('Nguyen Van A')
+            ->assertSee('0901234567')
+            ->assertSee(__('member.settings.shipping'))
+            ->assertSee(__('member.settings.bind_login'))
+            ->assertSee(__('member.settings.change_account'))
+            ->assertSee(__('member.settings.login_password'))
+            ->assertSee(__('member.settings.language'))
+            ->assertSee(__('member.settings.about'))
+            ->assertSee(__('member.settings.logout'));
     }
 
     public function test_member_can_update_profile_name(): void
@@ -1145,7 +1182,7 @@ class MemberPagesTest extends TestCase
             ->put(route('member.profile.phone.update'), [
                 'phone' => '0908765432',
             ])
-            ->assertRedirect(route('member.profile.show'))
+            ->assertRedirect(route('member.settings.change-account'))
             ->assertSessionHas('status');
 
         $this->assertSame('0908765432', $this->member->fresh()->phone);
@@ -1166,7 +1203,7 @@ class MemberPagesTest extends TestCase
                 'email' => 'seller@example.com',
                 'current_password' => 'password',
             ])
-            ->assertRedirect(route('member.profile.show'))
+            ->assertRedirect(route('member.settings.change-account'))
             ->assertSessionHas('status');
 
         $fresh = $phoneUser->fresh();
@@ -1474,7 +1511,23 @@ class MemberPagesTest extends TestCase
             ->assertSee(__('member.my.total_income'));
     }
 
-    public function test_my_page_matches_reference_merchant_layout(): void
+    public function test_member_my_page_shows_all_eight_menu_items(): void
+    {
+        // Regular member sees "Bắt đầu bán" (not "Quản lý cửa hàng").
+        $this->actingAs($this->member)
+            ->get(route('member.my.index'))
+            ->assertOk()
+            ->assertSee(__('member.actions.start_selling'))
+            ->assertSee(__('member.my.my_wallet'))
+            ->assertSee(__('member.my.shipping_address'))
+            ->assertSee(__('member.my.my_reviews'))
+            ->assertSee(__('member.actions.support'))
+            ->assertSee(__('member.my.complaints'))
+            ->assertSee(__('member.my.about'))
+            ->assertSee(__('member.settings.title'));
+    }
+
+    public function test_member_my_page_matches_reference_merchant_layout(): void
     {
         $this->member->assignRole('shop');
 

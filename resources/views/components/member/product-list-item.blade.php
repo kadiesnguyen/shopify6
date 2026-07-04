@@ -46,7 +46,7 @@
             @endif
 
             <p class="mt-1 text-xs text-gray-400">{{ __('member.products.stats', ['clicks' => number_format($product->display_click_count ?? 0), 'sales' => number_format($product->display_sales_count ?? 0)]) }}</p>
-            <p class="mt-1 text-base font-semibold text-emerald-600">${{ number_format($product->selling_price, 2) }}</p>
+            <p class="mt-1 text-base font-semibold text-emerald-600">${{ number_format($product->displaySellingPrice(), 2) }}</p>
             <p class="mt-0.5 text-xs text-gray-400">{{ __('member.stock') }}: {{ $product->stock }}</p>
         </div>
 

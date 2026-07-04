@@ -2,13 +2,14 @@
     'statusCounts' => collect(),
     'ordersRoute' => 'member.orders.index',
     'merchant' => false,
+    'title' => null,
 ])
 
 @php
     $items = $merchant
         ? [
             ['key' => 'pending_payment', 'label' => __('member.my.merchant_pending_payment'), 'icon' => 'wallet'],
-            ['key' => 'waiting_shipment', 'label' => __('member.my.merchant_shipping'), 'icon' => 'package'],
+            ['key' => 'awaiting_pickup', 'label' => __('member.my.merchant_shipping'), 'icon' => 'package'],
             ['key' => 'shipped', 'label' => __('member.my.merchant_in_transit'), 'icon' => 'truck'],
             ['key' => 'completed', 'label' => __('member.my.merchant_completed'), 'icon' => 'chat-bubble'],
             ['key' => 'received', 'label' => __('member.my.merchant_after_sales'), 'icon' => 'package-check'],
@@ -24,7 +25,7 @@
 
 <div class="px-3.5 py-4">
     <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-[17px] font-bold text-gray-900">{{ __('member.my.my_orders') }}</h2>
+        <h2 class="text-[17px] font-bold text-gray-900">{{ $title ?? __('member.my.my_orders') }}</h2>
         <a href="{{ route($ordersRoute) }}" class="flex items-center text-[14px] text-gray-400 no-underline">
             {{ __('member.my.view_all') }}
             <x-member.icon name="chevron-right" class="size-4" />
