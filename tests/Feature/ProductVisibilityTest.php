@@ -96,13 +96,6 @@ class ProductVisibilityTest extends TestCase
         $this->actingAs($this->member)
             ->get('/home')
             ->assertOk()
-            ->assertDontSee('Visible Product');
-
-        $this->markDistributionFeatured($this->shopUser);
-
-        $this->actingAs($this->member)
-            ->get('/home')
-            ->assertOk()
             ->assertSee('Visible Product');
     }
 
@@ -119,12 +112,50 @@ class ProductVisibilityTest extends TestCase
     public function test_member_sees_products_after_shop_distribution(): void
     {
         $this->distributeAsShop($this->shopUser);
-        $this->markDistributionFeatured($this->shopUser);
 
         $this->actingAs($this->member)
             ->get('/home')
             ->assertOk()
             ->assertSee('Visible Product');
+    }
+
+    public function test_home_returns_json_for_infinite_scroll(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+
+        $categoryId = (int) $this->product->category_id;
+
+        for ($i = 0; $i < 14; $i++) {
+            $extra = Product::query()->create([
+                'category_id' => $categoryId,
+                'name' => 'Home Product '.$i,
+                'slug' => 'home-product-'.$i,
+                'selling_price' => 25 + $i,
+                'purchase_price' => 10 + $i,
+                'commission' => 3,
+                'stock' => 10,
+                'status' => 'active',
+            ]);
+
+            ProductDistribution::query()->create([
+                'user_id' => $this->shopUser->id,
+                'product_id' => $extra->id,
+                'selling_price' => $extra->selling_price,
+                'purchase_price' => $extra->purchase_price,
+                'commission' => $extra->commission,
+                'commission_type' => 'fixed',
+                'status' => ProductDistribution::STATUS_AVAILABLE,
+            ]);
+        }
+
+        $this->actingAs($this->member)
+            ->getJson(route('member.home', ['page' => 2]))
+            ->assertOk()
+            ->assertJsonStructure(['html', 'has_more', 'next_page'])
+            ->assertJson([
+                'has_more' => false,
+                'next_page' => 3,
+            ]);
     }
 
     public function test_shop_sees_featured_shop_products_on_portal(): void

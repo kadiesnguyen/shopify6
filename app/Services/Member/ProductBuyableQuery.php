@@ -55,6 +55,12 @@ class ProductBuyableQuery
             ->paginate($perPage);
     }
 
+    public static function paginatePortalProducts(int $perPage = 12): LengthAwarePaginator
+    {
+        return self::orderByLatestDistribution(self::forPortal())
+            ->paginate($perPage);
+    }
+
     /** @param  array<int>  $shopUserIds */
     public static function portalHomeProducts(int $limit = 12, array $shopUserIds = []): Collection
     {
@@ -62,7 +68,9 @@ class ProductBuyableQuery
             return self::productsFromShopUserIds($shopUserIds, $limit);
         }
 
-        return self::portalFeaturedProducts($limit);
+        return self::orderByLatestDistribution(self::forPortal())
+            ->limit($limit)
+            ->get();
     }
 
     /** @param  array<int>  $shopUserIds */

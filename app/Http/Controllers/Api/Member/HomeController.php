@@ -24,8 +24,8 @@ class HomeController extends Controller
     public function index(): JsonResponse
     {
         $user = auth()->user();
-        $products = ProductBuyableQuery::portalFeaturedProducts(12);
-        $this->portalProductDisplay->applyShopLabels($products, featuredOnly: true);
+        $products = ProductBuyableQuery::portalHomeProducts(12);
+        $this->portalProductDisplay->applyShopLabels($products);
 
         $banners = CachedModelCollection::remember(
             'api.member.home.banners',

@@ -10,7 +10,7 @@
     $unreadCount = auth()->check() ? BellNotificationCache::unreadCount(auth()->id()) : 0;
 @endphp
 
-<nav class="portal-bottom-nav fixed inset-x-0 bottom-0 z-50 flex h-[50px] shrink-0 flex-nowrap items-center justify-around bg-white/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:left-1/2 md:right-auto md:w-full md:max-w-[420px] md:-translate-x-1/2">
+<nav class="portal-bottom-nav fixed inset-x-0 bottom-0 z-50 flex h-[50px] shrink-0 flex-nowrap items-center justify-around border-t border-gray-100 bg-white pb-[env(safe-area-inset-bottom)] md:left-1/2 md:right-auto md:w-full md:max-w-[420px] md:-translate-x-1/2">
     @foreach ($tabs as $tab)
         @php
             $active = collect($tab['patterns'])->contains(fn (string $pattern) => request()->routeIs($pattern));

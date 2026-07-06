@@ -75,6 +75,14 @@ function initMobileKeyboardFix() {
         },
         true,
     );
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            unlockLayoutHeight();
+        }
+    });
+
+    window.addEventListener('pageshow', unlockLayoutHeight);
 }
 
 if (document.readyState === 'loading') {

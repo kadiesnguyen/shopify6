@@ -8,6 +8,7 @@ use App\Models\Shop;
 use App\Services\Member\PortalProductDisplayService;
 use App\Services\Member\ProductBuyableQuery;
 use App\Support\Cache\CachedModelCollection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -19,7 +20,7 @@ class HomeController extends Controller
 
     public function __construct(private readonly PortalProductDisplayService $portalProductDisplay) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
         $keyword = trim($request->string('q')->toString());
         $shopKeyword = trim($request->string('shop')->toString());
@@ -42,8 +43,8 @@ class HomeController extends Controller
         $isCombinedHomeSearch = $keyword !== '' && ! $hasExplicitShopFilter && $shopUserIdsFromKeyword !== [];
 
         if (! $hasSearchFilters) {
-            $products = ProductBuyableQuery::portalFeaturedProducts(self::HOME_PRODUCT_LIMIT);
-            $this->portalProductDisplay->applyShopLabels($products, featuredOnly: true);
+            $products = ProductBuyableQuery::paginatePortalProducts(self::HOME_PRODUCT_LIMIT)->withQueryString();
+            $this->portalProductDisplay->applyShopLabels($products->getCollection());
         } else {
             $productQuery = ProductBuyableQuery::forPortal();
 
@@ -76,10 +77,21 @@ class HomeController extends Controller
             $labelShopUserIds = $shopUserIds !== [] ? $shopUserIds : $shopUserIdsFromKeyword;
 
             $products = ProductBuyableQuery::orderByLatestDistribution($productQuery, $orderShopUserIds)
-                ->limit(self::HOME_PRODUCT_LIMIT)
-                ->get();
+                ->paginate(self::HOME_PRODUCT_LIMIT)
+                ->withQueryString();
 
-            $this->portalProductDisplay->applyShopLabels($products, $labelShopUserIds, $selectedShop);
+            $this->portalProductDisplay->applyShopLabels($products->getCollection(), $labelShopUserIds, $selectedShop);
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'html' => view('member.home.partials.product-cards', [
+                    'products' => $products,
+                    'imageOffset' => ($products->currentPage() - 1) * $products->perPage(),
+                ])->render(),
+                'has_more' => $products->hasMorePages(),
+                'next_page' => $products->currentPage() + 1,
+            ]);
         }
 
         $banners = CachedModelCollection::remember(
