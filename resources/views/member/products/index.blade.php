@@ -18,7 +18,7 @@
             <x-member.link-card
                 :href="route('member.products.manage.index')"
                 icon="package"
-                :label="__('member.products.management')"
+                :label="__('member.products.goods')"
             />
         @endif
     </div>

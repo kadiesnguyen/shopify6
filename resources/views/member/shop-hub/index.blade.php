@@ -94,10 +94,11 @@
             <section class="rounded-[11px] bg-white px-3 py-4">
                 <div class="grid grid-cols-4 gap-2">
                     @foreach ([
-                        ['href' => route('member.products.distributions.index'), 'label' => __('member.shop_hub.distribute'), 'icon' => 'store', 'color' => 'text-emerald-600', 'bg' => 'bg-emerald-50'],
+                        ['href' => route('member.categories.index', ['mode' => 'distribute']), 'label' => __('member.shop_hub.distribute'), 'icon' => 'store', 'color' => 'text-emerald-600', 'bg' => 'bg-emerald-50'],
+                        ['href' => route('member.products.manage.index'), 'label' => __('member.products.goods'), 'icon' => 'package', 'color' => 'text-violet-600', 'bg' => 'bg-violet-50'],
                         ['href' => route('member.wallet.recharge'), 'label' => __('member.shop_hub.recharge'), 'icon' => 'wallet', 'color' => 'text-orange-600', 'bg' => 'bg-orange-50'],
                         ['href' => route('member.chat.index'), 'label' => __('member.shop_hub.support'), 'icon' => 'chat-bubble', 'color' => 'text-sky-600', 'bg' => 'bg-sky-50'],
-                        ['href' => route('member.shop-hub.menu'), 'label' => __('member.shop_hub.all_menu'), 'icon' => 'layout-grid', 'color' => 'text-violet-600', 'bg' => 'bg-violet-50'],
+                        ['href' => route('member.shop-hub.menu'), 'label' => __('member.shop_hub.all_menu'), 'icon' => 'layout-grid', 'color' => 'text-indigo-600', 'bg' => 'bg-indigo-50'],
                     ] as $link)
                         <a href="{{ $link['href'] }}" class="flex flex-col items-center gap-1.5 no-underline active:opacity-80">
                             <span @class(['inline-flex size-10 items-center justify-center rounded-full', $link['bg'], $link['color']])>

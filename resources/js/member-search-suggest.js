@@ -7,9 +7,14 @@ function escapeHtml(value) {
         .replaceAll("'", '&#039;');
 }
 
+function suggestFieldRoot(input) {
+    return input.closest('.portal-search-field') ?? input.closest('.portal-home-search');
+}
+
 function initSuggestInput(input) {
-    const list = input.closest('.portal-search-field')?.querySelector('[data-suggest-list]');
-    const hiddenInput = input.closest('.portal-search-field')?.querySelector('input[data-suggest-hidden]');
+    const field = suggestFieldRoot(input);
+    const list = field?.querySelector('[data-suggest-list]');
+    const hiddenInput = field?.querySelector('input[data-suggest-hidden]');
 
     if (!list) {
         return;
@@ -179,7 +184,7 @@ function initSuggestInput(input) {
     });
 
     document.addEventListener('click', (event) => {
-        if (!input.closest('.portal-search-field')?.contains(event.target)) {
+        if (!field?.contains(event.target)) {
             hideList();
         }
     });

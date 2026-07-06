@@ -20,12 +20,18 @@ class ProductSearchSuggestionController extends Controller
             return response()->json(['items' => []]);
         }
 
-        $target = $request->string('target')->toString() === 'shop' ? 'shop' : 'product';
+        $target = match ($request->string('target')->toString()) {
+            'shop' => 'shop',
+            'combined' => 'combined',
+            default => 'product',
+        };
         $context = $request->string('context')->toString();
 
-        $items = $target === 'shop'
-            ? $this->shopSuggestions($keyword, $context)
-            : $this->productSuggestions($keyword, $context);
+        $items = match ($target) {
+            'shop' => $this->shopSuggestions($keyword, $context),
+            'combined' => $this->combinedSuggestions($keyword, $context),
+            default => $this->productSuggestions($keyword, $context),
+        };
 
         return response()->json(['items' => $items]);
     }
@@ -61,6 +67,25 @@ class ProductSearchSuggestionController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    private function combinedSuggestions(string $keyword, string $context): array
+    {
+        $shops = collect($this->shopSuggestions($keyword, $context))
+            ->take(4)
+            ->map(fn (array $item) => [
+                ...$item,
+                'meta' => __('member.search.suggestion_shop'),
+            ]);
+
+        $products = collect($this->productSuggestions($keyword, $context))
+            ->take(4)
+            ->map(fn (array $item) => [
+                ...$item,
+                'meta' => __('member.search.suggestion_product'),
+            ]);
+
+        return $shops->concat($products)->values()->all();
     }
 
     private function baseQueryFor(string $context): Builder

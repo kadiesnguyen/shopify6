@@ -13,7 +13,9 @@
                     <span class="text-sm font-medium">{{ __('member.back') }}</span>
                 </a>
                 <span class="pointer-events-none absolute left-1/2 max-w-[55%] -translate-x-1/2 truncate text-center text-base font-semibold">{{ __('member.products.distribution_center') }}</span>
-                <span class="shrink-0 text-sm font-medium opacity-0" aria-hidden="true">{{ __('member.back') }}</span>
+                <a href="{{ route('member.products.manage.index') }}" class="relative z-10 shrink-0 text-sm font-medium text-white/90 no-underline">
+                    {{ __('member.products.goods') }}
+                </a>
             </div>
         </header>
 

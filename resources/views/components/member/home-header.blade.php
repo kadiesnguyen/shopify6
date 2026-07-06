@@ -7,7 +7,8 @@
 {{-- Reference: transparent search bar overlaid on the hero banner --}}
 <div class="absolute inset-x-0 top-0 z-20 flex items-center gap-2 p-[11px]">
     <form method="GET" action="{{ route('member.home') }}" class="min-w-0 flex-1">
-        <label class="portal-home-search relative flex h-[34px] w-full items-center gap-2 rounded-[6px] bg-[#f2f2f2] px-2.5">
+        <label class="portal-home-search portal-search-field relative flex h-[34px] w-full items-center gap-2 rounded-[6px] bg-[#f2f2f2] px-2.5">
+            <input type="hidden" name="shop_id" value="{{ request('shop_id') }}" data-suggest-hidden>
             <x-member.icon name="search" class="size-4 shrink-0 text-gray-500" />
             <input
                 type="search"
@@ -18,7 +19,7 @@
                 spellcheck="false"
                 data-member-suggest="1"
                 data-suggest-url="{{ route('member.search.suggestions') }}"
-                data-suggest-target="product"
+                data-suggest-target="combined"
                 data-suggest-context="portal"
                 data-suggest-min="1"
                 data-suggest-no-results="{{ __('member.search.no_suggestions') }}"

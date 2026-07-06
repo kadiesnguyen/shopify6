@@ -95,11 +95,48 @@ class ProductDistributionBalanceTest extends TestCase
             ])
             ->assertOk()
             ->assertJson([
-                'product_id' => $this->product->id,
+                'count' => 1,
                 'redirect' => route('member.products.manage.index'),
             ]);
 
         $this->assertDatabaseCount('product_distributions', 1);
+    }
+
+    public function test_distribute_mode_categories_batch_redirects_to_goods_page(): void
+    {
+        $secondProduct = Product::query()->create([
+            'category_id' => $this->product->category_id,
+            'name' => 'Second Product',
+            'slug' => 'second-product',
+            'selling_price' => 90,
+            'purchase_price' => 45,
+            'commission' => 9,
+            'stock' => 5,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($this->shopUser)
+            ->get(route('member.categories.index', ['mode' => 'distribute']))
+            ->assertOk()
+            ->assertSee(__('member.products.confirm_distribution'))
+            ->assertSee($this->product->name)
+            ->assertSee($secondProduct->name);
+
+        $this->actingAs($this->shopUser)
+            ->post(route('member.products.distributions.store'), [
+                'product_ids' => [$this->product->id, $secondProduct->id],
+            ])
+            ->assertRedirect(route('member.products.manage.index'))
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseCount('product_distributions', 2);
+
+        $this->actingAs($this->shopUser)
+            ->get(route('member.products.manage.index'))
+            ->assertOk()
+            ->assertSee($this->product->name)
+            ->assertSee($secondProduct->name)
+            ->assertSee(__('member.products.edit'));
     }
 
     public function test_distribution_center_shows_purchase_selling_and_profit(): void

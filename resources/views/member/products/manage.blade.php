@@ -86,15 +86,15 @@
                                 <div
                                     x-show="menuOpen && !editing"
                                     x-cloak
-                                    @click.outside="menuOpen = false"
-                                    class="absolute right-0 top-10 z-20 min-w-[8rem] overflow-hidden rounded-lg border border-gray-100 bg-white py-1 shadow-lg"
+                                    class="absolute inset-y-0 right-0 z-20 flex items-center gap-2 rounded-lg bg-gray-900/85 px-2 py-1 shadow-lg"
                                 >
                                     <button
                                         type="button"
-                                        class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                        class="inline-flex size-11 flex-col items-center justify-center rounded-full bg-orange-500 text-white"
                                         @click="editing = true; menuOpen = false; error = ''"
                                     >
-                                        {{ __('member.products.edit') }}
+                                        <x-member.icon name="file-text" class="size-4" />
+                                        <span class="mt-0.5 text-[10px] leading-none">{{ __('member.products.edit') }}</span>
                                     </button>
                                 </div>
                             </div>
@@ -144,7 +144,6 @@
                                         </button>
                                     </div>
 
-                                    <p class="mb-3 text-sm text-gray-500">{{ __('member.products.price_edit_hint') }}</p>
 
                                     <label class="mb-1 block text-xs font-medium text-gray-500">{{ __('member.products.market_price') }}</label>
                                     <p class="mb-3 text-sm font-semibold text-gray-900">${{ number_format($marketPrice, 2) }}</p>

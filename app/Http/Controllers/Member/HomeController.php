@@ -28,29 +28,58 @@ class HomeController extends Controller
         $shopUserIds = $shopFilter['user_ids'];
         $selectedShop = $shopFilter['selected_shop'];
         $hasSearchFilters = $keyword !== '' || $shopKeyword !== '' || $shopId > 0;
+        $hasExplicitShopFilter = $shopId > 0 || ($shopKeyword !== '' && $shopUserIds !== []);
+
+        $shopUserIdsFromKeyword = [];
+        if ($keyword !== '' && ! $hasExplicitShopFilter) {
+            $keywordShopFilter = $this->resolveShopFilter(0, $keyword);
+            $shopUserIdsFromKeyword = $keywordShopFilter['user_ids'];
+            if ($selectedShop === null) {
+                $selectedShop = $keywordShopFilter['selected_shop'];
+            }
+        }
+
+        $isCombinedHomeSearch = $keyword !== '' && ! $hasExplicitShopFilter && $shopUserIdsFromKeyword !== [];
 
         if (! $hasSearchFilters) {
             $products = ProductBuyableQuery::portalFeaturedProducts(self::HOME_PRODUCT_LIMIT);
             $this->portalProductDisplay->applyShopLabels($products, featuredOnly: true);
         } else {
-            $productQuery = ProductBuyableQuery::forPortal()
-                ->when($keyword !== '', fn ($query) => $query->where('name', 'like', "%{$keyword}%"))
-                ->when($shopUserIds !== [], function ($query) use ($shopUserIds): void {
-                    $query->whereHas('distributions', function ($distributionQuery) use ($shopUserIds): void {
-                        $distributionQuery
-                            ->available()
-                            ->whereIn('user_id', $shopUserIds);
-                    });
-                })
-                ->when($shopKeyword !== '' && $shopUserIds === [], function ($query): void {
-                    $query->whereRaw('1 = 0');
-                });
+            $productQuery = ProductBuyableQuery::forPortal();
 
-            $products = ProductBuyableQuery::orderByLatestDistribution($productQuery, $shopUserIds)
+            if ($isCombinedHomeSearch) {
+                $productQuery->where(function ($query) use ($keyword, $shopUserIdsFromKeyword): void {
+                    $query
+                        ->where('name', 'like', "%{$keyword}%")
+                        ->orWhereHas('distributions', function ($distributionQuery) use ($shopUserIdsFromKeyword): void {
+                            $distributionQuery
+                                ->available()
+                                ->whereIn('user_id', $shopUserIdsFromKeyword);
+                        });
+                });
+            } else {
+                $productQuery
+                    ->when($keyword !== '' && ! $hasExplicitShopFilter, fn ($query) => $query->where('name', 'like', "%{$keyword}%"))
+                    ->when($shopUserIds !== [], function ($query) use ($shopUserIds): void {
+                        $query->whereHas('distributions', function ($distributionQuery) use ($shopUserIds): void {
+                            $distributionQuery
+                                ->available()
+                                ->whereIn('user_id', $shopUserIds);
+                        });
+                    })
+                    ->when($shopKeyword !== '' && $shopUserIds === [], function ($query): void {
+                        $query->whereRaw('1 = 0');
+                    });
+            }
+
+            $orderShopUserIds = $shopUserIds !== [] ? $shopUserIds : $shopUserIdsFromKeyword;
+            $labelShopUserIds = $shopUserIds !== [] ? $shopUserIds : $shopUserIdsFromKeyword;
+
+            $products = ProductBuyableQuery::orderByLatestDistribution($productQuery, $orderShopUserIds)
                 ->limit(self::HOME_PRODUCT_LIMIT)
                 ->get();
 
-            $this->portalProductDisplay->applyShopLabels($products, $shopUserIds, $selectedShop);
+            $this->portalProductDisplay->applyShopLabels($products, $labelShopUserIds, $selectedShop);
         }
 
         $banners = CachedModelCollection::remember(

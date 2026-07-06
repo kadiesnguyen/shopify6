@@ -67,41 +67,95 @@ class ProductDistributionController extends Controller
 
         $validated = $request->validate([
             'product_id' => [
-                'required',
+                'required_without:product_ids',
+                'nullable',
+                'integer',
+                'exists:products,id',
+                Rule::unique('product_distributions', 'product_id')->where('user_id', $user->id),
+            ],
+            'product_ids' => ['required_without:product_id', 'nullable', 'array', 'min:1'],
+            'product_ids.*' => [
+                'integer',
+                'distinct',
                 'exists:products,id',
                 Rule::unique('product_distributions', 'product_id')->where('user_id', $user->id),
             ],
         ]);
 
-        $product = Product::query()
-            ->where('status', Product::STATUS_ACTIVE)
-            ->findOrFail($validated['product_id']);
+        $productIds = collect($validated['product_ids'] ?? [$validated['product_id']])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
 
-        $shop = $user->shop;
-
-        if ($shop && ! $this->industries->shopAllowsProduct($shop, $product)) {
-            $message = __('member.products.industry_restricted');
+        if ($productIds->isEmpty()) {
+            $message = __('member.products.select_products_first');
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['message' => $message], 422);
             }
 
-            return back()->withErrors(['product_id' => $message]);
+            return back()->withErrors(['product_ids' => $message]);
         }
 
-        $this->distributionService->distribute($user, $product);
+        $shop = $user->shop;
+        $distributed = 0;
+        $skipped = 0;
+
+        foreach ($productIds as $productId) {
+            if (ProductDistribution::query()->where('user_id', $user->id)->where('product_id', $productId)->exists()) {
+                $skipped++;
+
+                continue;
+            }
+
+            $product = Product::query()
+                ->where('status', Product::STATUS_ACTIVE)
+                ->find($productId);
+
+            if (! $product) {
+                $skipped++;
+
+                continue;
+            }
+
+            if ($shop && ! $this->industries->shopAllowsProduct($shop, $product)) {
+                $skipped++;
+
+                continue;
+            }
+
+            $this->distributionService->distribute($user, $product);
+            $distributed++;
+        }
+
+        if ($distributed === 0) {
+            $message = $skipped > 0
+                ? __('member.products.already_distributed')
+                : __('member.products.distribute_failed');
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['message' => $message], 422);
+            }
+
+            return back()->withErrors(['product_ids' => $message]);
+        }
+
+        $message = $productIds->count() === 1
+            ? __('member.products.distributed_success')
+            : __('member.products.distributed_batch_success', ['count' => $distributed]);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'message' => __('member.products.distributed_success'),
-                'product_id' => $product->id,
+                'message' => $message,
+                'count' => $distributed,
                 'redirect' => route('member.products.manage.index'),
             ]);
         }
 
         return redirect()
             ->route('member.products.manage.index')
-            ->with('status', __('member.products.distributed_success'));
+            ->with('status', $message);
     }
 
     public function manage(Request $request): View

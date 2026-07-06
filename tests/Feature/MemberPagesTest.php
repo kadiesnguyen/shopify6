@@ -359,6 +359,12 @@ class MemberPagesTest extends TestCase
             ->assertDontSee('Other Product Two');
 
         $this->actingAs($this->member)
+            ->get('/home?q=Needle Shop')
+            ->assertOk()
+            ->assertSee('Needle Product One')
+            ->assertDontSee('Other Product Two');
+
+        $this->actingAs($this->member)
             ->get('/home/products?shop=Needle')
             ->assertOk()
             ->assertSee('Needle Product One')
@@ -743,6 +749,14 @@ class MemberPagesTest extends TestCase
         );
         $shopItem = collect($shopResponse->json('items'))->firstWhere('value', 'Needle Portal Shop');
         $this->assertNotNull($shopItem['id'] ?? null);
+
+        $combinedResponse = $this->actingAs($this->member)
+            ->getJson('/home/search/suggestions?q=N&target=combined&context=portal')
+            ->assertOk();
+
+        $combinedValues = collect($combinedResponse->json('items'))->pluck('value');
+        $this->assertTrue($combinedValues->contains('Needle Portal Shop'));
+        $this->assertTrue($combinedValues->contains('Needle Portal Product'));
 
         $this->actingAs($this->member)
             ->getJson('/home/search/suggestions?q=Tesst&target=shop&context=portal')
