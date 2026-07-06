@@ -145,6 +145,9 @@
                                     </div>
 
 
+                                    <label class="mb-1 block text-xs font-medium text-gray-500">{{ __('member.products.market_price') }}</label>
+                                    <p class="mb-3 text-base font-semibold text-gray-900">${{ number_format($marketPrice, 2) }}</p>
+
                                     <label for="selling-price-{{ $distribution->id }}" class="mb-1 block text-xs font-medium text-gray-500">{{ __('member.products.selling_price') }}</label>
                                     <div class="relative mb-3">
                                         <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-base text-gray-400">$</span>
