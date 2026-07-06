@@ -218,6 +218,16 @@ class ProductVisibilityTest extends TestCase
             ->get(route('member.products.index', ['shop_id' => $shop->id]))
             ->assertOk()
             ->assertSee('$22.00', false);
+
+        $this->actingAs($this->member)
+            ->get(route('member.products.show', [
+                'product' => $this->product,
+                'shop_id' => $shop->id,
+            ]))
+            ->assertOk()
+            ->assertSee('$22.00', false)
+            ->assertSee('$25.00', false)
+            ->assertSee(__('member.products.price_to'));
     }
 
     public function test_shop_cannot_set_selling_price_above_market(): void

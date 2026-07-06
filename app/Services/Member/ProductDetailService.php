@@ -23,8 +23,9 @@ class ProductDetailService
         $product->loadMissing(['category', 'shop', 'images'])->loadCount('orderItems');
 
         $distribution = $this->resolveDisplayDistribution($product, $displayShopId, $shopOwnerUserId);
+        $marketPrice = (float) $product->selling_price;
         $purchasePrice = (float) ($distribution?->purchase_price ?? $product->purchase_price);
-        $sellingPrice = (float) ($distribution?->selling_price ?? $product->selling_price);
+        $sellingPrice = (float) ($distribution?->selling_price ?? $marketPrice);
         $profit = max(0, $sellingPrice - $purchasePrice);
         $description = $this->resolveDescription($product, $sourceUrl);
         $isRecommended = $product->distributions()->available()->exists();
@@ -38,6 +39,8 @@ class ProductDetailService
             'description_html' => $this->isHtmlDescription($description),
             'purchase_price' => $purchasePrice,
             'selling_price' => $sellingPrice,
+            'market_price' => $marketPrice,
+            'show_market_price' => $distribution !== null && $sellingPrice < $marketPrice,
             'profit' => $profit,
             'stock' => (int) $product->stock,
             'is_recommended' => $isRecommended,

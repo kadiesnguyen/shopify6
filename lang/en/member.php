@@ -136,6 +136,8 @@ return [
         'edit' => 'Edit',
         'save_content' => 'Save',
         'market_price' => 'Market price',
+        'catalog_price' => 'Price',
+        'price_to' => 'Price to',
         'price_edit_hint' => 'Set a selling price $2–$10 below market and round to cents, e.g. $20.00, $31.00.',
         'price_updated' => 'Selling price updated.',
         'price_below_purchase' => 'Selling price cannot be below purchase price.',

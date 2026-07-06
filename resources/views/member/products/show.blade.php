@@ -8,6 +8,8 @@
     @php
         $purchasePrice = $detail['purchase_price'];
         $sellingPrice = $detail['selling_price'];
+        $marketPrice = $detail['market_price'];
+        $showMarketPrice = $detail['show_market_price'] ?? false;
         $profit = $detail['profit'];
         $description = $detail['description'];
         $descriptionHtml = $detail['description_html'] ?? false;
@@ -205,6 +207,12 @@
 
                 <div class="relative z-10 -mt-3 rounded-t-2xl bg-white px-4 pb-3 pt-4 shadow-sm">
                     <p class="text-2xl font-bold text-orange-600">${{ number_format($sellingPrice, 2) }}</p>
+                    @if ($showMarketPrice)
+                        <p class="mt-1 text-sm text-gray-500">
+                            {{ __('member.products.price_to') }}:
+                            <span class="font-medium text-gray-400 line-through">${{ number_format($marketPrice, 2) }}</span>
+                        </p>
+                    @endif
                     <h1 class="mt-2 text-base font-semibold leading-snug text-gray-900">{{ $product->name }}</h1>
                     <span class="mt-2 inline-block rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-700">
                         {{ __('member.products.self_managed') }}

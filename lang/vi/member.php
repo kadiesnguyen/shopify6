@@ -136,6 +136,8 @@ return [
         'edit' => 'Chỉnh sửa',
         'save_content' => 'Lưu nội dung',
         'market_price' => 'Giá thị trường',
+        'catalog_price' => 'Giá cả',
+        'price_to' => 'Giá đến',
         'price_edit_hint' => 'Thường đặt giá bán thấp hơn giá thị trường từ $2 đến $10 và làm tròn, ví dụ $20.00, $31.00.',
         'price_updated' => 'Đã cập nhật giá bán.',
         'price_below_purchase' => 'Giá bán không được thấp hơn giá mua.',

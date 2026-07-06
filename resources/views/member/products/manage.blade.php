@@ -145,23 +145,24 @@
                                     </div>
 
 
-                                    <label class="mb-1 block text-xs font-medium text-gray-500">{{ __('member.products.market_price') }}</label>
-                                    <p class="mb-3 text-sm font-semibold text-gray-900">${{ number_format($marketPrice, 2) }}</p>
-
                                     <label for="selling-price-{{ $distribution->id }}" class="mb-1 block text-xs font-medium text-gray-500">{{ __('member.products.selling_price') }}</label>
-                                    <div class="relative mb-4">
-                                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
+                                    <div class="relative mb-3">
+                                        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-base text-gray-400">$</span>
                                         <input
                                             id="selling-price-{{ $distribution->id }}"
-                                            type="number"
+                                            type="text"
+                                            inputmode="decimal"
                                             name="selling_price"
-                                            step="0.01"
-                                            min="0"
                                             x-model="sellingPrice"
                                             required
-                                            class="w-full rounded-lg border border-gray-200 py-2.5 pl-7 pr-3 text-sm text-gray-900"
+                                            autocomplete="off"
+                                            class="block w-full min-w-0 rounded-lg border border-gray-200 py-3 pl-8 pr-3 text-base leading-normal text-gray-900"
+                                            style="font-size: 16px;"
                                         >
                                     </div>
+
+                                    <label class="mb-1 block text-xs font-medium text-gray-500">{{ __('member.products.price_to') }}</label>
+                                    <p class="mb-4 text-base font-semibold text-gray-900">${{ number_format($marketPrice, 2) }}</p>
 
                                     <p x-show="error" x-text="error" class="mb-3 text-sm text-rose-600"></p>
 

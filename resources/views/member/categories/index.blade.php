@@ -15,6 +15,24 @@
             </h1>
         </div>
 
+        @if ($distributeMode)
+            <form method="GET" class="border-b border-gray-100 bg-white px-3.5 pb-3">
+                <input type="hidden" name="mode" value="distribute">
+                @if ($activeCategory)
+                    <input type="hidden" name="category" value="{{ $activeCategory->id }}">
+                @endif
+                <x-member.search-field
+                    name="q"
+                    :value="$keyword ?? request('q')"
+                    :placeholder="__('member.products.distribution_search')"
+                    :autocomplete="true"
+                    suggest-target="product"
+                    suggest-context="distribution"
+                    icon="search"
+                />
+            </form>
+        @endif
+
         <div class="flex min-h-0 flex-1">
             <aside class="w-28 shrink-0 overflow-y-auto bg-[#f8f8f8]">
                 @foreach ($categories as $category)
@@ -22,6 +40,7 @@
                         href="{{ route('member.categories.index', array_filter([
                             'category' => $category->id,
                             'mode' => $distributeMode ? 'distribute' : null,
+                            'q' => ($keyword ?? '') !== '' ? $keyword : null,
                         ])) }}"
                         @class([
                             'flex h-14 items-center justify-center px-1 text-center leading-tight no-underline',
@@ -115,7 +134,7 @@
         </div>
     </div>
 
-    @if ($distributeMode && $products->isNotEmpty())
+    @if ($distributeMode && $products->contains(fn ($product) => ! $distributedIds->contains($product->id)))
         <div class="fixed inset-x-0 bottom-[calc(50px+env(safe-area-inset-bottom))] z-40 border-t border-gray-200 bg-white px-4 py-3 md:left-1/2 md:max-w-[420px] md:-translate-x-1/2">
             <button
                 type="submit"

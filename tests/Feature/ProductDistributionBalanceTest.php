@@ -139,6 +139,36 @@ class ProductDistributionBalanceTest extends TestCase
             ->assertSee(__('member.products.edit'));
     }
 
+    public function test_distribute_mode_categories_search_finds_product_across_categories(): void
+    {
+        $otherCategory = Category::query()->create([
+            'name' => 'Massage Category',
+            'slug' => 'massage-category',
+            'status' => 'active',
+        ]);
+
+        $massageProduct = Product::query()->create([
+            'category_id' => $otherCategory->id,
+            'name' => 'MeitFith Zero Gravity Massage Chair',
+            'slug' => 'meitfith-massage-chair',
+            'selling_price' => 1200,
+            'purchase_price' => 800,
+            'commission' => 120,
+            'stock' => 5,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($this->shopUser)
+            ->get(route('member.categories.index', [
+                'mode' => 'distribute',
+                'q' => 'Massage Chair',
+            ]))
+            ->assertOk()
+            ->assertSee($massageProduct->name)
+            ->assertSee(__('member.products.distribution_search'))
+            ->assertDontSee('Second Product');
+    }
+
     public function test_distribution_center_shows_purchase_selling_and_profit(): void
     {
         $this->actingAs($this->shopUser)

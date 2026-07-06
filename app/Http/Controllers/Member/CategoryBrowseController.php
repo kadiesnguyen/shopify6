@@ -48,39 +48,36 @@ class CategoryBrowseController extends Controller
 
         $categories = $categoriesQuery->get();
 
+        $keyword = trim($request->string('q')->toString());
         $activeCategory = $categories->firstWhere('id', $request->integer('category'))
             ?? $categories->first();
 
         $products = collect();
         $distributedIds = collect();
 
-        if ($activeCategory) {
-            if ($distributeMode) {
-                $distributedIds = ProductDistribution::query()
-                    ->where('user_id', auth()->id())
-                    ->pluck('product_id');
+        if ($distributeMode) {
+            $distributedIds = ProductDistribution::query()
+                ->where('user_id', auth()->id())
+                ->pluck('product_id');
 
-                $products = Product::query()
-                    ->with('category')
-                    ->where('status', Product::STATUS_ACTIVE)
-                    ->where('category_id', $activeCategory->id)
-                    ->when($shop, function ($query) use ($shop): void {
-                        $query->whereIn('category_id', $this->industries->allowedCategoryIds(
-                            $shop->industry_id,
-                            $shop->business_category_ids,
-                        ));
-                    })
-                    ->latest()
-                    ->limit(48)
-                    ->get();
-            } else {
-                $products = ProductBuyableQuery::forPortal()
-                    ->where('category_id', $activeCategory->id)
-                    ->limit(24)
-                    ->get();
+            $allowedIds = $allowedCategoryIds ?? $categories->pluck('id')->all();
 
-                $this->portalProductDisplay->applyShopLabels($products, featuredOnly: true);
-            }
+            $products = Product::query()
+                ->with('category')
+                ->where('status', Product::STATUS_ACTIVE)
+                ->whereIn('category_id', $allowedIds)
+                ->when($keyword !== '', fn ($query) => $query->where('name', 'like', "%{$keyword}%"))
+                ->when($keyword === '' && $activeCategory, fn ($query) => $query->where('category_id', $activeCategory->id))
+                ->latest()
+                ->limit(48)
+                ->get();
+        } elseif ($activeCategory) {
+            $products = ProductBuyableQuery::forPortal()
+                ->where('category_id', $activeCategory->id)
+                ->limit(24)
+                ->get();
+
+            $this->portalProductDisplay->applyShopLabels($products, featuredOnly: true);
         }
 
         $banners = CachedModelCollection::remember(
@@ -101,6 +98,7 @@ class CategoryBrowseController extends Controller
             'banners',
             'distributeMode',
             'distributedIds',
+            'keyword',
         ));
     }
 }
