@@ -204,21 +204,27 @@ class ProductDetailService
 
     public function findDemoGoodsIdByName(string $name): ?int
     {
-        if (! Cache::has('demo:goods-name-index')) {
-            $this->demoNameIndex();
+        return $this->demoGoodsIdForName($name);
+    }
+
+    public function rememberDemoGoodsMapping(string $name, int $goodsId): void
+    {
+        $key = mb_strtolower(trim(html_entity_decode($name, ENT_QUOTES | ENT_HTML5)));
+
+        if ($key === '') {
+            return;
         }
 
-        return $this->demoGoodsIdForName($name);
+        $index = Cache::get('demo:goods-name-index', []);
+        $index[$key] = $goodsId;
+        Cache::put('demo:goods-name-index', $index, now()->addDays(30));
     }
 
     private function demoGoodsIdForName(string $name): ?int
     {
-        if (! Cache::has('demo:goods-name-index')) {
-            return null;
-        }
-
         $key = mb_strtolower(trim(html_entity_decode($name, ENT_QUOTES | ENT_HTML5)));
-        $id = $this->demoNameIndex()[$key] ?? null;
+        $index = Cache::get('demo:goods-name-index', []);
+        $id = $index[$key] ?? null;
 
         return $id ? (int) $id : null;
     }

@@ -24,9 +24,8 @@ class BackfillProductGalleryCommand extends Command
         $updated = 0;
         $skipped = 0;
 
-        $this->info('Resolving demo product name index (cached when available)...');
         if (! \Illuminate\Support\Facades\Cache::has('demo:goods-name-index')) {
-            $details->warmDemoNameIndex();
+            $this->warn('No demo name index yet — sm-* products need demo:import-products first for name matching.');
         }
 
         $products = Product::query()

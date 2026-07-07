@@ -31,6 +31,9 @@ class ImportDemoProductsCommand extends Command
 
         $this->components->info("Importing products from demo API {$source}");
 
+        $progressLog = storage_path('logs/demo-import-progress.log');
+        @file_put_contents($progressLog, now()->toDateTimeString()." START\n");
+
         try {
             $stats = $importer->import(
                 sourceUrl: $source,
@@ -38,6 +41,19 @@ class ImportDemoProductsCommand extends Command
                 limit: $limit,
                 skipImages: (bool) $this->option('skip-images'),
                 sleepMs: $sleep,
+                onProgress: function (array $progress) use ($progressLog): void {
+                    $line = sprintf(
+                        '%s goods:%s cat:%s parsed:%d saved:%d skipped:%d',
+                        now()->toDateTimeString(),
+                        $progress['goods_id'],
+                        $progress['category'],
+                        $progress['parsed'],
+                        $progress['created'] + $progress['updated'],
+                        $progress['skipped'] ?? 0,
+                    );
+
+                    @file_put_contents($progressLog, $line."\n", FILE_APPEND);
+                },
             );
         } catch (\Throwable $exception) {
             $this->components->error($exception->getMessage());
@@ -55,6 +71,7 @@ class ImportDemoProductsCommand extends Command
         $this->components->twoColumnDetail('Parsed', (string) $stats['parsed']);
         $this->components->twoColumnDetail('Created', (string) $stats['created']);
         $this->components->twoColumnDetail('Updated', (string) $stats['updated']);
+        $this->components->twoColumnDetail('Skipped', (string) ($stats['skipped'] ?? 0));
         $this->components->twoColumnDetail('Shops (new)', (string) $stats['shops']);
         $this->components->twoColumnDetail('Categories (new)', (string) $stats['categories']);
 

@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductDistribution;
 use App\Models\Shop;
 use App\Models\User;
+use App\Services\Member\ProductDetailService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -38,7 +39,8 @@ class DemoProductImporter
     }
 
     /**
-     * @return array{parsed: int, created: int, updated: int, shops: int, categories: int}
+     * @param  (callable(array<string, int|string>): void)|null  $onProgress
+     * @return array{parsed: int, created: int, updated: int, skipped: int, shops: int, categories: int}
      */
     public function import(
         string $sourceUrl,
@@ -46,6 +48,7 @@ class DemoProductImporter
         ?int $limit = null,
         bool $skipImages = false,
         int $sleepMs = 100,
+        ?callable $onProgress = null,
     ): array {
         $this->baseUrl = rtrim($sourceUrl === '' ? (string) config('services.demo_api.base_url') : $sourceUrl, '/');
         set_time_limit(0);
@@ -63,6 +66,7 @@ class DemoProductImporter
             'parsed' => 0,
             'created' => 0,
             'updated' => 0,
+            'skipped' => 0,
             'shops' => 0,
             'categories' => 0,
         ];
@@ -73,7 +77,9 @@ class DemoProductImporter
             throw new RuntimeException('No categories returned from demo API.');
         }
 
-        $productsById = [];
+        /** @var array<int, true> $seenIds */
+        $seenIds = [];
+        $imported = 0;
 
         foreach ($categories as $demoCategory) {
             $localCategory = $this->resolveCategory($demoCategory);
@@ -99,12 +105,57 @@ class DemoProductImporter
                 foreach ($items as $item) {
                     $id = (int) $item['id'];
 
-                    if (! isset($productsById[$id])) {
-                        $productsById[$id] = [
-                            'demo' => $item,
-                            'category_id' => $localCategory['category']->id,
-                        ];
-                        $stats['parsed']++;
+                    if (isset($seenIds[$id])) {
+                        continue;
+                    }
+
+                    $seenIds[$id] = true;
+                    $stats['parsed']++;
+
+                    if ($dryRun) {
+                        if ($limit !== null && $stats['parsed'] >= $limit) {
+                            break 3;
+                        }
+
+                        continue;
+                    }
+
+                    $meta = [
+                        'demo' => $item,
+                        'category_id' => $localCategory['category']->id,
+                    ];
+
+                    try {
+                        $result = $this->importListedProduct($id, $meta, $admin, $skipImages, $sleepMs);
+
+                        if ($result['shop_created']) {
+                            $stats['shops']++;
+                        }
+
+                        if ($result['created']) {
+                            $stats['created']++;
+                        } else {
+                            $stats['updated']++;
+                        }
+
+                        $imported++;
+                    } catch (RuntimeException $exception) {
+                        $stats['skipped']++;
+                        $this->line("Skipping product {$id}: {$exception->getMessage()}");
+                    }
+
+                    if ($onProgress !== null) {
+                        $onProgress([
+                            'phase' => 'import',
+                            'goods_id' => $id,
+                            'category' => $demoCategory['cate_name'],
+                            'page' => $page,
+                            ...$stats,
+                        ]);
+                    }
+
+                    if ($limit !== null && $imported >= $limit) {
+                        break 3;
                     }
                 }
 
@@ -113,71 +164,104 @@ class DemoProductImporter
                 }
 
                 $page++;
-
-                if ($limit !== null && count($productsById) >= $limit) {
-                    break 2;
-                }
             }
         }
 
-        if ($limit !== null) {
-            $productsById = array_slice($productsById, 0, $limit, true);
-        }
-
-        if ($productsById === []) {
+        if ($stats['parsed'] === 0) {
             throw new RuntimeException('No products parsed from demo API.');
         }
 
-        if ($dryRun) {
-            return $stats;
-        }
-
-        $index = 0;
-
-        foreach ($productsById as $id => $meta) {
-            try {
-                $detail = $this->call('api/Goods/goodsInfo', ['goods_id' => $id]);
-            } catch (RuntimeException $exception) {
-                $this->line("Skipping product {$id}: {$exception->getMessage()}");
-
-                continue;
-            }
-
-            $goodsInfo = $detail['data']['goodsinfo'] ?? null;
-            $gpres = $detail['data']['gpres'] ?? [];
-
-            if ($sleepMs > 0) {
-                usleep($sleepMs * 1000);
-            }
-
-            try {
-                $shop = $this->resolveShop((int) $meta['demo']['shop_id'], $skipImages);
-            } catch (RuntimeException $exception) {
-                $this->line("Skipping product {$id}: {$exception->getMessage()}");
-
-                continue;
-            }
-
-            if ($shop['created']) {
-                $stats['shops']++;
-            }
-
-            $result = $this->resolveProduct($meta, $goodsInfo, $gpres, $shop['shop'], $admin, $skipImages);
-
-            if ($result['created']) {
-                $stats['created']++;
-            } else {
-                $stats['updated']++;
-            }
-
-            $index++;
-
-            if ($index % 25 === 0) {
-                gc_collect_cycles();
-            }
-        }
-
         return $stats;
+    }
+
+    /**
+     * @param  array{demo: array<string, mixed>, category_id: int}  $meta
+     * @return array{created: bool, shop_created: bool}
+     */
+    private function importListedProduct(
+        int $goodsId,
+        array $meta,
+        User $admin,
+        bool $skipImages,
+        int $sleepMs,
+    ): array {
+        $detail = $this->call('api/Goods/goodsInfo', ['goods_id' => $goodsId]);
+        $goodsInfo = $detail['data']['goodsinfo'] ?? null;
+        $gpres = $detail['data']['gpres'] ?? [];
+
+        if ($sleepMs > 0) {
+            usleep($sleepMs * 1000);
+        }
+
+        $shop = $this->resolveShop((int) $meta['demo']['shop_id'], $skipImages);
+        $result = $this->resolveProduct($meta, $goodsInfo, $gpres, $shop['shop'], $admin, $skipImages);
+
+        app(ProductDetailService::class)->rememberDemoGoodsMapping(
+            (string) $meta['demo']['goods_name'],
+            $goodsId,
+        );
+
+        return [
+            'created' => $result['created'],
+            'shop_created' => $shop['created'],
+        ];
+    }
+
+    /**
+     * @param  (callable(array<string, int|string>): void)|null  $onProgress
+     * @return array{categories: int, products: int, pages: int}
+     */
+    public function catalogStats(?callable $onProgress = null): array
+    {
+        $this->baseUrl = rtrim((string) config('services.demo_api.base_url'), '/');
+        $categories = $this->categories();
+        $total = 0;
+        $pages = 0;
+
+        foreach ($categories as $demoCategory) {
+            $categoryTotal = 0;
+            $page = 1;
+
+            while (true) {
+                $response = $this->call('api/Goods/getCategoryGoodsList', [
+                    'cate_id' => $demoCategory['id'],
+                    'page' => $page,
+                ]);
+                $items = $response['data']['goodres'] ?? [];
+
+                if (! is_array($items) || $items === []) {
+                    break;
+                }
+
+                $categoryTotal += count($items);
+                $total += count($items);
+                $pages++;
+
+                if ($onProgress !== null) {
+                    $onProgress([
+                        'phase' => 'count',
+                        'category' => $demoCategory['cate_name'],
+                        'category_id' => $demoCategory['id'],
+                        'page' => $page,
+                        'category_total' => $categoryTotal,
+                        'products' => $total,
+                        'pages' => $pages,
+                    ]);
+                }
+
+                if (count($items) < 10) {
+                    break;
+                }
+
+                $page++;
+            }
+        }
+
+        return [
+            'categories' => count($categories),
+            'products' => $total,
+            'pages' => $pages,
+        ];
     }
 
     /** @return list<array{id: int, cate_name: string}> */
