@@ -16,62 +16,64 @@
     @endphp
 
     <div class="bg-[#f4f4f4] pb-4">
-        <a
-            href="{{ route('member.home') }}"
-            x-data="{
-                top: 72,
-                dragging: false,
-                moved: false,
-                startY: 0,
-                startTop: 0,
-                init() {
-                    const saved = localStorage.getItem('shopHubHomeBtnTop');
-                    if (saved) this.top = parseInt(saved, 10);
-                },
-                onPointerDown(event) {
-                    if (event.button !== 0) return;
-                    this.dragging = true;
-                    this.moved = false;
-                    this.startY = event.clientY;
-                    this.startTop = this.top;
-                    this.$el.setPointerCapture(event.pointerId);
-                },
-                onPointerMove(event) {
-                    if (! this.dragging) return;
-                    const delta = event.clientY - this.startY;
-                    if (Math.abs(delta) > 4) this.moved = true;
-                    const min = 12;
-                    const max = window.innerHeight - this.$el.offsetHeight - 58;
-                    this.top = Math.min(max, Math.max(min, this.startTop + delta));
-                },
-                onPointerUp(event) {
-                    if (! this.dragging) return;
-                    this.dragging = false;
-                    this.$el.releasePointerCapture(event.pointerId);
-                    if (this.moved) {
-                        localStorage.setItem('shopHubHomeBtnTop', String(this.top));
-                    }
-                },
-                onClick(event) {
-                    if (this.moved) {
-                        event.preventDefault();
+        <div class="pointer-events-none fixed inset-y-0 left-0 right-0 z-50 md:left-1/2 md:right-auto md:w-full md:max-w-[420px] md:-translate-x-1/2">
+            <a
+                href="{{ route('member.home') }}"
+                x-data="{
+                    top: 72,
+                    dragging: false,
+                    moved: false,
+                    startY: 0,
+                    startTop: 0,
+                    init() {
+                        const saved = localStorage.getItem('shopHubHomeBtnTop');
+                        if (saved) this.top = parseInt(saved, 10);
+                    },
+                    onPointerDown(event) {
+                        if (event.button !== 0) return;
+                        this.dragging = true;
                         this.moved = false;
-                    }
-                },
-            }"
-            :style="'top:' + top + 'px'"
-            @pointerdown="onPointerDown($event)"
-            @pointermove="onPointerMove($event)"
-            @pointerup="onPointerUp($event)"
-            @pointercancel="onPointerUp($event)"
-            @click="onClick($event)"
-            class="fixed right-3 z-50 flex size-[52px] touch-none select-none flex-col items-center justify-center gap-0.5 rounded-full bg-white/90 text-gray-800 shadow-md no-underline active:opacity-80"
-            :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
-            aria-label="{{ __('member.shop_application.back_home') }}"
-        >
-            <x-member.icon name="home" class="size-5 shrink-0 pointer-events-none" />
-            <span class="max-w-[44px] truncate text-center text-[10px] font-medium leading-tight pointer-events-none">{{ __('member.nav.home') }}</span>
-        </a>
+                        this.startY = event.clientY;
+                        this.startTop = this.top;
+                        this.$el.setPointerCapture(event.pointerId);
+                    },
+                    onPointerMove(event) {
+                        if (! this.dragging) return;
+                        const delta = event.clientY - this.startY;
+                        if (Math.abs(delta) > 4) this.moved = true;
+                        const min = 12;
+                        const max = window.innerHeight - this.$el.offsetHeight - 58;
+                        this.top = Math.min(max, Math.max(min, this.startTop + delta));
+                    },
+                    onPointerUp(event) {
+                        if (! this.dragging) return;
+                        this.dragging = false;
+                        this.$el.releasePointerCapture(event.pointerId);
+                        if (this.moved) {
+                            localStorage.setItem('shopHubHomeBtnTop', String(this.top));
+                        }
+                    },
+                    onClick(event) {
+                        if (this.moved) {
+                            event.preventDefault();
+                            this.moved = false;
+                        }
+                    },
+                }"
+                :style="'top:' + top + 'px'"
+                @pointerdown="onPointerDown($event)"
+                @pointermove="onPointerMove($event)"
+                @pointerup="onPointerUp($event)"
+                @pointercancel="onPointerUp($event)"
+                @click="onClick($event)"
+                class="pointer-events-auto absolute right-3 flex size-14 touch-none select-none flex-col items-center justify-center gap-0.5 rounded-full bg-blue-600 text-white shadow-lg ring-2 ring-white/70 no-underline active:opacity-90"
+                :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
+                aria-label="{{ __('member.shop_application.back_home') }}"
+            >
+                <x-member.icon name="home" class="size-5 shrink-0 pointer-events-none text-white" />
+                <span class="max-w-[48px] truncate text-center text-[10px] font-semibold leading-tight pointer-events-none">{{ __('member.nav.home') }}</span>
+            </a>
+        </div>
 
         <div
             class="relative h-[140px] bg-[#333] bg-cover bg-center px-4 pt-8"
