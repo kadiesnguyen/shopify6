@@ -91,6 +91,7 @@ git -c "safe.directory=$REMOTE_PATH" pull origin "$GIT_BRANCH"
 composer install --no-dev --optimize-autoloader --no-interaction
 npm ci
 npm run build
+rm -rf node_modules
 
 php artisan migrate --force
 php artisan storage:link 2>/dev/null || true
