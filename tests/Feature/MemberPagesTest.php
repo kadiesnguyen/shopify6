@@ -1103,7 +1103,7 @@ class MemberPagesTest extends TestCase
 
         $this->actingAs($this->member)
             ->put(route('member.payment-password.update'), [
-                'current_payment_password' => '123456',
+                'password' => 'password',
                 'payment_password' => '654321',
                 'payment_password_confirmation' => '654321',
             ])

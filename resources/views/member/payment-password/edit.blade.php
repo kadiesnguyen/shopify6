@@ -19,22 +19,20 @@
 
             <div class="bg-white">
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <label for="current_payment_password" class="mb-2 block text-sm font-medium text-gray-900">{{ __('member.profile.current_payment_password') }}</label>
+                    <label for="password" class="mb-2 block text-sm font-medium text-gray-900">{{ __('member.payment_password.edit_login_label') }}</label>
                     <input
-                        id="current_payment_password"
-                        name="current_payment_password"
+                        id="password"
+                        name="password"
                         type="password"
-                        inputmode="numeric"
-                        maxlength="6"
-                        autocomplete="off"
-                        placeholder="{{ __('member.payment_password.placeholder') }}"
+                        autocomplete="current-password"
+                        placeholder="{{ __('member.profile.current_password_placeholder') }}"
                         class="portal-plain-input"
                         required
                     >
-                    @error('current_payment_password')<p class="mt-2 text-xs text-red-600">{{ $message }}</p>@enderror
+                    @error('password')<p class="mt-2 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <label for="payment_password" class="mb-2 block text-sm font-medium text-gray-900">{{ __('member.payment_password.fund_label') }}</label>
+                    <label for="payment_password" class="mb-2 block text-sm font-medium text-gray-900">{{ __('member.payment_password.edit_withdraw_label') }}</label>
                     <input
                         id="payment_password"
                         name="payment_password"
@@ -49,7 +47,7 @@
                     @error('payment_password')<p class="mt-2 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <label for="payment_password_confirmation" class="mb-2 block text-sm font-medium text-gray-900">{{ __('member.payment_password.confirm_label') }}</label>
+                    <label for="payment_password_confirmation" class="mb-2 block text-sm font-medium text-gray-900">{{ __('member.payment_password.edit_withdraw_confirm_label') }}</label>
                     <input
                         id="payment_password_confirmation"
                         name="payment_password_confirmation"

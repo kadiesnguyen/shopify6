@@ -72,8 +72,11 @@ return [
 
     'payment_password' => [
         'title' => 'Đặt mật khẩu thanh toán',
-        'fund_label' => 'Mật khẩu quỹ',
-        'confirm_label' => 'Nhập lại mật khẩu quỹ',
+        'fund_label' => 'Mật khẩu rút tiền',
+        'confirm_label' => 'Nhập lại mật khẩu rút tiền',
+        'edit_login_label' => 'Mật khẩu đăng nhập',
+        'edit_withdraw_label' => 'Mật khẩu rút tiền',
+        'edit_withdraw_confirm_label' => 'Nhập lại mật khẩu rút tiền',
         'placeholder' => 'Vui lòng nhập 6 chữ số',
         'confirm_placeholder' => 'Vui lòng nhập lại mật khẩu',
         'submit' => 'Gửi',
@@ -304,7 +307,7 @@ return [
         'user_code' => 'Mã thành viên',
         'payment_password' => 'Đặt mật khẩu thanh toán',
         'login_password' => 'Đổi mật khẩu đăng nhập',
-        'funds_password' => 'Đổi mật khẩu quỹ',
+        'funds_password' => 'Đổi mật khẩu rút tiền',
         'current_password' => 'Mật khẩu hiện tại',
         'current_password_placeholder' => 'Nhập mật khẩu đăng nhập hiện tại',
         'new_password' => 'Mật khẩu mới',

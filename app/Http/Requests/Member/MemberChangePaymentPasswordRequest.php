@@ -17,7 +17,7 @@ class MemberChangePaymentPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'current_payment_password' => ['required', 'digits:6'],
+            'password' => ['required', 'string'],
             'payment_password' => ['required', 'digits:6', 'confirmed'],
         ];
     }
@@ -26,7 +26,6 @@ class MemberChangePaymentPasswordRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'current_payment_password.digits' => __('member.payment_password.invalid_digits'),
             'payment_password.digits' => __('member.payment_password.invalid_digits'),
             'payment_password.confirmed' => __('member.payment_password.mismatch'),
         ];
@@ -39,10 +38,8 @@ class MemberChangePaymentPasswordRequest extends FormRequest
                 return;
             }
 
-            $hash = $this->user()->getRawOriginal('payment_password');
-
-            if (! Hash::check($this->input('current_payment_password'), $hash)) {
-                $validator->errors()->add('current_payment_password', __('member.profile.current_payment_password_invalid'));
+            if (! Hash::check((string) $this->input('password'), $this->user()->getRawOriginal('password'))) {
+                $validator->errors()->add('password', __('member.profile.current_password_invalid'));
             }
         });
     }

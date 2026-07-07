@@ -72,8 +72,11 @@ return [
 
     'payment_password' => [
         'title' => 'Set payment password',
-        'fund_label' => 'Fund password',
-        'confirm_label' => 'Confirm fund password',
+        'fund_label' => 'Withdrawal password',
+        'confirm_label' => 'Re-enter withdrawal password',
+        'edit_login_label' => 'Login password',
+        'edit_withdraw_label' => 'Withdrawal password',
+        'edit_withdraw_confirm_label' => 'Re-enter withdrawal password',
         'placeholder' => 'Enter 6 digits',
         'confirm_placeholder' => 'Re-enter password',
         'submit' => 'Submit',
@@ -304,7 +307,7 @@ return [
         'user_code' => 'User code',
         'payment_password' => 'Set Payment Password',
         'login_password' => 'Change Login Password',
-        'funds_password' => 'Change Funds Password',
+        'funds_password' => 'Change withdrawal password',
         'current_password' => 'Current password',
         'current_password_placeholder' => 'Enter current login password',
         'new_password' => 'New password',
