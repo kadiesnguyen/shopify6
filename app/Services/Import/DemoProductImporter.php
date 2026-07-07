@@ -35,6 +35,7 @@ class DemoProductImporter
 
     public function __construct()
     {
+        $this->baseUrl = rtrim((string) config('services.demo_api.base_url'), '/');
         $this->secretKey = (string) config('services.demo_api.secret_key');
         $this->locale = (string) config('services.demo_api.locale');
     }
