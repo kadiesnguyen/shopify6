@@ -34,7 +34,15 @@ class BackfillProductGalleryCommand extends Command
             ->orderBy('id')
             ->when($limit !== null, fn ($query) => $query->limit($limit))
             ->get()
-            ->filter(fn (Product $product) => $product->images_count < 2)
+            ->filter(function (Product $product) use ($importer): bool {
+                $target = $importer->targetGalleryCount((float) $product->selling_price);
+
+                if ((int) $product->images_count < $target) {
+                    return true;
+                }
+
+                return $importer->countDescriptionImages((string) $product->description) < $target;
+            })
             ->values();
 
         foreach ($products as $product) {

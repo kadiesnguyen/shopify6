@@ -13,8 +13,8 @@ class DemoProductGalleryTest extends TestCase
 
         $this->assertSame(3, $importer->targetGalleryCount(35.0));
         $this->assertSame(5, $importer->targetGalleryCount(1110.0));
-        $this->assertSame(2, $importer->minimumGalleryCount(24.49));
-        $this->assertSame(4, $importer->minimumGalleryCount(95.73));
+        $this->assertSame(3, $importer->minimumGalleryCount(24.49));
+        $this->assertSame(5, $importer->minimumGalleryCount(95.73));
     }
 
     public function test_collect_image_urls_caps_by_price_tier(): void

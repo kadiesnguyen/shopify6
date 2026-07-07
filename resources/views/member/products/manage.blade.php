@@ -165,7 +165,7 @@
                                         >
                                     </div>
 
-                                    <label class="mb-1 block text-xs font-medium text-gray-500">{{ __('member.products.price_to') }}</label>
+                                    <label class="mb-1 block text-xs font-medium text-gray-500">{{ __('member.products.purchase_price') }}</label>
                                     <p class="mb-4 text-base font-semibold text-gray-900">${{ number_format($purchasePrice, 2) }}</p>
 
                                     <p x-show="error" x-text="error" class="mb-3 text-sm text-rose-600"></p>

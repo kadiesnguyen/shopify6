@@ -115,6 +115,7 @@ chmod -R ug+rwx storage bootstrap/cache public/uploads 2>/dev/null || true
 
 php artisan config:cache
 php artisan route:cache
+php artisan view:clear
 php artisan view:cache
 
 echo "Remote app updated at $(pwd) @ $(git -c safe.directory=$REMOTE_PATH rev-parse --short HEAD)"

@@ -280,14 +280,14 @@ class DemoProductImporter
 
     public function minimumGalleryCount(float $sellingPrice): int
     {
-        return $sellingPrice >= self::EXPENSIVE_PRICE_THRESHOLD ? 4 : 2;
+        return $this->targetGalleryCount($sellingPrice);
     }
 
     /**
      * @param  list<array<string, mixed>>  $gpres
      * @return list<string>
      */
-    public function collectImageUrls(?string $thumbUrl, array $gpres, float $sellingPrice): array
+    public function collectImageUrls(?string $thumbUrl, array $gpres, float $sellingPrice, ?string $goodsDesc = null): array
     {
         $urls = [];
 
@@ -303,7 +303,28 @@ class DemoProductImporter
             }
         }
 
+        if ($goodsDesc) {
+            if (preg_match_all('/<img[^>]+src=["\']([^"\']+)["\']/i', $goodsDesc, $matches)) {
+                foreach ($matches[1] as $url) {
+                    $url = trim(html_entity_decode((string) $url, ENT_QUOTES | ENT_HTML5));
+
+                    if ($url !== '' && ! in_array($url, $urls, true)) {
+                        $urls[] = $url;
+                    }
+                }
+            }
+        }
+
         return array_slice($urls, 0, $this->targetGalleryCount($sellingPrice));
+    }
+
+    public function countDescriptionImages(string $html): int
+    {
+        if (! preg_match_all('/<img\b/i', $html, $matches)) {
+            return 0;
+        }
+
+        return count($matches[0]);
     }
 
     /** @return array<string, mixed>|null */
@@ -327,8 +348,9 @@ class DemoProductImporter
         $goodsInfo = $detail['data']['goodsinfo'] ?? null;
         $gpres = $detail['data']['gpres'] ?? [];
         $thumb = is_array($goodsInfo) ? ($goodsInfo['thumb_url'] ?? null) : null;
+        $goodsDesc = is_array($goodsInfo) ? ($goodsInfo['goods_desc'] ?? null) : null;
         $sellingPrice = (float) ($product->selling_price ?: ($goodsInfo['zs_shop_price'] ?? 0));
-        $imageUrls = $this->collectImageUrls($thumb, $gpres, $sellingPrice);
+        $imageUrls = $this->collectImageUrls($thumb, $gpres, $sellingPrice, is_string($goodsDesc) ? $goodsDesc : null);
 
         if (count($imageUrls) < $this->minimumGalleryCount($sellingPrice)) {
             return false;
@@ -359,6 +381,7 @@ class DemoProductImporter
         $description = $this->appendGalleryToDescription(
             $description,
             array_column($imagePaths, 'path'),
+            $this->minimumGalleryCount($sellingPrice),
         );
 
         $payload = ['description' => $description];
@@ -506,7 +529,7 @@ class DemoProductImporter
         $sellingPrice = (float) ($demo['min_price'] ?? $goodsInfo['zs_shop_price'] ?? 0);
         $purchasePrice = round($sellingPrice * 0.595, 2);
         $commission = round($sellingPrice * 0.10, 2);
-        $imageUrls = $this->collectImageUrls($demo['thumb_url'] ?? null, $gpres, $sellingPrice);
+        $imageUrls = $this->collectImageUrls($demo['thumb_url'] ?? null, $gpres, $sellingPrice, $goodsInfo['goods_desc'] ?? null);
         $baseDescription = $this->htmlDescription($goodsInfo['goods_desc'] ?? null, $name);
 
         $mainImagePath = null;
@@ -531,6 +554,7 @@ class DemoProductImporter
         $description = $this->appendGalleryToDescription(
             $baseDescription,
             array_column($imagePaths, 'path'),
+            $this->minimumGalleryCount($sellingPrice),
         );
 
         $payload = [
@@ -614,9 +638,9 @@ class DemoProductImporter
     }
 
     /** @param  list<string>  $storagePaths */
-    private function appendGalleryToDescription(string $html, array $storagePaths): string
+    private function appendGalleryToDescription(string $html, array $storagePaths, int $minimumImages = 3): string
     {
-        if ($storagePaths === [] || $this->descriptionHasImages($html)) {
+        if ($storagePaths === [] || $this->countDescriptionImages($html) >= $minimumImages) {
             return $html;
         }
 
