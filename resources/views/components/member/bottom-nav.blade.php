@@ -1,12 +1,21 @@
 @php
     use App\Support\Member\BellNotificationCache;
 
-    $tabs = [
-        ['route' => 'member.home', 'label' => __('member.nav.home'), 'icon' => 'home', 'patterns' => ['member.home']],
-        ['route' => 'member.categories.index', 'label' => __('member.nav.categories'), 'icon' => 'layout-grid', 'patterns' => ['member.categories.*']],
-        ['route' => 'member.cart.index', 'label' => __('member.nav.cart'), 'icon' => 'shopping-cart', 'patterns' => ['member.cart.*']],
-        ['route' => 'member.my.index', 'label' => __('member.nav.my'), 'icon' => 'user', 'patterns' => ['member.my.*', 'member.profile.*', 'member.shipping.*', 'member.wallet.*', 'member.promotions.*', 'member.notifications.*', 'member.shop-hub.*', 'member.settings.*', 'member.reviews.*', 'member.complaints.*', 'member.seller.orders.*'], 'badge' => true],
-    ];
+    $isShop = auth()->check() && auth()->user()->isShop();
+
+    $tabs = $isShop
+        ? [
+            ['route' => 'member.shop-hub.index', 'label' => __('member.nav.shop'), 'icon' => 'store', 'patterns' => ['member.shop-hub.*']],
+            ['route' => 'member.seller.orders.index', 'label' => __('member.nav.place_order'), 'icon' => 'layout-grid', 'patterns' => ['member.seller.orders.*', 'member.seller.refunds.*']],
+            ['route' => 'member.products.manage.index', 'label' => __('member.products.goods'), 'icon' => 'package', 'patterns' => ['member.products.manage.*', 'member.products.distributions.*', 'member.categories.*']],
+            ['route' => 'member.my.index', 'label' => __('member.nav.my'), 'icon' => 'user', 'patterns' => ['member.my.*', 'member.profile.*', 'member.shipping.*', 'member.wallet.*', 'member.promotions.*', 'member.notifications.*', 'member.settings.*', 'member.reviews.*', 'member.complaints.*'], 'badge' => true],
+        ]
+        : [
+            ['route' => 'member.home', 'label' => __('member.nav.home'), 'icon' => 'home', 'patterns' => ['member.home']],
+            ['route' => 'member.categories.index', 'label' => __('member.nav.categories'), 'icon' => 'layout-grid', 'patterns' => ['member.categories.*']],
+            ['route' => 'member.cart.index', 'label' => __('member.nav.cart'), 'icon' => 'shopping-cart', 'patterns' => ['member.cart.*']],
+            ['route' => 'member.my.index', 'label' => __('member.nav.my'), 'icon' => 'user', 'patterns' => ['member.my.*', 'member.profile.*', 'member.shipping.*', 'member.wallet.*', 'member.promotions.*', 'member.notifications.*', 'member.shop-hub.*', 'member.settings.*', 'member.reviews.*', 'member.complaints.*', 'member.seller.orders.*'], 'badge' => true],
+        ];
     $unreadCount = auth()->check() ? BellNotificationCache::unreadCount(auth()->id()) : 0;
 @endphp
 

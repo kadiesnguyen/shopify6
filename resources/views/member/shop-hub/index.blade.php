@@ -36,24 +36,42 @@
 
         <div class="relative z-10 -mt-5 space-y-3.5 px-3.5">
             <section class="rounded-[11px] bg-white p-4">
-                <h2 class="text-[15px] font-bold text-gray-900">{{ __('member.shop_hub.overview') }}</h2>
-                <div class="mt-3 grid grid-cols-2 gap-2">
-                    @foreach ([
-                        ['label' => __('member.shop_hub.order_count'), 'value' => number_format($stats['total_orders'])],
-                        ['label' => __('member.shop_hub.total_revenue'), 'value' => '$'.number_format($stats['total_sales'], 2)],
-                        ['label' => __('member.shop_hub.available_balance'), 'value' => '$'.number_format($stats['available_balance'], 2)],
-                        ['label' => __('member.shop_hub.reputation_score'), 'value' => number_format($stats['credit_score'])],
-                    ] as $item)
-                        <div class="rounded-lg bg-gray-50 px-3 py-3 text-center">
-                            <p class="text-[11px] leading-tight text-gray-500">{{ $item['label'] }}</p>
-                            <p class="mt-1 text-base font-bold text-gray-900">{{ $item['value'] }}</p>
-                        </div>
-                    @endforeach
+                <div class="flex items-start justify-between gap-3">
+                    <h2 class="text-[15px] font-bold text-gray-900">{{ __('member.shop_hub.overview') }}</h2>
+                    <button
+                        type="button"
+                        onclick="location.reload()"
+                        class="shrink-0 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] text-gray-500"
+                    >
+                        {{ __('member.shop_hub.refresh_page') }}
+                    </button>
                 </div>
-                <div class="mt-2 rounded-lg bg-emerald-50 px-3 py-3 text-center">
-                    <p class="text-[11px] text-emerald-700">{{ __('member.shop_hub.visitors_today') }}</p>
-                    <p class="mt-1 text-lg font-bold text-emerald-800">{{ number_format($stats['visitors_today']) }}</p>
+
+                <div class="mt-4 grid grid-cols-[1fr_auto] items-start gap-x-4 gap-y-4">
+                    <div>
+                        <p class="text-[13px] text-gray-600">{{ __('member.shop_hub.order_count') }}</p>
+                        <p class="mt-1 text-[28px] font-bold leading-none text-gray-900">{{ number_format($stats['total_orders']) }}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[13px] text-gray-600">{{ __('member.shop_hub.available_balance') }}</p>
+                        <p class="mt-1 text-[22px] font-bold leading-none text-emerald-600">${{ number_format($stats['available_balance'], 2) }}</p>
+                    </div>
+
+                    <div class="col-span-2">
+                        <p class="text-[13px] text-gray-600">{{ __('member.shop_hub.total_revenue') }}</p>
+                        <p class="mt-1 text-[22px] font-bold leading-none text-gray-900">${{ number_format($stats['total_sales'], 2) }}</p>
+                    </div>
+
+                    <div class="col-span-2">
+                        <p class="text-[13px] text-gray-600">{{ __('member.shop_hub.reputation_score') }}</p>
+                        <p class="mt-1 text-[28px] font-bold leading-none text-gray-900">{{ number_format($stats['credit_score']) }}</p>
+                    </div>
                 </div>
+
+                <p class="mt-4 border-t border-gray-100 pt-3 text-[13px] text-gray-600">
+                    {{ __('member.shop_hub.visitors_today') }}:
+                    <span class="font-bold text-gray-900">{{ number_format($stats['visitors_today']) }}</span>
+                </p>
             </section>
 
             <div class="rounded-[11px] bg-white">

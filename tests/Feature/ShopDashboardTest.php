@@ -75,6 +75,7 @@ class ShopDashboardTest extends TestCase
             ->get(route('member.shop-hub.index'))
             ->assertOk()
             ->assertSee(__('member.shop_hub.overview'))
+            ->assertSee(__('member.shop_hub.refresh_page'))
             ->assertSee(__('member.shop_hub.order_rate_month'))
             ->assertSee('$999.99')
             ->assertSee('42');

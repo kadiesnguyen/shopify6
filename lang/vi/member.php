@@ -9,6 +9,8 @@ return [
         'customers' => 'Khách hàng',
         'support' => 'CSKH',
         'orders' => 'Đơn hàng',
+        'shop' => 'Cửa hàng',
+        'place_order' => 'Đặt hàng',
         'my' => 'Của tôi',
     ],
 
@@ -462,6 +464,7 @@ return [
     'shop_hub' => [
         'title' => 'Quản lý cửa hàng',
         'overview' => 'Tổng quan dữ liệu',
+        'refresh_page' => 'làm mới trang',
         'order_count' => 'Số đơn đặt hàng',
         'total_revenue' => 'Tổng doanh thu',
         'available_balance' => 'Số dư khả dụng',

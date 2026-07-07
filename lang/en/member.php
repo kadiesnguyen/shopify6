@@ -9,6 +9,8 @@ return [
         'customers' => 'Customers',
         'support' => 'Support',
         'orders' => 'Orders',
+        'shop' => 'Shop',
+        'place_order' => 'Orders',
         'my' => 'My',
     ],
 
@@ -555,6 +557,7 @@ return [
     'shop_hub' => [
         'title' => 'Shop management',
         'overview' => 'Data overview',
+        'refresh_page' => 'Refresh page',
         'order_count' => 'Orders',
         'total_revenue' => 'Total revenue',
         'available_balance' => 'Available balance',
