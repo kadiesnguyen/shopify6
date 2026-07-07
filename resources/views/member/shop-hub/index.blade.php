@@ -18,8 +18,8 @@
 
     <div class="bg-[#f4f4f4] pb-4">
         <div
-            class="relative h-[140px] bg-emerald-700 bg-cover bg-center px-4 pt-8"
-            style="background-image: linear-gradient(135deg, #059669 0%, #047857 100%);"
+            class="relative h-[140px] bg-[#333] bg-cover bg-center px-4 pt-8"
+            style="background-image: url('{{ asset('images/portal/shop-hub-header-bg.png') }}');"
         >
             <div class="flex items-center gap-3 pt-6">
                 <img
@@ -35,32 +35,6 @@
         </div>
 
         <div class="relative z-10 -mt-5 space-y-3.5 px-3.5">
-            <section class="rounded-[11px] bg-white px-3 py-4">
-                <div class="grid grid-cols-3 gap-2 text-center">
-                    @foreach ([
-                        ['label' => __('member.shop_hub.completed_orders'), 'value' => number_format($stats['completed_orders']), 'href' => route('member.seller.orders.index', ['status' => 'completed'])],
-                        ['label' => __('member.shop_hub.failed_orders'), 'value' => number_format($stats['failed_orders']), 'href' => route('member.seller.orders.index', ['status' => 'cancelled'])],
-                        ['label' => __('member.shop_hub.order_reviews'), 'value' => number_format($stats['order_reviews']), 'href' => route('member.shop-hub.reviews')],
-                    ] as $item)
-                        <a href="{{ $item['href'] }}" class="rounded-lg bg-gray-50 px-2 py-3 no-underline active:opacity-80">
-                            <p class="text-lg font-bold text-gray-900">{{ $item['value'] }}</p>
-                            <p class="mt-1 text-[11px] leading-tight text-gray-500">{{ $item['label'] }}</p>
-                        </a>
-                    @endforeach
-                </div>
-                <div class="mt-3 grid grid-cols-2 gap-2">
-                    @foreach ([
-                        ['href' => route('member.chat.index'), 'label' => __('member.shop_hub.support'), 'icon' => 'headset'],
-                        ['href' => route('member.shop-hub.sub-accounts.index'), 'label' => __('member.shop_hub.sub_accounts'), 'icon' => 'user'],
-                    ] as $shortcut)
-                        <a href="{{ $shortcut['href'] }}" class="flex flex-col items-center gap-1 no-underline active:opacity-80">
-                            <x-member.icon :name="$shortcut['icon']" class="size-6 text-gray-800" />
-                            <span class="w-full truncate text-center text-[11px] text-gray-600">{{ $shortcut['label'] }}</span>
-                        </a>
-                    @endforeach
-                </div>
-            </section>
-
             <section class="rounded-[11px] bg-white p-4">
                 <h2 class="text-[15px] font-bold text-gray-900">{{ __('member.shop_hub.overview') }}</h2>
                 <div class="mt-3 grid grid-cols-2 gap-2">

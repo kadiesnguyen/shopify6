@@ -187,7 +187,7 @@ return [
             'auto_calculated' => 'auto',
             'display_pending_orders' => 'Pending payment (orders)',
             'display_delivering_orders' => 'In delivery (orders)',
-            'display_received_orders' => 'Received (orders)',
+            'display_received_orders' => 'Receiving (orders)',
             'display_completed_orders' => 'Completed (orders)',
             'display_total_income' => 'Total income / sales (USD)',
             'display_balance' => 'Available balance (USD)',

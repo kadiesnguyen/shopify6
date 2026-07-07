@@ -123,7 +123,7 @@ class Shop extends Model
         $column = match ($status) {
             'pending_payment' => 'display_pending_orders',
             'awaiting_pickup' => 'display_delivering_orders',
-            'received' => 'display_received_orders',
+            'shipped' => 'display_received_orders',
             'completed' => 'display_completed_orders',
             default => null,
         };
@@ -148,7 +148,6 @@ class Shop extends Model
             Order::STATUS_PENDING_PAYMENT => 'pending_payment',
             Order::STATUS_AWAITING_PICKUP => 'awaiting_pickup',
             Order::STATUS_SHIPPED => 'shipped',
-            Order::STATUS_RECEIVED => 'received',
             Order::STATUS_COMPLETED => 'completed',
         ];
 

@@ -12,7 +12,6 @@
             ['key' => 'awaiting_pickup', 'label' => __('member.my.merchant_shipping'), 'icon' => 'package'],
             ['key' => 'shipped', 'label' => __('member.my.merchant_in_transit'), 'icon' => 'truck'],
             ['key' => 'completed', 'label' => __('member.my.merchant_completed'), 'icon' => 'chat-bubble'],
-            ['key' => 'received', 'label' => __('member.my.merchant_after_sales'), 'icon' => 'package-check'],
         ]
         : [
             ['key' => 'pending_payment', 'label' => __('member.my.to_pay'), 'icon' => 'wallet'],

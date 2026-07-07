@@ -5,6 +5,7 @@
     'query' => [],
     'showPendingPayment' => true,
     'tabLabels' => [],
+    'hiddenTabs' => [],
 ])
 
 @php
@@ -21,6 +22,10 @@
 
     if (! $showPendingPayment) {
         $tabs = $tabs->except('pending_payment');
+    }
+
+    if ($hiddenTabs !== []) {
+        $tabs = $tabs->except($hiddenTabs);
     }
 @endphp
 

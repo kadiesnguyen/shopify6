@@ -14,7 +14,6 @@ final class ShopOrderStatusBadges
         Order::STATUS_PENDING_PAYMENT,
         Order::STATUS_AWAITING_PICKUP,
         Order::STATUS_SHIPPED,
-        Order::STATUS_RECEIVED,
         Order::STATUS_COMPLETED,
     ];
 

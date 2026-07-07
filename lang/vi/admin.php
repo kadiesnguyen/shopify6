@@ -196,7 +196,7 @@ return [
             'auto_calculated' => 'tự tính',
             'display_pending_orders' => 'Chờ thanh toán (số đơn)',
             'display_delivering_orders' => 'Đang giao (số đơn)',
-            'display_received_orders' => 'Đã nhận (số đơn)',
+            'display_received_orders' => 'Nhận hàng (số đơn)',
             'display_completed_orders' => 'Hoàn thành (số đơn)',
             'display_total_income' => 'Tổng thu nhập / doanh số (USD)',
             'display_balance' => 'Số dư khả dụng (USD)',

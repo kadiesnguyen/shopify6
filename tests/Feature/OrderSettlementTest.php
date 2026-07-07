@@ -197,6 +197,14 @@ class OrderSettlementTest extends TestCase
         $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
 
         $this->actingAs($this->seller)
+            ->get(route('member.seller.orders.index', ['status' => Order::STATUS_AWAITING_PICKUP]))
+            ->assertOk()
+            ->assertSee(__('member.orders.seller_status_awaiting'), false)
+            ->assertSee(__('member.products.price_to'), false)
+            ->assertSee(__('member.products.selling_price'), false)
+            ->assertSee(__('member.orders.confirm_platform_shipping'), false);
+
+        $this->actingAs($this->seller)
             ->post(route('member.seller.orders.confirm-shipping', $order))
             ->assertRedirect()
             ->assertSessionHas('status');

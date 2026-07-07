@@ -1,11 +1,11 @@
 @extends('layouts.member')
 
-@section('title', __('member.my.order_management'))
+@section('title', __('member.my.seller_orders_title'))
 @section('full_bleed', '1')
 
 @section('content')
     <div class="px-4 pt-3 pb-2">
-        <h1 class="text-lg font-bold text-gray-900">{{ __('member.my.order_management') }}</h1>
+        <h1 class="text-lg font-bold text-gray-900">{{ __('member.my.seller_orders_title') }}</h1>
     </div>
 
     <x-member.order-type-tabs active="seller" />
@@ -17,9 +17,10 @@
         :show-pending-payment="false"
         :tab-labels="[
             'awaiting_pickup' => __('member.my.merchant_shipping'),
-            'shipped' => __('member.my.merchant_in_transit'),
+            'shipped' => __('member.orders.seller_status_shipped'),
             'completed' => __('member.my.merchant_completed'),
         ]"
+        :hidden-tabs="['received']"
     />
 
     @if ($errors->has('order'))

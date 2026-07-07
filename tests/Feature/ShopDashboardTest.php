@@ -139,17 +139,20 @@ class ShopDashboardTest extends TestCase
             'slug' => 'minh-store',
             'status' => 'active',
             'display_delivering_orders' => 5,
+            'display_received_orders' => 88,
             'display_completed_orders' => 120,
         ]);
 
         $counts = $shop->orderStatusDisplayCounts($this->member->id);
         $this->assertSame(5, $counts['awaiting_pickup']);
+        $this->assertSame(88, $counts['shipped']);
         $this->assertSame(120, $counts['completed']);
 
         $this->actingAs($this->member->fresh())
             ->get(route('member.shop-hub.index'))
             ->assertOk()
             ->assertSee('Minh Store')
+            ->assertDontSee(__('member.my.merchant_after_sales'), false)
             ->assertSee('99+', false);
     }
 
@@ -270,9 +273,8 @@ class ShopDashboardTest extends TestCase
         $this->actingAs($this->member->fresh())
             ->get(route('member.shop-hub.index'))
             ->assertOk()
-            ->assertSee(__('member.shop_hub.completed_orders'))
-            ->assertSee(__('member.shop_hub.failed_orders'))
-            ->assertSee(__('member.shop_hub.order_reviews'))
+            ->assertSee(__('member.shop_hub.overview'))
+            ->assertSee(__('member.shop_hub.order_management'))
             ->assertSee('1', false);
 
         $this->actingAs($this->member)
