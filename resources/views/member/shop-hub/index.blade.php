@@ -22,11 +22,11 @@
         >
             <a
                 href="{{ route('member.home') }}"
-                class="absolute left-4 top-4 z-10 flex items-center gap-1 text-white/90 no-underline active:opacity-80"
+                class="absolute left-3 top-3 z-20 flex size-[52px] flex-col items-center justify-center gap-0.5 rounded-full bg-white/90 text-gray-800 shadow-md no-underline active:opacity-80"
                 aria-label="{{ __('member.shop_application.back_home') }}"
             >
-                <x-member.icon name="chevron-left" class="size-5" />
-                <span class="text-sm font-medium">{{ __('member.shop_application.back_home') }}</span>
+                <x-member.icon name="home" class="size-5 shrink-0" />
+                <span class="max-w-[44px] truncate text-center text-[10px] font-medium leading-tight">{{ __('member.nav.home') }}</span>
             </a>
 
             <div class="flex items-center gap-3 pt-6">
