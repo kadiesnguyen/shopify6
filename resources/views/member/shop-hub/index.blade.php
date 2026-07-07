@@ -16,19 +16,67 @@
     @endphp
 
     <div class="bg-[#f4f4f4] pb-4">
+        <a
+            href="{{ route('member.home') }}"
+            x-data="{
+                top: 72,
+                dragging: false,
+                moved: false,
+                startY: 0,
+                startTop: 0,
+                init() {
+                    const saved = localStorage.getItem('shopHubHomeBtnTop');
+                    if (saved) this.top = parseInt(saved, 10);
+                },
+                onPointerDown(event) {
+                    if (event.button !== 0) return;
+                    this.dragging = true;
+                    this.moved = false;
+                    this.startY = event.clientY;
+                    this.startTop = this.top;
+                    this.$el.setPointerCapture(event.pointerId);
+                },
+                onPointerMove(event) {
+                    if (! this.dragging) return;
+                    const delta = event.clientY - this.startY;
+                    if (Math.abs(delta) > 4) this.moved = true;
+                    const min = 12;
+                    const max = window.innerHeight - this.$el.offsetHeight - 58;
+                    this.top = Math.min(max, Math.max(min, this.startTop + delta));
+                },
+                onPointerUp(event) {
+                    if (! this.dragging) return;
+                    this.dragging = false;
+                    this.$el.releasePointerCapture(event.pointerId);
+                    if (this.moved) {
+                        localStorage.setItem('shopHubHomeBtnTop', String(this.top));
+                    }
+                },
+                onClick(event) {
+                    if (this.moved) {
+                        event.preventDefault();
+                        this.moved = false;
+                    }
+                },
+            }"
+            :style="'top:' + top + 'px'"
+            @pointerdown="onPointerDown($event)"
+            @pointermove="onPointerMove($event)"
+            @pointerup="onPointerUp($event)"
+            @pointercancel="onPointerUp($event)"
+            @click="onClick($event)"
+            class="fixed right-3 z-50 flex size-[52px] touch-none select-none flex-col items-center justify-center gap-0.5 rounded-full bg-white/90 text-gray-800 shadow-md no-underline active:opacity-80"
+            :class="dragging ? 'cursor-grabbing' : 'cursor-grab'"
+            aria-label="{{ __('member.shop_application.back_home') }}"
+        >
+            <x-member.icon name="home" class="size-5 shrink-0 pointer-events-none" />
+            <span class="max-w-[44px] truncate text-center text-[10px] font-medium leading-tight pointer-events-none">{{ __('member.nav.home') }}</span>
+        </a>
+
         <div
             class="relative h-[140px] bg-[#333] bg-cover bg-center px-4 pt-8"
             style="background-image: url('{{ asset('images/portal/shop-hub-header-bg.png') }}');"
         >
-            <a
-                href="{{ route('member.home') }}"
-                class="absolute left-3 top-3 z-20 flex size-[52px] flex-col items-center justify-center gap-0.5 rounded-full bg-white/90 text-gray-800 shadow-md no-underline active:opacity-80"
-                aria-label="{{ __('member.shop_application.back_home') }}"
-            >
-                <x-member.icon name="home" class="size-5 shrink-0" />
-                <span class="max-w-[44px] truncate text-center text-[10px] font-medium leading-tight">{{ __('member.nav.home') }}</span>
-            </a>
-
             <div class="flex items-center gap-3 pt-6">
                 <img
                     src="{{ $logoUrl ?: 'https://api.dicebear.com/7.x/avataaars/svg?seed='.urlencode((string) $user->id) }}"

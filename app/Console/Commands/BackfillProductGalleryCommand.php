@@ -12,20 +12,22 @@ class BackfillProductGalleryCommand extends Command
     protected $signature = 'products:backfill-gallery
                 {--limit= : Max products to update}
                 {--sleep=100 : Milliseconds between remote fetches}
-                {--skip-images : Update descriptions only, do not download images}';
+                {--skip-images : Update descriptions only, do not download images}
+                {--local-only : Skip demo API; use on-disk product images only}';
 
-    protected $description = 'Backfill product gallery/description images from demo API (shopify.lljcj.com source)';
+    protected $description = 'Backfill product gallery/description images (demo API + local fallback)';
 
     public function handle(DemoProductImporter $importer, ProductDetailService $details): int
     {
         $limit = $this->option('limit') !== null ? max(1, (int) $this->option('limit')) : null;
         $sleepMs = max(0, (int) $this->option('sleep'));
         $skipImages = (bool) $this->option('skip-images');
+        $localOnly = (bool) $this->option('local-only');
         $updated = 0;
         $skipped = 0;
 
-        if (! \Illuminate\Support\Facades\Cache::has('demo:goods-name-index')) {
-            $this->warn('No demo name index yet — sm-* products need demo:import-products first for name matching.');
+        if (! $localOnly && ! \Illuminate\Support\Facades\Cache::has('demo:goods-name-index')) {
+            $this->warn('No demo name index yet — sm-* products will use local image fallback.');
         }
 
         $products = Product::query()
@@ -46,32 +48,41 @@ class BackfillProductGalleryCommand extends Command
             ->values();
 
         foreach ($products as $product) {
-            $goodsId = null;
+            $synced = false;
 
-            if (preg_match('/^demo-(\d+)$/', (string) $product->slug, $match)) {
-                $goodsId = (int) $match[1];
-            } else {
-                $goodsId = $details->findDemoGoodsIdByName($product->name);
+            if (! $localOnly) {
+                $goodsId = null;
+
+                if (preg_match('/^demo-(\d+)$/', (string) $product->slug, $match)) {
+                    $goodsId = (int) $match[1];
+                } else {
+                    $goodsId = $details->findDemoGoodsIdByName($product->name);
+                }
+
+                if ($goodsId !== null && $importer->syncGalleryForProduct($product->fresh(), $goodsId, $skipImages)) {
+                    $updated++;
+                    $this->line("Updated #{$product->id} {$product->slug} from demo:{$goodsId}");
+                    $synced = true;
+                }
+
+                if ($synced && $sleepMs > 0) {
+                    usleep($sleepMs * 1000);
+                }
             }
 
-            if ($goodsId === null) {
-                $skipped++;
-                $this->line("Skip #{$product->id} {$product->slug} — no demo match");
+            if ($synced) {
+                continue;
+            }
+
+            if ($importer->syncLocalGalleryForProduct($product->fresh(['images', 'category']))) {
+                $updated++;
+                $this->line("Updated #{$product->id} {$product->slug} from local images");
 
                 continue;
             }
 
-            if ($importer->syncGalleryForProduct($product->fresh(), $goodsId, $skipImages)) {
-                $updated++;
-                $this->line("Updated #{$product->id} {$product->slug} from demo:{$goodsId}");
-            } else {
-                $skipped++;
-                $this->line("Skip #{$product->id} {$product->slug} — insufficient gallery");
-            }
-
-            if ($sleepMs > 0) {
-                usleep($sleepMs * 1000);
-            }
+            $skipped++;
+            $this->line("Skip #{$product->id} {$product->slug} — no usable images");
         }
 
         $this->info("Done. updated={$updated} skipped={$skipped}");

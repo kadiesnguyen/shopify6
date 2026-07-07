@@ -2,9 +2,9 @@
 
 namespace App\Services\Member;
 
-use App\Models\Order;
 use App\Models\ProductReview;
 use App\Models\User;
+use App\Support\Member\ShopOrderStatusBadges;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -145,12 +145,8 @@ class ShopHubService
     public function statusCounts(User $user): Collection
     {
         return $user->shop
-            ? $user->shop->orderStatusDisplayCounts($user->id)
-            : Order::query()
-                ->where('seller_id', $user->id)
-                ->selectRaw('status, count(*) as total')
-                ->groupBy('status')
-                ->pluck('total', 'status');
+            ? ShopOrderStatusBadges::unseenCounts($user->shop, $user->id)
+            : ShopOrderStatusBadges::sellerStatusCounts($user->id);
     }
 
     /** @return list<array<string, string>> */

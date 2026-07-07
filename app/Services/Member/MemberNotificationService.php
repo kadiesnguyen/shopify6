@@ -4,6 +4,7 @@ namespace App\Services\Member;
 
 use App\Models\Notification;
 use App\Models\Order;
+use App\Support\Member\BellNotificationCache;
 
 class MemberNotificationService
 {
@@ -38,6 +39,8 @@ class MemberNotificationService
                 'url' => route('member.seller.orders.index', ['status' => Order::STATUS_PENDING_PAYMENT]),
             ],
         ]);
+
+        BellNotificationCache::forget($order->seller_id);
     }
 
     public function notifyOrderCompleted(Order $order): void
@@ -69,6 +72,8 @@ class MemberNotificationService
                 'url' => route('member.wallet.withdrawal'),
             ],
         ]);
+
+        BellNotificationCache::forget($order->seller_id);
     }
 
     private function referenceExists(int $userId, string $reference): bool

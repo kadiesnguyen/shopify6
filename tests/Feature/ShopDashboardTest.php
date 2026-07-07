@@ -133,7 +133,7 @@ class ShopDashboardTest extends TestCase
         $this->assertArrayHasKey('monthly_chart_labels', $stats);
     }
 
-    public function test_shop_hub_uses_admin_order_status_display_overrides(): void
+    public function test_shop_hub_order_badges_use_unseen_counts_not_display_overrides(): void
     {
         Role::findOrCreate('shop');
         $this->member->assignRole('shop');
@@ -143,22 +143,39 @@ class ShopDashboardTest extends TestCase
             'name' => 'Minh Store',
             'slug' => 'minh-store',
             'status' => 'active',
+            'display_pending_orders' => 99,
             'display_delivering_orders' => 5,
             'display_received_orders' => 88,
             'display_completed_orders' => 120,
         ]);
 
         $counts = $shop->orderStatusDisplayCounts($this->member->id);
+        $this->assertSame(99, $counts['pending_payment']);
         $this->assertSame(5, $counts['awaiting_pickup']);
         $this->assertSame(88, $counts['shipped']);
         $this->assertSame(120, $counts['completed']);
+
+        $buyer = User::factory()->create(['status' => 'active']);
+
+        Order::query()->create([
+            'user_id' => $buyer->id,
+            'shop_id' => $shop->id,
+            'seller_id' => $this->member->id,
+            'order_no' => 'ORD-UNSEEN-001',
+            'total' => 100,
+            'commission' => 10,
+            'purchase_cost' => 60,
+            'status' => Order::STATUS_PENDING_PAYMENT,
+            'payment_method' => 'wallet',
+        ]);
 
         $this->actingAs($this->member->fresh())
             ->get(route('member.shop-hub.index'))
             ->assertOk()
             ->assertSee('Minh Store')
             ->assertDontSee(__('member.my.merchant_after_sales'), false)
-            ->assertSee('99+', false);
+            ->assertSee('1', false)
+            ->assertDontSee('>99<', false);
     }
 
     public function test_member_without_shop_does_not_see_shop_data_on_my_page(): void

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
 use App\Models\ProductReview;
 use App\Services\Member\ShopDashboardService;
+use App\Support\Member\ShopOrderStatusBadges;
 use Illuminate\View\View;
 
 class ShopHubController extends Controller
@@ -59,12 +59,8 @@ class ShopHubController extends Controller
 
         $stats = $this->shopDashboard->statsFor($user);
         $statusCounts = $user->shop
-            ? $user->shop->orderStatusDisplayCounts($user->id)
-            : Order::query()
-                ->where('seller_id', $user->id)
-                ->selectRaw('status, count(*) as total')
-                ->groupBy('status')
-                ->pluck('total', 'status');
+            ? ShopOrderStatusBadges::unseenCounts($user->shop, $user->id)
+            : ShopOrderStatusBadges::sellerStatusCounts($user->id);
 
         return view($view, compact('user', 'stats', 'statusCounts'));
     }

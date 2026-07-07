@@ -400,6 +400,116 @@ class DemoProductImporter
         return true;
     }
 
+    public function syncLocalGalleryForProduct(Product $product): bool
+    {
+        $product->loadMissing(['images', 'category']);
+        $minimum = $this->minimumGalleryCount((float) $product->selling_price);
+        $storagePaths = $this->localStoragePaths($product);
+
+        if ($storagePaths === []) {
+            return false;
+        }
+
+        $imagePaths = [];
+
+        foreach ($storagePaths as $index => $path) {
+            $imagePaths[] = ['path' => $path, 'sort' => $index];
+        }
+
+        $imagePaths = $this->padGalleryPaths($imagePaths, $minimum);
+
+        $plain = trim(strip_tags((string) $product->description));
+        $needsText = $plain === ''
+            || $plain === trim($product->name)
+            || strlen($plain) < 100;
+
+        $description = $needsText
+            ? $this->englishDescriptionHtml($product)
+            : $this->stripDescriptionGallery((string) $product->description);
+
+        $description = $this->appendGalleryToDescription(
+            $description,
+            array_column($imagePaths, 'path'),
+            $minimum,
+        );
+
+        $product->update([
+            'description' => $description,
+            'image' => $imagePaths[0]['path'],
+        ]);
+        $this->syncImages($product, $imagePaths);
+
+        return true;
+    }
+
+    public function englishDescriptionHtml(Product $product): string
+    {
+        $product->loadMissing('category');
+        $name = e($product->name);
+        $category = e($product->category?->name ?? 'everyday living');
+        $seed = crc32($name.(string) $product->id);
+
+        $intros = [
+            "{$name} is built for shoppers who want reliable quality without compromise.",
+            "Meet {$name} — a practical pick from our {$category} collection.",
+            "{$name} combines modern styling with everyday usability for your home or office.",
+            "Designed with care, {$name} delivers the kind of value customers expect from a trusted catalog item.",
+        ];
+
+        $bullets = [
+            'Selected materials chosen for comfort and day-to-day durability.',
+            'Clean design that fits a wide range of interior styles.',
+            'Straightforward setup with clear product details and support.',
+            'Balanced sizing and finish suitable for regular household use.',
+            'Inspected before listing to keep quality consistent across orders.',
+            'Packaged securely to reduce transit wear and damage.',
+            'Backed by our standard seller support and after-sales assistance.',
+            'A popular option for buyers comparing value in this category.',
+        ];
+
+        $intro = $intros[$seed % count($intros)];
+        $picked = [];
+
+        for ($i = 0; count($picked) < 4; $i++) {
+            $line = $bullets[($seed + ($i * 3)) % count($bullets)];
+
+            if (! in_array($line, $picked, true)) {
+                $picked[] = $line;
+            }
+        }
+
+        $list = implode('', array_map(fn (string $line): string => '<li>'.e($line).'</li>', $picked));
+
+        return '<p>'.$intro.'</p><ul>'.$list.'</ul><p>Order with confidence — photos and specifications are shown on this page.</p>';
+    }
+
+    /** @return list<string> */
+    private function localStoragePaths(Product $product): array
+    {
+        $paths = [];
+
+        if (filled($product->image)) {
+            $paths[] = (string) $product->image;
+        }
+
+        foreach ($product->images()->orderBy('sort_order')->get() as $image) {
+            $path = (string) $image->image;
+
+            if ($path !== '' && ! in_array($path, $paths, true)) {
+                $paths[] = $path;
+            }
+        }
+
+        return $paths;
+    }
+
+    private function stripDescriptionGallery(string $html): string
+    {
+        $stripped = preg_replace('/<div class="product-desc-gallery">.*?<\/div>/is', '', $html);
+
+        return trim($stripped ?? $html);
+    }
+
     /**
      * @param  array<string, mixed>  $params
      * @return array<string, mixed>
@@ -670,6 +780,7 @@ class DemoProductImporter
             return $html;
         }
 
+        $html = $this->stripDescriptionGallery($html);
         $blocks = [];
 
         foreach ($storagePaths as $path) {

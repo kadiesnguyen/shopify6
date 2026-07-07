@@ -5,6 +5,7 @@
 
     $tabs = $isShop
         ? [
+            ['route' => 'member.home', 'label' => __('member.nav.home'), 'icon' => 'home', 'patterns' => ['member.home']],
             ['route' => 'member.shop-hub.index', 'label' => __('member.nav.shop'), 'icon' => 'store', 'patterns' => ['member.shop-hub.*']],
             ['route' => 'member.seller.orders.index', 'label' => __('member.nav.place_order'), 'icon' => 'layout-grid', 'patterns' => ['member.seller.orders.*', 'member.seller.refunds.*']],
             ['route' => 'member.products.manage.index', 'label' => __('member.products.goods'), 'icon' => 'package', 'patterns' => ['member.products.manage.*', 'member.products.distributions.*', 'member.categories.*']],

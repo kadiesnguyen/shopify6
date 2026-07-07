@@ -13,6 +13,8 @@ use App\Models\Wallet;
 use App\Services\Member\OrderSettlementService;
 use App\Services\Member\OrderService;
 use App\Services\Member\ProductDistributionService;
+use App\Support\Member\BellNotificationCache;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -100,6 +102,15 @@ class OrderSettlementTest extends TestCase
             'user_id' => $this->seller->id,
             'type' => 'order_pending_payment',
         ]);
+    }
+
+    public function test_place_order_refreshes_seller_bell_notification_count(): void
+    {
+        Cache::put('member.bell_unread.'.$this->seller->id, 0, 60);
+
+        app(OrderService::class)->placeOrder($this->buyer, $this->product);
+
+        $this->assertSame(1, BellNotificationCache::unreadCount($this->seller->id));
     }
 
     public function test_seller_receives_purchase_return_and_commission_when_order_is_completed(): void
