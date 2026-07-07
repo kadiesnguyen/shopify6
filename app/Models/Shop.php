@@ -146,7 +146,7 @@ class Shop extends Model
 
         $keys = [
             Order::STATUS_PENDING_PAYMENT => 'pending_payment',
-            Order::STATUS_AWAITING_PICKUP => 'awaiting_pickup',
+            Order::STATUS_WAITING_SHIPMENT => 'awaiting_pickup',
             Order::STATUS_SHIPPED => 'shipped',
             Order::STATUS_COMPLETED => 'completed',
         ];
@@ -157,7 +157,7 @@ class Shop extends Model
             $calculated = (int) ($actual[$orderStatus] ?? 0);
 
             if ($key === 'awaiting_pickup') {
-                $calculated += (int) ($actual[Order::STATUS_PENDING_PAYMENT] ?? 0);
+                $calculated += (int) ($actual[Order::STATUS_AWAITING_PICKUP] ?? 0);
             }
 
             $counts[$key] = $this->resolveDisplayCount($key, $calculated);

@@ -14,13 +14,13 @@
         :status="$status"
         :status-counts="$statusCounts"
         route-name="member.seller.orders.index"
-        :show-pending-payment="false"
         :tab-labels="[
+            'pending_payment' => __('member.my.merchant_pending_payment'),
             'awaiting_pickup' => __('member.my.merchant_shipping'),
             'shipped' => __('member.orders.seller_status_shipped'),
             'completed' => __('member.my.merchant_completed'),
         ]"
-        :hidden-tabs="['received']"
+        :hidden-tabs="['received', 'waiting_shipment']"
     />
 
     @if ($errors->has('order'))

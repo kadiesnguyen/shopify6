@@ -43,6 +43,10 @@ class OrderSettlementService
         return DB::transaction(function () use ($order, $previousStatus, $newStatus): Order {
             $order = Order::query()->whereKey($order->id)->lockForUpdate()->with(['items', 'productDistribution'])->firstOrFail();
 
+            if ($newStatus === Order::STATUS_SHIPPED && $order->shipped_at === null) {
+                $order->shipped_at = now();
+            }
+
             if ($newStatus === Order::STATUS_COMPLETED) {
                 $this->creditSellerPurchaseReturn($order);
                 $this->creditSellerCommission($order);
@@ -70,6 +74,12 @@ class OrderSettlementService
     }
 
     /** @var list<string> */
+    public const SELLER_AWAITING_SHIPMENT_STATUSES = [
+        Order::STATUS_AWAITING_PICKUP,
+        Order::STATUS_WAITING_SHIPMENT,
+    ];
+
+    /** @var list<string> */
     public const SELLER_SHIP_CONFIRM_STATUSES = [
         Order::STATUS_PENDING_PAYMENT,
         Order::STATUS_AWAITING_PICKUP,
@@ -90,8 +100,7 @@ class OrderSettlementService
 
             $this->deductSellerProductCost($order);
 
-            $order->status = Order::STATUS_SHIPPED;
-            $order->shipped_at = now();
+            $order->status = Order::STATUS_WAITING_SHIPMENT;
             $order->save();
 
             return $order->fresh(['items', 'buyer.wallet', 'seller.wallet']);

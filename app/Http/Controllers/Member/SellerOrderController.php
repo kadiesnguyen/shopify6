@@ -29,8 +29,8 @@ class SellerOrderController extends Controller
             ->with(['items', 'shop', 'buyer'])
             ->where('seller_id', auth()->id())
             ->when(
-                $status === Order::STATUS_AWAITING_PICKUP,
-                fn ($query) => $query->whereIn('status', OrderSettlementService::SELLER_SHIP_CONFIRM_STATUSES),
+                in_array($status, [Order::STATUS_AWAITING_PICKUP, Order::STATUS_WAITING_SHIPMENT], true),
+                fn ($query) => $query->whereIn('status', OrderSettlementService::SELLER_AWAITING_SHIPMENT_STATUSES),
                 fn ($query) => $query->when($status !== '', fn ($inner) => $inner->where('status', $status)),
             )
             ->when($keyword !== '', fn ($query) => $query->whereHas(

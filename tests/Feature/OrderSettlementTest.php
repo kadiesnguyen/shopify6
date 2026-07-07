@@ -149,8 +149,8 @@ class OrderSettlementTest extends TestCase
         app(OrderSettlementService::class)->confirmPlatformShipping($order->fresh());
 
         $order->refresh();
-        $this->assertSame(Order::STATUS_SHIPPED, $order->status);
-        $this->assertNotNull($order->shipped_at);
+        $this->assertSame(Order::STATUS_WAITING_SHIPMENT, $order->status);
+        $this->assertNull($order->shipped_at);
         $this->assertSame($balanceBeforeConfirm - 60.0, (float) $this->seller->wallet->fresh()->balance);
         $this->assertDatabaseHas('transactions', [
             'user_id' => $this->seller->id,
@@ -181,7 +181,7 @@ class OrderSettlementTest extends TestCase
 
         app(OrderSettlementService::class)->applyStatusChange(
             $order->fresh(),
-            Order::STATUS_SHIPPED,
+            Order::STATUS_WAITING_SHIPMENT,
             Order::STATUS_CANCELLED,
         );
 
@@ -197,9 +197,9 @@ class OrderSettlementTest extends TestCase
         $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
 
         $this->actingAs($this->seller)
-            ->get(route('member.seller.orders.index', ['status' => Order::STATUS_AWAITING_PICKUP]))
+            ->get(route('member.seller.orders.index', ['status' => Order::STATUS_PENDING_PAYMENT]))
             ->assertOk()
-            ->assertSee(__('member.orders.seller_status_awaiting'), false)
+            ->assertSee(__('member.orders.seller_status_pending'), false)
             ->assertSee(__('member.products.price_to'), false)
             ->assertSee(__('member.products.selling_price'), false)
             ->assertSee(__('member.orders.confirm_platform_shipping'), false);
@@ -209,11 +209,12 @@ class OrderSettlementTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('status');
 
-        $this->assertSame(Order::STATUS_SHIPPED, $order->fresh()->status);
+        $this->assertSame(Order::STATUS_WAITING_SHIPMENT, $order->fresh()->status);
 
         $counts = \App\Support\Member\ShopOrderStatusBadges::sellerStatusCounts($this->seller->id);
-        $this->assertSame(0, $counts[Order::STATUS_AWAITING_PICKUP]);
-        $this->assertSame(1, $counts[Order::STATUS_SHIPPED]);
+        $this->assertSame(0, $counts['pending_payment']);
+        $this->assertSame(1, $counts['awaiting_pickup']);
+        $this->assertSame(0, $counts['shipped']);
     }
 
     public function test_shipped_orders_auto_complete_after_delivery_window(): void
@@ -222,6 +223,11 @@ class OrderSettlementTest extends TestCase
 
         $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
         app(OrderSettlementService::class)->confirmPlatformShipping($order->fresh());
+        app(OrderSettlementService::class)->applyStatusChange(
+            $order->fresh(),
+            Order::STATUS_WAITING_SHIPMENT,
+            Order::STATUS_SHIPPED,
+        );
 
         $order->update(['shipped_at' => now()->subMinutes(30)]);
         $this->artisan('orders:auto-complete-shipped')->assertSuccessful();

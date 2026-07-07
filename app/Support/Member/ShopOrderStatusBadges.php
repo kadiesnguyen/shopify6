@@ -12,7 +12,7 @@ final class ShopOrderStatusBadges
     /** @var list<string> */
     public const ICON_STATUSES = [
         Order::STATUS_PENDING_PAYMENT,
-        Order::STATUS_AWAITING_PICKUP,
+        Order::STATUS_WAITING_SHIPMENT,
         Order::STATUS_SHIPPED,
         Order::STATUS_COMPLETED,
     ];
@@ -25,10 +25,10 @@ final class ShopOrderStatusBadges
             $query = Order::query()
                 ->where('seller_id', $sellerUserId)
                 ->when(
-                    $status === Order::STATUS_AWAITING_PICKUP,
+                    $status === Order::STATUS_WAITING_SHIPMENT,
                     fn ($builder) => $builder->whereIn(
                         'status',
-                        OrderSettlementService::SELLER_SHIP_CONFIRM_STATUSES,
+                        OrderSettlementService::SELLER_AWAITING_SHIPMENT_STATUSES,
                     ),
                     fn ($builder) => $builder->where('status', $status),
                 );
@@ -39,7 +39,7 @@ final class ShopOrderStatusBadges
                 $query->where('id', '>', $lastSeenOrderId);
             }
 
-            $counts[$status] = $query->count();
+            $counts[self::iconKey($status)] = $query->count();
         }
 
         return $counts;
@@ -53,32 +53,28 @@ final class ShopOrderStatusBadges
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        $counts = $actual->except([
-            Order::STATUS_PENDING_PAYMENT,
-            Order::STATUS_AWAITING_PICKUP,
+        return collect([
+            'pending_payment' => (int) ($actual[Order::STATUS_PENDING_PAYMENT] ?? 0),
+            'awaiting_pickup' => (int) ($actual[Order::STATUS_AWAITING_PICKUP] ?? 0)
+                + (int) ($actual[Order::STATUS_WAITING_SHIPMENT] ?? 0),
+            'shipped' => (int) ($actual[Order::STATUS_SHIPPED] ?? 0),
+            'completed' => (int) ($actual[Order::STATUS_COMPLETED] ?? 0),
         ]);
-
-        $counts[Order::STATUS_AWAITING_PICKUP] =
-            (int) ($actual[Order::STATUS_PENDING_PAYMENT] ?? 0)
-            + (int) ($actual[Order::STATUS_AWAITING_PICKUP] ?? 0);
-
-        return $counts->map(fn ($count) => (int) $count);
     }
 
     public static function markSeen(Shop $shop, string $status, int $sellerUserId): void
     {
-        if (! in_array($status, self::ICON_STATUSES, true)) {
+        $iconStatus = self::resolveIconStatus($status);
+
+        if ($iconStatus === null) {
             return;
         }
 
         $seen = $shop->order_status_seen_at ?? [];
 
-        // The awaiting_pickup badge in unseenCounts combines pending_payment + awaiting_pickup
-        // (see OrderSettlementService::SELLER_SHIP_CONFIRM_STATUSES). Marking one status seen
-        // without the other leaves a stale badge after the seller opens the tab.
-        $statusesToMark = $status === Order::STATUS_AWAITING_PICKUP
-            ? [Order::STATUS_PENDING_PAYMENT, Order::STATUS_AWAITING_PICKUP]
-            : [$status];
+        $statusesToMark = $iconStatus === Order::STATUS_WAITING_SHIPMENT
+            ? OrderSettlementService::SELLER_AWAITING_SHIPMENT_STATUSES
+            : [$iconStatus];
 
         foreach ($statusesToMark as $s) {
             $lastOrderId = Order::query()
@@ -101,5 +97,31 @@ final class ShopOrderStatusBadges
         }
 
         return (int) $marker['last_order_id'];
+    }
+
+    private static function iconKey(string $status): string
+    {
+        return match ($status) {
+            Order::STATUS_PENDING_PAYMENT => 'pending_payment',
+            Order::STATUS_WAITING_SHIPMENT => 'awaiting_pickup',
+            Order::STATUS_SHIPPED => 'shipped',
+            Order::STATUS_COMPLETED => 'completed',
+            default => $status,
+        };
+    }
+
+    private static function resolveIconStatus(string $status): ?string
+    {
+        if (in_array($status, self::ICON_STATUSES, true)) {
+            return $status;
+        }
+
+        return match ($status) {
+            'pending_payment' => Order::STATUS_PENDING_PAYMENT,
+            'awaiting_pickup', Order::STATUS_AWAITING_PICKUP, Order::STATUS_WAITING_SHIPMENT, 'waiting_shipment' => Order::STATUS_WAITING_SHIPMENT,
+            'shipped' => Order::STATUS_SHIPPED,
+            'completed' => Order::STATUS_COMPLETED,
+            default => null,
+        };
     }
 }

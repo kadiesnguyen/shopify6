@@ -7,7 +7,9 @@
     $canConfirm = in_array($order->status, OrderSettlementService::SELLER_SHIP_CONFIRM_STATUSES, true);
 
     $statusLabel = match ($order->status) {
-        Order::STATUS_PENDING_PAYMENT, Order::STATUS_AWAITING_PICKUP => __('member.orders.seller_status_awaiting'),
+        Order::STATUS_PENDING_PAYMENT => __('member.orders.seller_status_pending'),
+        Order::STATUS_AWAITING_PICKUP => __('member.orders.seller_status_awaiting'),
+        Order::STATUS_WAITING_SHIPMENT => __('member.orders.seller_status_waiting_shipment'),
         Order::STATUS_SHIPPED => __('member.orders.seller_status_shipped'),
         Order::STATUS_COMPLETED => __('member.orders.seller_status_completed'),
         default => __('member.orders.'.$order->status),
