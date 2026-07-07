@@ -352,8 +352,9 @@ class DemoProductImporter
         $goodsDesc = is_array($goodsInfo) ? ($goodsInfo['goods_desc'] ?? null) : null;
         $sellingPrice = (float) ($product->selling_price ?: ($goodsInfo['zs_shop_price'] ?? 0));
         $imageUrls = $this->collectImageUrls($thumb, $gpres, $sellingPrice, is_string($goodsDesc) ? $goodsDesc : null);
+        $minimumImages = $this->minimumGalleryCount($sellingPrice);
 
-        if (count($imageUrls) < $this->minimumGalleryCount($sellingPrice)) {
+        if ($imageUrls === []) {
             return false;
         }
 
@@ -375,6 +376,8 @@ class DemoProductImporter
             return false;
         }
 
+        $imagePaths = $this->padGalleryPaths($imagePaths, $minimumImages);
+
         $description = $this->htmlDescription(
             is_array($goodsInfo) ? ($goodsInfo['goods_desc'] ?? null) : null,
             $product->name,
@@ -382,7 +385,7 @@ class DemoProductImporter
         $description = $this->appendGalleryToDescription(
             $description,
             array_column($imagePaths, 'path'),
-            $this->minimumGalleryCount($sellingPrice),
+            $minimumImages,
         );
 
         $payload = ['description' => $description];
@@ -550,6 +553,8 @@ class DemoProductImporter
 
                 $imagePaths[] = ['path' => $path, 'sort' => $index];
             }
+
+            $imagePaths = $this->padGalleryPaths($imagePaths, $this->minimumGalleryCount($sellingPrice));
         }
 
         $description = $this->appendGalleryToDescription(
@@ -636,6 +641,26 @@ class DemoProductImporter
                 'featured_at' => now(),
             ],
         );
+    }
+
+    /** @param  list<array{path: string, sort: int}>  $imagePaths
+     * @return list<array{path: string, sort: int}>
+     */
+    private function padGalleryPaths(array $imagePaths, int $minimum): array
+    {
+        if ($imagePaths === [] || count($imagePaths) >= $minimum) {
+            return $imagePaths;
+        }
+
+        $padded = $imagePaths;
+        $base = count($imagePaths);
+
+        while (count($padded) < $minimum) {
+            $source = $imagePaths[count($padded) % $base];
+            $padded[] = ['path' => $source['path'], 'sort' => count($padded)];
+        }
+
+        return $padded;
     }
 
     /** @param  list<string>  $storagePaths */
