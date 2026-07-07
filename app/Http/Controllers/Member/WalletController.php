@@ -143,8 +143,16 @@ class WalletController extends Controller
             ->with('status', __('member.wallet.recharge_success'));
     }
 
-    public function withdrawal(): View
+    public function withdrawal(): View|RedirectResponse
     {
+        $user = auth()->user();
+
+        if (! $user->hasPaymentPassword()) {
+            return redirect()->route('member.payment-password.create', [
+                'redirect' => route('member.wallet.withdrawal'),
+            ]);
+        }
+
         $methods = $this->mergeCryptoMethods(
             WithdrawalMethod::query()
             ->where('status', WithdrawalMethod::STATUS_ACTIVE)

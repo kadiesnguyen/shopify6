@@ -500,6 +500,8 @@ return [
         'currency_required' => 'Please select a currency.',
         'network_required' => 'Please select a blockchain network.',
         'crypto_address_required' => 'Please enter a wallet address.',
+        'withdraw_password' => 'Enter withdrawal password',
+        'withdraw_password_invalid' => 'Withdrawal password is incorrect.',
     ],
 
     'settings' => [

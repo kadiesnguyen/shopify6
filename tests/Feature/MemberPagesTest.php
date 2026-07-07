@@ -786,11 +786,14 @@ class MemberPagesTest extends TestCase
             ->assertSee(__('member.wallet.recharge_title'))
             ->assertSee(__('member.wallet.recharge_method'));
 
-        $this->actingAs($this->member)
+        $this->member->update(['payment_password' => '123456']);
+
+        $this->actingAs($this->member->fresh())
             ->get('/home/withdrawal')
             ->assertOk()
             ->assertSee(__('member.wallet.withdraw_title'))
-            ->assertSee(__('member.wallet.withdraw_method'));
+            ->assertSee(__('member.wallet.withdraw_method'))
+            ->assertSee(__('member.wallet.withdraw_password'));
 
         $this->actingAs($this->member)
             ->get('/home/fund-records')
@@ -846,6 +849,7 @@ class MemberPagesTest extends TestCase
     public function test_member_can_submit_bank_withdrawal_request(): void
     {
         $method = WithdrawalMethod::query()->first();
+        $this->member->update(['payment_password' => '123456']);
 
         $this->actingAs($this->member)
             ->post('/home/withdrawal', [
@@ -854,6 +858,7 @@ class MemberPagesTest extends TestCase
                 'bank_account_name' => 'Nguyen Van A',
                 'bank_name' => 'Vietcombank',
                 'bank_account_number' => '0123456789',
+                'payment_password' => '123456',
             ])
             ->assertRedirect(route('member.wallet.fund-records', ['type' => 'withdrawal']))
             ->assertSessionHas('status');
@@ -881,6 +886,7 @@ class MemberPagesTest extends TestCase
             'status' => 'active',
             'sort_order' => 2,
         ]);
+        $this->member->update(['payment_password' => '123456']);
 
         $this->actingAs($this->member)
             ->post('/home/withdrawal', [
@@ -889,6 +895,7 @@ class MemberPagesTest extends TestCase
                 'currency' => 'USDT',
                 'network' => 'USDT (TRC20)',
                 'crypto_address' => 'TXyz123456789',
+                'payment_password' => '123456',
             ])
             ->assertRedirect(route('member.wallet.fund-records', ['type' => 'withdrawal']))
             ->assertSessionHas('status');
@@ -902,6 +909,7 @@ class MemberPagesTest extends TestCase
     public function test_member_withdrawal_rejects_insufficient_balance(): void
     {
         $method = WithdrawalMethod::query()->first();
+        $this->member->update(['payment_password' => '123456']);
 
         $this->actingAs($this->member)
             ->post('/home/withdrawal', [
@@ -910,9 +918,37 @@ class MemberPagesTest extends TestCase
                 'bank_account_name' => 'Nguyen Van A',
                 'bank_name' => 'Vietcombank',
                 'bank_account_number' => '0123456789',
+                'payment_password' => '123456',
             ])
             ->assertRedirect()
             ->assertSessionHasErrors('amount');
+    }
+
+    public function test_member_withdrawal_rejects_invalid_password(): void
+    {
+        $method = WithdrawalMethod::query()->first();
+        $this->member->update(['payment_password' => '123456']);
+
+        $this->actingAs($this->member)
+            ->post('/home/withdrawal', [
+                'withdrawal_method_id' => $method->id,
+                'amount' => 100,
+                'bank_account_name' => 'Nguyen Van A',
+                'bank_name' => 'Vietcombank',
+                'bank_account_number' => '0123456789',
+                'payment_password' => '000000',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasErrors('payment_password');
+    }
+
+    public function test_member_without_withdraw_password_redirected_from_withdrawal_page(): void
+    {
+        $this->actingAs($this->member)
+            ->get('/home/withdrawal')
+            ->assertRedirect(route('member.payment-password.create', [
+                'redirect' => route('member.wallet.withdrawal'),
+            ]));
     }
 
     public function test_member_can_place_order(): void

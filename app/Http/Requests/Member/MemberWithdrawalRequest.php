@@ -4,6 +4,7 @@ namespace App\Http\Requests\Member;
 
 use App\Models\WithdrawalMethod;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Validator;
 
 class MemberWithdrawalRequest extends FormRequest
@@ -24,12 +25,26 @@ class MemberWithdrawalRequest extends FormRequest
             'bank_account_name' => ['nullable', 'string', 'max:120'],
             'bank_name' => ['nullable', 'string', 'max:120'],
             'bank_account_number' => ['nullable', 'string', 'max:64'],
+            'payment_password' => ['required', 'digits:6'],
         ];
     }
 
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
+            $user = $this->user();
+
+            if (! $user->hasPaymentPassword()) {
+                $validator->errors()->add('payment_password', __('member.payment_password.required_notice'));
+
+                return;
+            }
+
+            $hash = $user->getRawOriginal('payment_password');
+            if (! Hash::check((string) $this->input('payment_password'), $hash)) {
+                $validator->errors()->add('payment_password', __('member.wallet.withdraw_password_invalid'));
+            }
+
             $method = WithdrawalMethod::query()->find($this->input('withdrawal_method_id'));
 
             if (! $method || $method->status !== WithdrawalMethod::STATUS_ACTIVE) {

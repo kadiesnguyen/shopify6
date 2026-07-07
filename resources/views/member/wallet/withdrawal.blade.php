@@ -153,6 +153,21 @@
                             </p>
                         </div>
                     </div>
+
+                    <x-member.form-field :label="__('member.wallet.withdraw_password')" class="border-t border-gray-100">
+                        <input
+                            type="password"
+                            name="payment_password"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            maxlength="6"
+                            autocomplete="off"
+                            required
+                            x-model="paymentPassword"
+                            placeholder="{{ __('member.payment_password.placeholder') }}"
+                            class="portal-plain-input"
+                        >
+                    </x-member.form-field>
                 </section>
 
                 <button type="submit" class="h-12 w-full rounded-xl bg-black text-base font-medium text-white hover:bg-gray-800 disabled:opacity-60" :disabled="!canSubmit">
@@ -205,6 +220,7 @@ function withdrawalForm(config) {
         bankName: config.oldBankName || '',
         bankAccountNumber: config.oldBankAccountNumber || '',
         amount: config.oldAmount || '',
+        paymentPassword: '',
         methodSheetOpen: false,
         currencySheetOpen: false,
         networkSheetOpen: false,
@@ -255,7 +271,7 @@ function withdrawalForm(config) {
             return this.money(this.feeAmount);
         },
         get canSubmit() {
-            if (!this.selectedMethod || !this.selectedMethodId || (parseFloat(this.amount) || 0) <= 0) {
+            if (!this.selectedMethod || !this.selectedMethodId || (parseFloat(this.amount) || 0) <= 0 || this.paymentPassword.length !== 6) {
                 return false;
             }
 

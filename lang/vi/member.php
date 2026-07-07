@@ -657,6 +657,8 @@ return [
         'currency_required' => 'Vui lòng chọn tiền tệ.',
         'network_required' => 'Vui lòng chọn mạng blockchain.',
         'crypto_address_required' => 'Vui lòng nhập địa chỉ ví.',
+        'withdraw_password' => 'Nhập mật khẩu rút tiền',
+        'withdraw_password_invalid' => 'Mật khẩu rút tiền không đúng.',
     ],
 
     'contract' => [

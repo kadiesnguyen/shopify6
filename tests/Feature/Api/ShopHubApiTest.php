@@ -159,6 +159,7 @@ class ShopHubApiTest extends TestCase
         ]);
 
         Sanctum::actingAs($this->seller);
+        $this->seller->update(['payment_password' => '123456']);
 
         $this->postJson('/api/member/wallet/withdrawal', [
             'withdrawal_method_id' => $method->id,
@@ -166,6 +167,7 @@ class ShopHubApiTest extends TestCase
             'bank_account_name' => 'Seller',
             'bank_name' => 'VCB',
             'bank_account_number' => '999',
+            'payment_password' => '123456',
         ])->assertCreated();
     }
 }
