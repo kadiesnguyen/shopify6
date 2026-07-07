@@ -258,7 +258,7 @@ class ProductVisibilityTest extends TestCase
             ->assertOk()
             ->assertSee('$22.00', false)
             ->assertSee('$25.00', false)
-            ->assertSee(__('member.products.price_to'));
+            ->assertSee(__('member.products.market_price'));
     }
 
     public function test_shop_cannot_set_selling_price_above_market(): void

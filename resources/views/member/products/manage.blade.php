@@ -48,6 +48,7 @@
                         @php
                             $product = $distribution->product;
                             $marketPrice = (float) $product->selling_price;
+                            $purchasePrice = (float) $distribution->purchase_price;
                         @endphp
                         <article
                             class="flex min-w-0 items-center gap-3 p-3"
@@ -165,7 +166,7 @@
                                     </div>
 
                                     <label class="mb-1 block text-xs font-medium text-gray-500">{{ __('member.products.price_to') }}</label>
-                                    <p class="mb-4 text-base font-semibold text-gray-900">${{ number_format($marketPrice, 2) }}</p>
+                                    <p class="mb-4 text-base font-semibold text-gray-900">${{ number_format($purchasePrice, 2) }}</p>
 
                                     <p x-show="error" x-text="error" class="mb-3 text-sm text-rose-600"></p>
 

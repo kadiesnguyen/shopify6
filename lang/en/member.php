@@ -139,7 +139,7 @@ return [
         'save_content' => 'Save',
         'market_price' => 'Market price',
         'catalog_price' => 'Price',
-        'price_to' => 'Price to',
+        'price_to' => 'Market price',
         'price_edit_hint' => 'Set a selling price $2–$10 below market and round to cents, e.g. $20.00, $31.00.',
         'price_updated' => 'Selling price updated.',
         'price_below_purchase' => 'Selling price cannot be below purchase price.',
@@ -254,12 +254,12 @@ return [
         'purchase_cost' => 'Purchase cost',
         'actual_amount' => 'Actual amount',
         'confirm_platform_shipping' => 'Apply for delivery',
-        'confirm_shipping_prompt' => 'Confirm deducting price-to from balance and move this order to Awaiting shipment?',
+        'confirm_shipping_prompt' => 'Confirm deducting market price from balance and move this order to Awaiting shipment?',
         'shipping_confirm_cancel' => 'Cancel',
         'shipping_confirm_confirm' => 'Confirm',
         'confirm_shipping_success' => 'Order moved to Awaiting shipment.',
         'confirm_shipping_failed' => 'Could not confirm this order.',
-        'insufficient_balance' => 'Insufficient balance to pay price-to amount.',
+        'insufficient_balance' => 'Insufficient balance to pay market price amount.',
     ],
 
     'customers' => [

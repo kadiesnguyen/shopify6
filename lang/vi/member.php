@@ -139,7 +139,7 @@ return [
         'save_content' => 'Lưu nội dung',
         'market_price' => 'Giá thị trường',
         'catalog_price' => 'Giá cả',
-        'price_to' => 'Giá đến',
+        'price_to' => 'Giá thị trường',
         'price_edit_hint' => 'Thường đặt giá bán thấp hơn giá thị trường từ $2 đến $10 và làm tròn, ví dụ $20.00, $31.00.',
         'price_updated' => 'Đã cập nhật giá bán.',
         'price_below_purchase' => 'Giá bán không được thấp hơn giá mua.',
@@ -254,12 +254,12 @@ return [
         'purchase_cost' => 'Giá nhập hàng',
         'actual_amount' => 'Số tiền thực',
         'confirm_platform_shipping' => 'Áp dụng cho việc giao hàng',
-        'confirm_shipping_prompt' => 'Xác nhận trừ giá đến từ số dư và chuyển đơn sang Đang chờ vận chuyển?',
+        'confirm_shipping_prompt' => 'Xác nhận trừ giá thị trường từ số dư và chuyển đơn sang Đang chờ vận chuyển?',
         'shipping_confirm_cancel' => 'Cancel',
         'shipping_confirm_confirm' => 'Confirm',
         'confirm_shipping_success' => 'Đơn hàng đã chuyển sang Đang chờ vận chuyển.',
         'confirm_shipping_failed' => 'Không thể xác nhận đơn hàng.',
-        'insufficient_balance' => 'Số dư không đủ để thanh toán giá đến.',
+        'insufficient_balance' => 'Số dư không đủ để thanh toán giá thị trường.',
     ],
 
     'customers' => [

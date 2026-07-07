@@ -209,7 +209,7 @@
                     <p class="text-2xl font-bold text-orange-600">${{ number_format($sellingPrice, 2) }}</p>
                     @if ($showMarketPrice)
                         <p class="mt-1 text-sm text-gray-500">
-                            {{ __('member.products.price_to') }}:
+                            {{ __('member.products.market_price') }}:
                             <span class="font-medium text-gray-400 line-through">${{ number_format($marketPrice, 2) }}</span>
                         </p>
                     @endif
