@@ -74,6 +74,8 @@ class ShopDashboardTest extends TestCase
         $this->actingAs($this->member->fresh())
             ->get(route('member.shop-hub.index'))
             ->assertOk()
+            ->assertSee(__('member.shop_application.back_home'))
+            ->assertSee(route('member.home'), false)
             ->assertSee(__('member.shop_hub.overview'))
             ->assertSee(__('member.shop_hub.refresh_page'))
             ->assertSee(__('member.shop_hub.order_rate_month'))

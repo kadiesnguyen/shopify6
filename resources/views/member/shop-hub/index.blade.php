@@ -1,7 +1,6 @@
 @extends('layouts.member')
 
 @section('title', __('member.shop_hub.title'))
-@section('back_url', route('member.my.index'))
 @section('portal_gray_bg', '1')
 @section('hide_portal_header', '1')
 @section('full_bleed', '1')
@@ -21,6 +20,15 @@
             class="relative h-[140px] bg-[#333] bg-cover bg-center px-4 pt-8"
             style="background-image: url('{{ asset('images/portal/shop-hub-header-bg.png') }}');"
         >
+            <a
+                href="{{ route('member.home') }}"
+                class="absolute left-4 top-4 z-10 flex items-center gap-1 text-white/90 no-underline active:opacity-80"
+                aria-label="{{ __('member.shop_application.back_home') }}"
+            >
+                <x-member.icon name="chevron-left" class="size-5" />
+                <span class="text-sm font-medium">{{ __('member.shop_application.back_home') }}</span>
+            </a>
+
             <div class="flex items-center gap-3 pt-6">
                 <img
                     src="{{ $logoUrl ?: 'https://api.dicebear.com/7.x/avataaars/svg?seed='.urlencode((string) $user->id) }}"
