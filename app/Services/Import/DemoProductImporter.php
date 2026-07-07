@@ -8,6 +8,7 @@ use App\Models\ProductDistribution;
 use App\Models\Shop;
 use App\Models\User;
 use App\Services\Member\ProductDetailService;
+use App\Services\Member\ProductDistributionService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -592,15 +593,18 @@ class DemoProductImporter
             return;
         }
 
+        $displaySelling = ProductDistributionService::suggestedSellingPrice($sellingPrice, $purchasePrice);
+        $displayCommission = max(0, $displaySelling - $purchasePrice);
+
         ProductDistribution::query()->updateOrCreate(
             [
                 'user_id' => $owner->id,
                 'product_id' => $product->id,
             ],
             [
-                'selling_price' => $sellingPrice,
+                'selling_price' => $displaySelling,
                 'purchase_price' => $purchasePrice,
-                'commission' => $commission,
+                'commission' => $displayCommission,
                 'commission_type' => ProductDistribution::COMMISSION_FIXED,
                 'status' => ProductDistribution::STATUS_AVAILABLE,
                 'is_featured' => true,

@@ -157,7 +157,13 @@ class ProductDetailService
                 ->first();
         }
 
-        return null;
+        return ProductDistribution::query()
+            ->available()
+            ->where('product_id', $product->id)
+            ->orderByDesc('is_featured')
+            ->orderByDesc('featured_at')
+            ->orderByDesc('created_at')
+            ->first();
     }
 
     private function resolveDescription(Product $product, string $sourceUrl): string

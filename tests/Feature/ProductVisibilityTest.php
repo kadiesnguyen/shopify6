@@ -261,6 +261,17 @@ class ProductVisibilityTest extends TestCase
             ->assertSee(__('member.products.market_price'));
     }
 
+    public function test_product_detail_shows_market_price_without_shop_id_after_distribute(): void
+    {
+        $this->distributeAsShop($this->shopUser);
+
+        $this->actingAs($this->member)
+            ->get(route('member.products.show', ['product' => $this->product]))
+            ->assertOk()
+            ->assertSee(__('member.products.market_price'))
+            ->assertSee('$25.00', false);
+    }
+
     public function test_shop_cannot_set_selling_price_above_market(): void
     {
         $this->distributeAsShop($this->shopUser);
@@ -417,15 +428,7 @@ class ProductVisibilityTest extends TestCase
 
     private function distributeAsShop(User $shopUser): void
     {
-        ProductDistribution::query()->create([
-            'user_id' => $shopUser->id,
-            'product_id' => $this->product->id,
-            'selling_price' => $this->product->selling_price,
-            'purchase_price' => $this->product->purchase_price,
-            'commission' => $this->product->commission,
-            'commission_type' => 'fixed',
-            'status' => ProductDistribution::STATUS_AVAILABLE,
-        ]);
+        app(\App\Services\Member\ProductDistributionService::class)->distribute($shopUser, $this->product);
     }
 
     private function markDistributionFeatured(User $shopUser): void

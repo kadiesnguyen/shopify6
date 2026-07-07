@@ -9,14 +9,32 @@ use RuntimeException;
 
 class ProductDistributionService
 {
+    public static function suggestedSellingPrice(float $marketPrice, float $purchasePrice): float
+    {
+        $marketPrice = round($marketPrice, 2);
+        $purchasePrice = round($purchasePrice, 2);
+
+        if ($marketPrice <= $purchasePrice) {
+            return $marketPrice;
+        }
+
+        $discount = min(10.0, max(2.0, round($marketPrice * 0.05, 2)));
+
+        return max($purchasePrice, round($marketPrice - $discount, 2));
+    }
+
     public function distribute(User $shopUser, Product $product): ProductDistribution
     {
+        $marketPrice = (float) $product->selling_price;
+        $purchasePrice = (float) $product->purchase_price;
+        $sellingPrice = self::suggestedSellingPrice($marketPrice, $purchasePrice);
+
         return ProductDistribution::query()->create([
             'user_id' => $shopUser->id,
             'product_id' => $product->id,
-            'selling_price' => $product->selling_price,
-            'purchase_price' => $product->purchase_price,
-            'commission' => max(0, (float) $product->selling_price - (float) $product->purchase_price),
+            'selling_price' => $sellingPrice,
+            'purchase_price' => $purchasePrice,
+            'commission' => max(0, $sellingPrice - $purchasePrice),
             'commission_type' => ProductDistribution::COMMISSION_FIXED,
             'status' => ProductDistribution::STATUS_AVAILABLE,
         ]);
