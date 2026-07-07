@@ -17,6 +17,8 @@ class DemoProductImporter
 {
     private const DEFAULT_STOCK = 100;
 
+    private const EXPENSIVE_PRICE_THRESHOLD = 80.0;
+
     private string $baseUrl;
 
     private string $secretKey;
@@ -186,6 +188,106 @@ class DemoProductImporter
         return $response['data']['cateres'] ?? [];
     }
 
+    public function targetGalleryCount(float $sellingPrice): int
+    {
+        return $sellingPrice >= self::EXPENSIVE_PRICE_THRESHOLD ? 5 : 3;
+    }
+
+    public function minimumGalleryCount(float $sellingPrice): int
+    {
+        return $sellingPrice >= self::EXPENSIVE_PRICE_THRESHOLD ? 4 : 2;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $gpres
+     * @return list<string>
+     */
+    public function collectImageUrls(?string $thumbUrl, array $gpres, float $sellingPrice): array
+    {
+        $urls = [];
+
+        if ($thumbUrl) {
+            $urls[] = $thumbUrl;
+        }
+
+        foreach ($gpres as $pic) {
+            $url = $pic['img_url'] ?? null;
+
+            if ($url && ! in_array($url, $urls, true)) {
+                $urls[] = $url;
+            }
+        }
+
+        return array_slice($urls, 0, $this->targetGalleryCount($sellingPrice));
+    }
+
+    /** @return array<string, mixed>|null */
+    public function fetchGoodsInfo(int $goodsId): ?array
+    {
+        try {
+            return $this->call('api/Goods/goodsInfo', ['goods_id' => $goodsId]);
+        } catch (RuntimeException) {
+            return null;
+        }
+    }
+
+    public function syncGalleryForProduct(Product $product, int $goodsId, bool $skipImages = false): bool
+    {
+        $detail = $this->fetchGoodsInfo($goodsId);
+
+        if ($detail === null) {
+            return false;
+        }
+
+        $goodsInfo = $detail['data']['goodsinfo'] ?? null;
+        $gpres = $detail['data']['gpres'] ?? [];
+        $thumb = is_array($goodsInfo) ? ($goodsInfo['thumb_url'] ?? null) : null;
+        $sellingPrice = (float) ($product->selling_price ?: ($goodsInfo['zs_shop_price'] ?? 0));
+        $imageUrls = $this->collectImageUrls($thumb, $gpres, $sellingPrice);
+
+        if (count($imageUrls) < $this->minimumGalleryCount($sellingPrice)) {
+            return false;
+        }
+
+        $imagePaths = [];
+
+        if (! $skipImages) {
+            foreach ($imageUrls as $index => $url) {
+                $path = $this->downloadImage($url, 'products/demo', (string) $goodsId);
+
+                if ($path === null) {
+                    continue;
+                }
+
+                $imagePaths[] = ['path' => $path, 'sort' => $index];
+            }
+        }
+
+        if ($imagePaths === [] && ! $skipImages) {
+            return false;
+        }
+
+        $description = $this->htmlDescription(
+            is_array($goodsInfo) ? ($goodsInfo['goods_desc'] ?? null) : null,
+            $product->name,
+        );
+        $description = $this->appendGalleryToDescription(
+            $description,
+            array_column($imagePaths, 'path'),
+        );
+
+        $payload = ['description' => $description];
+
+        if ($imagePaths !== []) {
+            $payload['image'] = $imagePaths[0]['path'];
+        }
+
+        $product->update($payload);
+        $this->syncImages($product, $imagePaths);
+
+        return true;
+    }
+
     /**
      * @param  array<string, mixed>  $params
      * @return array<string, mixed>
@@ -319,28 +421,15 @@ class DemoProductImporter
         $sellingPrice = (float) ($demo['min_price'] ?? $goodsInfo['zs_shop_price'] ?? 0);
         $purchasePrice = round($sellingPrice * 0.595, 2);
         $commission = round($sellingPrice * 0.10, 2);
-        $description = $this->htmlDescription($goodsInfo['goods_desc'] ?? null, $name);
-
-        $imageUrls = [];
-
-        if (! empty($demo['thumb_url'])) {
-            $imageUrls[] = $demo['thumb_url'];
-        }
-
-        foreach ($gpres as $pic) {
-            $url = $pic['img_url'] ?? null;
-
-            if ($url && ! in_array($url, $imageUrls, true)) {
-                $imageUrls[] = $url;
-            }
-        }
+        $imageUrls = $this->collectImageUrls($demo['thumb_url'] ?? null, $gpres, $sellingPrice);
+        $baseDescription = $this->htmlDescription($goodsInfo['goods_desc'] ?? null, $name);
 
         $mainImagePath = null;
         $imagePaths = [];
 
         if (! $skipImages && $imageUrls !== []) {
             foreach ($imageUrls as $index => $url) {
-                $path = $this->downloadImage($url, 'products/demo');
+                $path = $this->downloadImage($url, 'products/demo', (string) $demo['id']);
 
                 if ($path === null) {
                     continue;
@@ -353,6 +442,11 @@ class DemoProductImporter
                 $imagePaths[] = ['path' => $path, 'sort' => $index];
             }
         }
+
+        $description = $this->appendGalleryToDescription(
+            $baseDescription,
+            array_column($imagePaths, 'path'),
+        );
 
         $payload = [
             'category_id' => $meta['category_id'],
@@ -431,7 +525,29 @@ class DemoProductImporter
         );
     }
 
-    private function downloadImage(string $url, string $folder): ?string
+    /** @param  list<string>  $storagePaths */
+    private function appendGalleryToDescription(string $html, array $storagePaths): string
+    {
+        if ($storagePaths === [] || $this->descriptionHasImages($html)) {
+            return $html;
+        }
+
+        $blocks = [];
+
+        foreach ($storagePaths as $path) {
+            $url = asset('storage/'.$path);
+            $blocks[] = '<p><img src="'.$url.'" alt="" style="max-width:100%;height:auto;display:block;margin:0 auto;"></p>';
+        }
+
+        return $html.'<div class="product-desc-gallery">'.implode('', $blocks).'</div>';
+    }
+
+    private function descriptionHasImages(string $html): bool
+    {
+        return (bool) preg_match('/<img\b/i', $html);
+    }
+
+    private function downloadImage(string $url, string $folder, ?string $goodsId = null): ?string
     {
         $url = trim($url);
 
@@ -439,9 +555,10 @@ class DemoProductImporter
             return null;
         }
 
-        // ponytail: filenames come from URL basenames; collisions across different
-        // products/images are ignored because the demo source rarely reuses names.
-        // Upgrade: prepend product/hash or use a content-addressed store if needed.
+        if ($goodsId !== null && $goodsId !== '') {
+            $folder = rtrim($folder, '/').'/'.$goodsId;
+        }
+
         $filename = basename(parse_url($url, PHP_URL_PATH) ?: 'asset.bin');
 
         if ($filename === '' || $filename === 'asset.bin') {

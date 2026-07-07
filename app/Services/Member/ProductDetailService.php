@@ -202,6 +202,15 @@ class ProductDetailService
         $this->demoNameIndex();
     }
 
+    public function findDemoGoodsIdByName(string $name): ?int
+    {
+        if (! Cache::has('demo:goods-name-index')) {
+            $this->demoNameIndex();
+        }
+
+        return $this->demoGoodsIdForName($name);
+    }
+
     private function demoGoodsIdForName(string $name): ?int
     {
         if (! Cache::has('demo:goods-name-index')) {

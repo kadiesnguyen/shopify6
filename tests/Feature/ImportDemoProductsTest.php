@@ -95,8 +95,8 @@ class ImportDemoProductsTest extends TestCase
             'name' => 'Demo Dress',
             'selling_price' => 22.67,
         ]);
-        $this->assertDatabaseHas('product_images', ['image' => 'products/demo/dress.jpg', 'sort_order' => 0]);
-        $this->assertDatabaseHas('product_images', ['image' => 'products/demo/dress2.jpg', 'sort_order' => 1]);
+        $this->assertDatabaseHas('product_images', ['image' => 'products/demo/123/dress.jpg', 'sort_order' => 0]);
+        $this->assertDatabaseHas('product_images', ['image' => 'products/demo/123/dress2.jpg', 'sort_order' => 1]);
 
         $this->assertDatabaseHas('model_has_roles', ['model_type' => 'App\\Models\\User']);
     }
