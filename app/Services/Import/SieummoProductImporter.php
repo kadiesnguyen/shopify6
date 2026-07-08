@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductDistribution;
 use App\Models\Shop;
 use App\Models\User;
+use App\Services\Member\ProductDistributionService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -288,9 +289,11 @@ class SieummoProductImporter
     /** @return array{purchase_price: float, commission: float} */
     private function pricingFor(float $sellingPrice): array
     {
+        $purchasePrice = ProductDistributionService::costPriceForPrice($sellingPrice);
+
         return [
-            'purchase_price' => round($sellingPrice * 0.595, 2),
-            'commission' => round($sellingPrice * 0.10, 2),
+            'purchase_price' => $purchasePrice,
+            'commission' => round($sellingPrice - $purchasePrice, 2),
         ];
     }
 

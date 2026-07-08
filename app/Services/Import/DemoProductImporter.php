@@ -641,8 +641,8 @@ class DemoProductImporter
         $name = html_entity_decode((string) $demo['goods_name'], ENT_QUOTES | ENT_HTML5);
         $name = Str::limit($name, 250, '');
         $sellingPrice = (float) ($demo['min_price'] ?? $goodsInfo['zs_shop_price'] ?? 0);
-        $purchasePrice = round($sellingPrice * 0.595, 2);
-        $commission = round($sellingPrice * 0.10, 2);
+        $purchasePrice = ProductDistributionService::costPriceForPrice($sellingPrice);
+        $commission = round($sellingPrice - $purchasePrice, 2);
         $imageUrls = $this->collectImageUrls($demo['thumb_url'] ?? null, $gpres, $sellingPrice, $goodsInfo['goods_desc'] ?? null);
         $baseDescription = $this->htmlDescription($goodsInfo['goods_desc'] ?? null, $name);
 
