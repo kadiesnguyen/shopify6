@@ -172,7 +172,9 @@ class OrderSettlementTest extends TestCase
             Order::STATUS_COMPLETED,
         );
 
-        $this->assertSame($balanceAfterDistribution + 100.0, (float) $this->seller->wallet->fresh()->balance);
+        // selling_price is auto-discounted to 95 on distribute (market 100 - $5),
+        // so completion returns purchase 60 + commission 35 = 95.
+        $this->assertSame($balanceAfterDistribution + 95.0, (float) $this->seller->wallet->fresh()->balance);
         $this->assertDatabaseHas('transactions', [
             'user_id' => $this->seller->id,
             'type' => Transaction::TYPE_PURCHASE_RETURN,
@@ -182,7 +184,7 @@ class OrderSettlementTest extends TestCase
         $this->assertDatabaseHas('transactions', [
             'user_id' => $this->seller->id,
             'type' => Transaction::TYPE_COMMISSION,
-            'amount' => 40,
+            'amount' => 35,
             'reference' => $order->order_no.'-seller-commission',
         ]);
 
@@ -292,7 +294,7 @@ class OrderSettlementTest extends TestCase
         $order->refresh();
         $this->assertSame(Order::STATUS_COMPLETED, $order->status);
         $this->assertNotNull($order->completed_at);
-        $this->assertSame($balanceBeforeComplete + 100.0, (float) $this->seller->wallet->fresh()->balance);
+        $this->assertSame($balanceBeforeComplete + 95.0, (float) $this->seller->wallet->fresh()->balance);
     }
 
     public function test_cancelled_order_refunds_buyer_without_returning_distribution_cost_to_seller(): void
@@ -351,7 +353,7 @@ class OrderSettlementTest extends TestCase
             ->patch('/admin/orders/'.$order->id, ['status' => Order::STATUS_COMPLETED])
             ->assertRedirect();
 
-        $this->assertSame($balanceAfterDistribution + 100.0, (float) $this->seller->wallet->fresh()->balance);
+        $this->assertSame($balanceAfterDistribution + 95.0, (float) $this->seller->wallet->fresh()->balance);
         $this->assertDatabaseHas('orders', [
             'id' => $order->id,
             'status' => Order::STATUS_COMPLETED,
@@ -398,8 +400,8 @@ class OrderSettlementTest extends TestCase
             Order::STATUS_COMPLETED,
         );
 
-        $this->assertSame($balanceAfterDistribution + 100.0, (float) $this->seller->wallet->fresh()->balance);
-        $this->assertSame(400.0, (float) $this->buyer->wallet->fresh()->balance);
+        $this->assertSame($balanceAfterDistribution + 95.0, (float) $this->seller->wallet->fresh()->balance);
+        $this->assertSame(405.0, (float) $this->buyer->wallet->fresh()->balance);
 
         $this->actingAs($admin)
             ->delete(route('admin.orders.destroy', $order))
