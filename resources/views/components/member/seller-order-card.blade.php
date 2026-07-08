@@ -59,11 +59,11 @@
     <div class="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-gray-50 px-3 py-3">
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600">
             <span>
-                {{ __('member.products.price_to') }}:
+                {{ __('member.products.cost_price') }}:
                 <span class="font-semibold text-[#fa3534]">${{ number_format($order->purchase_cost, 2) }}</span>
             </span>
             <span>
-                {{ __('member.products.selling_price') }}:
+                {{ __('member.products.market_price') }}:
                 <span class="font-semibold text-[#fa3534]">${{ number_format($order->total, 2) }}</span>
             </span>
         </div>
