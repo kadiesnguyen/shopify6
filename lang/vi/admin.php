@@ -223,6 +223,11 @@ return [
         'created' => 'Đã tạo sản phẩm.',
         'updated' => 'Đã cập nhật sản phẩm.',
         'deleted' => 'Đã xóa sản phẩm.',
+        'main_image' => 'Ảnh chính',
+        'gallery_images' => 'Thư viện ảnh',
+        'add_gallery_images' => 'Thêm ảnh vào thư viện',
+        'gallery_hint' => 'Có thể chọn nhiều ảnh cùng lúc (Ctrl/Cmd + click).',
+        'remove_image' => 'Xóa',
     ],
 
     'categories' => [

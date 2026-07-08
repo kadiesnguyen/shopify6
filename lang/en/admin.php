@@ -206,10 +206,19 @@ return [
     'products' => [
         'title' => 'Product management',
         'search' => 'Search products...',
+        'count' => ':count products',
+        'add_product' => 'Add product',
+        'edit_product' => 'Edit product',
+        'commission_type' => 'Commission type',
         'empty' => 'No products yet.',
         'created' => 'Product created.',
         'updated' => 'Product updated.',
         'deleted' => 'Product deleted.',
+        'main_image' => 'Main image',
+        'gallery_images' => 'Image gallery',
+        'add_gallery_images' => 'Add gallery images',
+        'gallery_hint' => 'You can select multiple images at once (Ctrl/Cmd + click).',
+        'remove_image' => 'Remove',
     ],
 
     'categories' => [

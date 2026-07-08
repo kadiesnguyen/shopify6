@@ -73,6 +73,10 @@
     </div>
 
     @if ($showProductModal ?? false)
+        @push('scripts')
+            @vite(['resources/js/admin-rich-editor.js'])
+        @endpush
+
         @include('admin.products.partials.modal', [
             'product' => $modalProduct ?? new \App\Models\Product(['status' => 'active', 'commission_type' => 'fixed']),
             'categories' => $categories,

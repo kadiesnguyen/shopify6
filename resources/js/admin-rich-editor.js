@@ -61,47 +61,49 @@ function createImageHandler(quill, uploadUrl) {
 }
 
 function initRichEditors() {
-    const form = document.querySelector('[data-settings-form]');
-
-    if (! form) {
-        return;
-    }
-
-    const uploadUrl = form.dataset.cmsImageUploadUrl ?? '';
-    const editors = [];
-
-    form.querySelectorAll('[data-rich-editor]').forEach((container) => {
-        const inputId = container.dataset.input;
-        const input = inputId ? document.getElementById(inputId) : null;
-
-        if (! input) {
+    document.querySelectorAll('[data-settings-form], [data-rich-editor-form]').forEach((form) => {
+        if (form.dataset.richEditorReady === '1') {
             return;
         }
 
-        const quill = new Quill(container, {
-            theme: 'snow',
-            modules: {
-                toolbar: {
-                    container: toolbarOptions,
-                    handlers: {
-                        image: createImageHandler(null, uploadUrl),
+        form.dataset.richEditorReady = '1';
+
+        const uploadUrl = form.dataset.cmsImageUploadUrl ?? '';
+        const editors = [];
+
+        form.querySelectorAll('[data-rich-editor]').forEach((container) => {
+            const inputId = container.dataset.input;
+            const input = inputId ? document.getElementById(inputId) : null;
+
+            if (! input) {
+                return;
+            }
+
+            const quill = new Quill(container, {
+                theme: 'snow',
+                modules: {
+                    toolbar: {
+                        container: toolbarOptions,
+                        handlers: {
+                            image: createImageHandler(null, uploadUrl),
+                        },
+                    },
+                    clipboard: {
+                        matchVisual: false,
                     },
                 },
-                clipboard: {
-                    matchVisual: false,
-                },
-            },
+            });
+
+            quill.root.innerHTML = input.value ?? '';
+            quill.getModule('toolbar').handlers.image = createImageHandler(quill, uploadUrl);
+
+            editors.push({ quill, input });
         });
 
-        quill.root.innerHTML = input.value ?? '';
-        quill.getModule('toolbar').handlers.image = createImageHandler(quill, uploadUrl);
-
-        editors.push({ quill, input });
-    });
-
-    form.addEventListener('submit', () => {
-        editors.forEach(({ quill, input }) => {
-            input.value = quill.root.innerHTML === '<p><br></p>' ? '' : quill.root.innerHTML;
+        form.addEventListener('submit', () => {
+            editors.forEach(({ quill, input }) => {
+                input.value = quill.root.innerHTML === '<p><br></p>' ? '' : quill.root.innerHTML;
+            });
         });
     });
 }

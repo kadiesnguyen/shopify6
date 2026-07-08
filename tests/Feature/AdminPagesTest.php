@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\RechargeMethod;
 use App\Models\RechargeRequest;
 use App\Models\Shop;
@@ -74,6 +75,38 @@ class AdminPagesTest extends TestCase
             ->assertRedirect(route('admin.products.index'));
 
         $this->assertDatabaseHas('products', ['name' => 'Admin Product']);
+    }
+
+    public function test_admin_can_create_product_with_gallery_images(): void
+    {
+        $category = Category::query()->create([
+            'name' => 'Gallery Cat',
+            'slug' => 'gallery-cat',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post('/admin/products', [
+                'category_id' => $category->id,
+                'name' => 'Gallery Product',
+                'description' => '<p><strong>HTML</strong> description</p>',
+                'selling_price' => 10,
+                'purchase_price' => 5,
+                'commission' => 1,
+                'commission_type' => 'fixed',
+                'stock' => 20,
+                'status' => 'active',
+                'gallery_files' => [
+                    \Illuminate\Http\UploadedFile::fake()->create('one.jpg', 100, 'image/jpeg'),
+                    \Illuminate\Http\UploadedFile::fake()->create('two.jpg', 100, 'image/jpeg'),
+                ],
+            ])
+            ->assertRedirect(route('admin.products.index'));
+
+        $product = Product::query()->where('name', 'Gallery Product')->first();
+        $this->assertNotNull($product);
+        $this->assertSame('<p><strong>HTML</strong> description</p>', $product->description);
+        $this->assertSame(2, $product->images()->count());
     }
 
     public function test_admin_can_approve_recharge_request(): void

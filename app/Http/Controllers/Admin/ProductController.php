@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Shop;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -27,7 +28,7 @@ class ProductController extends Controller
         $showProductModal = $request->boolean('show_create') || $request->filled('edit');
 
         if ($request->filled('edit')) {
-            $modalProduct = Product::query()->find($request->integer('edit'));
+            $modalProduct = Product::query()->with('images')->find($request->integer('edit'));
         }
 
         $categories = Category::query()->orderBy('name')->get();
@@ -62,9 +63,10 @@ class ProductController extends Controller
             $data['image'] = $request->file('image_file')->store('products', 'public');
         }
 
-        unset($data['image_file']);
+        unset($data['image_file'], $data['gallery_files'], $data['remove_gallery_ids']);
 
-        Product::query()->create($data);
+        $product = Product::query()->create($data);
+        $this->syncGalleryImages($product, $request);
 
         return redirect()->route('admin.products.index')->with('status', __('admin.products.created'));
     }
@@ -86,11 +88,42 @@ class ProductController extends Controller
             $data['image'] = $request->file('image_file')->store('products', 'public');
         }
 
-        unset($data['image_file']);
+        unset($data['image_file'], $data['gallery_files'], $data['remove_gallery_ids']);
 
         $product->update($data);
+        $this->syncGalleryImages($product, $request);
 
         return redirect()->route('admin.products.index')->with('status', __('admin.products.updated'));
+    }
+
+    private function syncGalleryImages(Product $product, Request $request): void
+    {
+        $removeIds = collect($request->input('remove_gallery_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->all();
+
+        if ($removeIds !== []) {
+            $product->images()->whereIn('id', $removeIds)->delete();
+        }
+
+        $galleryFiles = array_values(array_filter(
+            $request->file('gallery_files', []) ?? [],
+            fn ($file) => $file instanceof UploadedFile && $file->isValid(),
+        ));
+
+        if ($galleryFiles === []) {
+            return;
+        }
+
+        $nextSort = ((int) $product->images()->max('sort_order')) + 1;
+
+        foreach ($galleryFiles as $file) {
+            $product->images()->create([
+                'image' => $file->store('products/gallery', 'public'),
+                'sort_order' => $nextSort++,
+            ]);
+        }
     }
 
     public function destroy(Product $product): RedirectResponse

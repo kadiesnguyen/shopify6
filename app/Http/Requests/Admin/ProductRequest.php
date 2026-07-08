@@ -27,6 +27,10 @@ class ProductRequest extends FormRequest
             'stock' => ['required', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive,draft'],
             'image_file' => ['nullable', 'image', 'max:5120'],
+            'gallery_files' => ['nullable', 'array'],
+            'gallery_files.*' => ['image', 'max:5120'],
+            'remove_gallery_ids' => ['nullable', 'array'],
+            'remove_gallery_ids.*' => ['integer', 'exists:product_images,id'],
         ];
     }
 }
