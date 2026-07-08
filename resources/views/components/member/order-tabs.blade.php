@@ -17,7 +17,6 @@
         'shipped' => __('member.orders.shipped'),
         'received' => __('member.orders.received'),
         'completed' => __('member.orders.completed'),
-        'cancelled' => __('member.orders.cancelled'),
     ]);
 
     if (! $showPendingPayment) {
