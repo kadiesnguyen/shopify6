@@ -45,12 +45,17 @@ class CartController extends Controller
                 (int) ($validated['qty'] ?? 1),
                 isset($validated['shop_user_id']) ? (int) $validated['shop_user_id'] : null,
             );
-        } catch (\RuntimeException) {
+        } catch (\RuntimeException $exception) {
+            $message = match ($exception->getMessage()) {
+                'cannot_buy_own_shop' => __('member.cart.cannot_buy_own_shop'),
+                default => __('member.cart.add_failed'),
+            };
+
             if ($request->wantsJson()) {
-                return response()->json(['message' => __('member.cart.add_failed')], 422);
+                return response()->json(['message' => $message], 422);
             }
 
-            return back()->withErrors(['cart' => __('member.cart.add_failed')]);
+            return back()->withErrors(['cart' => $message]);
         }
 
         if ($request->wantsJson()) {
@@ -130,6 +135,7 @@ class CartController extends Controller
         } catch (\RuntimeException $exception) {
             return match ($exception->getMessage()) {
                 'insufficient_stock' => back()->withErrors(['cart' => __('member.checkout.insufficient_stock')]),
+                'cannot_buy_own_shop' => back()->withErrors(['cart' => __('member.checkout.cannot_buy_own_shop')]),
                 default => back()->withErrors(['cart' => __('member.checkout.insufficient_balance')]),
             };
         }

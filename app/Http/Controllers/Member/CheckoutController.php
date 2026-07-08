@@ -32,7 +32,7 @@ class CheckoutController extends Controller
 
         $shopId = $request->integer('shop_id') ?: null;
         $product->load(['shop', 'category']);
-        $unitPrice = $this->distributionService->previewOrderPrice($product, $shopId) ?? (float) $product->selling_price;
+        $unitPrice = $this->distributionService->previewOrderPrice($product, $shopId, auth()->id()) ?? (float) $product->selling_price;
         $product->setAttribute('display_selling_price', $unitPrice);
 
         $address = ShippingAddress::query()
@@ -78,7 +78,7 @@ class CheckoutController extends Controller
         }
 
         $wallet = auth()->user()->wallet;
-        $unitPrice = $this->distributionService->previewOrderPrice($product, $shopId) ?? (float) $product->selling_price;
+        $unitPrice = $this->distributionService->previewOrderPrice($product, $shopId, auth()->id()) ?? (float) $product->selling_price;
         $total = $unitPrice * $qty;
 
         if (! $wallet || $wallet->balance < $total) {
@@ -94,6 +94,9 @@ class CheckoutController extends Controller
                 'insufficient_stock' => back()
                     ->withInput()
                     ->withErrors(['qty' => __('member.checkout.insufficient_stock')]),
+                'cannot_buy_own_shop' => back()
+                    ->withInput()
+                    ->withErrors(['payment_method' => __('member.checkout.cannot_buy_own_shop')]),
                 default => back()
                     ->withInput()
                     ->withErrors(['payment_method' => __('member.checkout.insufficient_balance')]),

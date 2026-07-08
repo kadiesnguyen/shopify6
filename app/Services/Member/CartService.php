@@ -44,10 +44,14 @@ class CartService
 
     public function add(User $user, Product $product, int $qty = 1, ?int $shopUserId = null): CartItem
     {
-        $distribution = $this->resolveDistribution($product, $shopUserId);
+        $distribution = $this->resolveDistribution($product, $shopUserId, $user->id);
 
         if (! $distribution) {
-            throw new RuntimeException('product_not_distributed');
+            throw new RuntimeException(
+                $this->distributions->hasAvailableDistributionForSeller($product, $user->id)
+                    ? 'cannot_buy_own_shop'
+                    : 'product_not_distributed',
+            );
         }
 
         $qty = max(1, min($qty, $product->stock));
@@ -99,9 +103,9 @@ class CartService
         return $this->itemsFor($user)->where('selected', true)->values();
     }
 
-    private function resolveDistribution(Product $product, ?int $shopUserId): ?ProductDistribution
+    private function resolveDistribution(Product $product, ?int $shopUserId, int $buyerUserId): ?ProductDistribution
     {
-        if ($shopUserId) {
+        if ($shopUserId && $shopUserId !== $buyerUserId) {
             $distribution = ProductDistribution::query()
                 ->available()
                 ->where('product_id', $product->id)
@@ -116,6 +120,7 @@ class CartService
         return ProductDistribution::query()
             ->available()
             ->where('product_id', $product->id)
+            ->where('user_id', '!=', $buyerUserId)
             ->orderBy('id')
             ->first();
     }

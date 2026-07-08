@@ -67,6 +67,7 @@ return [
         'address_required' => 'Please add a shipping address before placing an order.',
         'insufficient_balance' => 'Insufficient balance to pay.',
         'insufficient_stock' => 'Not enough stock for this quantity.',
+        'cannot_buy_own_shop' => 'Shops cannot purchase products from their own store.',
         'contact_support' => 'Please contact support to recharge.',
     ],
 
@@ -556,6 +557,7 @@ return [
         'added' => 'Added to cart',
         'added_toast' => 'Added to cart successfully',
         'add_failed' => 'Unable to add to cart',
+        'cannot_buy_own_shop' => 'Shops cannot purchase products from their own store.',
         'removed' => 'Removed from cart',
         'empty_checkout' => 'Select at least one item to checkout',
     ],

@@ -71,7 +71,7 @@ class ProductDistributionService
         ]);
     }
 
-    public function resolveForOrder(Product $product, ?int $displayShopId = null): ?ProductDistribution
+    public function resolveForOrder(Product $product, ?int $displayShopId = null, ?int $excludeSellerUserId = null): ?ProductDistribution
     {
         // Route the order to the shop the buyer was actually shown, so its owner
         // receives the pending order instead of a load-balanced third party.
@@ -80,6 +80,7 @@ class ProductDistributionService
                 ->available()
                 ->where('product_id', $product->id)
                 ->whereHas('user.shop', fn ($query) => $query->whereKey($displayShopId))
+                ->when($excludeSellerUserId, fn ($query) => $query->where('user_id', '!=', $excludeSellerUserId))
                 ->orderByDesc('created_at')
                 ->lockForUpdate()
                 ->first();
@@ -92,6 +93,7 @@ class ProductDistributionService
         return ProductDistribution::query()
             ->available()
             ->where('product_id', $product->id)
+            ->when($excludeSellerUserId, fn ($query) => $query->where('user_id', '!=', $excludeSellerUserId))
             ->withCount(['orders as active_orders_count' => function ($query): void {
                 $query->whereNotIn('status', [
                     \App\Models\Order::STATUS_COMPLETED,
@@ -102,6 +104,15 @@ class ProductDistributionService
             ->orderBy('id')
             ->lockForUpdate()
             ->first();
+    }
+
+    public function hasAvailableDistributionForSeller(Product $product, int $sellerUserId): bool
+    {
+        return ProductDistribution::query()
+            ->available()
+            ->where('product_id', $product->id)
+            ->where('user_id', $sellerUserId)
+            ->exists();
     }
 
     public function reserve(ProductDistribution $distribution): void
@@ -159,13 +170,14 @@ class ProductDistributionService
         return $distribution->fresh();
     }
 
-    public function previewOrderPrice(Product $product, ?int $displayShopId = null): ?float
+    public function previewOrderPrice(Product $product, ?int $displayShopId = null, ?int $excludeSellerUserId = null): ?float
     {
         if ($displayShopId > 0) {
             $preferred = ProductDistribution::query()
                 ->available()
                 ->where('product_id', $product->id)
                 ->whereHas('user.shop', fn ($query) => $query->whereKey($displayShopId))
+                ->when($excludeSellerUserId, fn ($query) => $query->where('user_id', '!=', $excludeSellerUserId))
                 ->orderByDesc('created_at')
                 ->first();
 
@@ -177,6 +189,7 @@ class ProductDistributionService
         $distribution = ProductDistribution::query()
             ->available()
             ->where('product_id', $product->id)
+            ->when($excludeSellerUserId, fn ($query) => $query->where('user_id', '!=', $excludeSellerUserId))
             ->withCount(['orders as active_orders_count' => function ($query): void {
                 $query->whereNotIn('status', [
                     \App\Models\Order::STATUS_COMPLETED,

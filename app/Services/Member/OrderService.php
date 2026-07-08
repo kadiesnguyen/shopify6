@@ -29,10 +29,14 @@ class OrderService
 
             abort_unless($product->status === Product::STATUS_ACTIVE, 404);
 
-            $distribution = $this->distributionService->resolveForOrder($product, $displayShopId);
+            $distribution = $this->distributionService->resolveForOrder($product, $displayShopId, $user->id);
 
             if (! $distribution) {
-                throw new RuntimeException('product_not_distributed');
+                throw new RuntimeException(
+                    $this->distributionService->hasAvailableDistributionForSeller($product, $user->id)
+                        ? 'cannot_buy_own_shop'
+                        : 'product_not_distributed',
+                );
             }
 
             $qty = max(1, min($qty, $product->stock));

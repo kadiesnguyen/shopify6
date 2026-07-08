@@ -67,6 +67,7 @@ return [
         'address_required' => 'Vui lòng thêm địa chỉ nhận hàng trước khi đặt hàng.',
         'insufficient_balance' => 'Số dư không đủ để thanh toán.',
         'insufficient_stock' => 'Sản phẩm không đủ tồn kho.',
+        'cannot_buy_own_shop' => 'Cửa hàng không thể mua sản phẩm từ chính shop của mình.',
         'contact_support' => 'Vui lòng liên hệ CSKH để nạp tiền.',
     ],
 
@@ -461,6 +462,7 @@ return [
         'added' => 'Đã thêm vào giỏ hàng',
         'added_toast' => 'Tham gia giỏ hàng thành công',
         'add_failed' => 'Không thể thêm vào giỏ hàng',
+        'cannot_buy_own_shop' => 'Cửa hàng không thể mua sản phẩm từ chính shop của mình.',
         'removed' => 'Đã xóa khỏi giỏ hàng',
         'empty_checkout' => 'Chọn ít nhất một sản phẩm để thanh toán',
     ],

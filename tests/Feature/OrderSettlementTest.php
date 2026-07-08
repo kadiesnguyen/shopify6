@@ -153,6 +153,56 @@ class OrderSettlementTest extends TestCase
         ]);
     }
 
+    public function test_shop_cannot_place_order_on_own_distribution(): void
+    {
+        Wallet::query()->where('user_id', $this->seller->id)->update(['balance' => 500]);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('cannot_buy_own_shop');
+
+        app(OrderService::class)->placeOrder($this->seller, $this->product);
+    }
+
+    public function test_shop_buying_from_own_display_shop_routes_to_other_distributor(): void
+    {
+        $product = Product::query()->create([
+            'category_id' => $this->product->category_id,
+            'user_id' => $this->seller->id,
+            'shop_id' => $this->seller->shop->id,
+            'name' => 'Self Buy Blocked Product',
+            'slug' => 'self-buy-blocked-product',
+            'selling_price' => 100,
+            'purchase_price' => 60,
+            'commission' => 15,
+            'stock' => 10,
+            'status' => 'active',
+        ]);
+
+        app(ProductDistributionService::class)->distribute($this->seller, $product);
+
+        $otherSeller = User::factory()->create(['status' => 'active']);
+        $otherSeller->assignRole(['member', 'shop']);
+        Shop::query()->create([
+            'user_id' => $otherSeller->id,
+            'name' => 'Other Shop',
+            'slug' => 'other-shop',
+            'status' => 'active',
+        ]);
+        app(ProductDistributionService::class)->distribute($otherSeller, $product);
+
+        Wallet::query()->where('user_id', $this->seller->id)->update(['balance' => 500]);
+
+        $order = app(OrderService::class)->placeOrder(
+            $this->seller,
+            $product,
+            1,
+            $this->seller->shop->id,
+        );
+
+        $this->assertSame($otherSeller->id, $order->seller_id);
+        $this->assertNotSame($this->seller->id, $order->seller_id);
+    }
+
     public function test_seller_receives_purchase_return_and_commission_when_order_is_completed(): void
     {
         $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
