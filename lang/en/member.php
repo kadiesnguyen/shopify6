@@ -261,7 +261,7 @@ return [
         'confirm_shipping_prompt' => 'Confirm paying cost price to the supplier?',
         'shipping_confirm_cancel' => 'Cancel',
         'shipping_confirm_confirm' => 'Confirm',
-        'confirm_shipping_success' => 'Order moved to Awaiting shipment.',
+        'confirm_shipping_success' => 'Shipping in progress',
         'confirm_shipping_failed' => 'Could not confirm this order.',
         'insufficient_balance' => 'Insufficient balance to pay cost price.',
     ],

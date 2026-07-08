@@ -261,7 +261,7 @@ return [
         'confirm_shipping_prompt' => 'Xác nhận thanh toán giá gốc cho nhà cung ứng',
         'shipping_confirm_cancel' => 'Cancel',
         'shipping_confirm_confirm' => 'Confirm',
-        'confirm_shipping_success' => 'Đơn hàng đã chuyển sang Đang chờ vận chuyển.',
+        'confirm_shipping_success' => 'Đang tiến hành vận chuyển',
         'confirm_shipping_failed' => 'Không thể xác nhận đơn hàng.',
         'insufficient_balance' => 'Số dư không đủ để thanh toán giá gốc.',
     ],

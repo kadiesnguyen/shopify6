@@ -70,6 +70,13 @@ final class ShopOrderStatusBadges
             return;
         }
 
+        // The pending-payment badge is action-required: it must stay lit until the
+        // shop presses confirm (which moves the order out of pending_payment).
+        // Simply viewing the list should never clear it.
+        if ($iconStatus === Order::STATUS_PENDING_PAYMENT) {
+            return;
+        }
+
         $seen = $shop->order_status_seen_at ?? [];
 
         $statusesToMark = $iconStatus === Order::STATUS_WAITING_SHIPMENT

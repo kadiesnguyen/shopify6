@@ -270,6 +270,34 @@ class OrderSettlementTest extends TestCase
         $this->assertSame(0, $counts['shipped']);
     }
 
+    public function test_pending_payment_badge_persists_until_confirm(): void
+    {
+        $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
+        $shop = $this->seller->shop;
+
+        $this->assertSame(
+            1,
+            \App\Support\Member\ShopOrderStatusBadges::unseenCounts($shop, $this->seller->id)->get('pending_payment'),
+        );
+
+        $this->actingAs($this->seller)
+            ->get(route('member.seller.orders.index', ['status' => Order::STATUS_PENDING_PAYMENT]))
+            ->assertOk();
+
+        $this->assertSame(
+            1,
+            \App\Support\Member\ShopOrderStatusBadges::unseenCounts($shop->fresh(), $this->seller->id)->get('pending_payment'),
+            'Viewing the pending-payment list must not clear the badge.',
+        );
+
+        app(OrderSettlementService::class)->confirmPlatformShipping($order->fresh());
+
+        $this->assertSame(
+            0,
+            \App\Support\Member\ShopOrderStatusBadges::unseenCounts($shop->fresh(), $this->seller->id)->get('pending_payment'),
+        );
+    }
+
     public function test_shipped_orders_auto_complete_after_delivery_window(): void
     {
         config(['portal.order_auto_complete_hours' => 1]);
