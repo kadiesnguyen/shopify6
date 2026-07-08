@@ -45,4 +45,26 @@ class SieummoProductDetailParserTest extends TestCase
             (new SieummoProductDetailParser)->parseDescription($html),
         );
     }
+
+    public function test_parses_gallery_urls_before_description_heading(): void
+    {
+        $html = <<<'HTML'
+            <div class="hero">
+                <img src="/uploads/20260611114229-6d70dbc1.jpg" alt="Main">
+                <img src="/uploads/20260611114230-abc12345.jpg" alt="Side">
+                <img src="/uploads/20260611114231-def67890.webp" alt="Detail">
+            </div>
+            <h2 class="font-bold text-gray-900 mb-2">Mô tả sản phẩm</h2>
+            <ul class="list-disc pl-5 space-y-2 text-sm text-gray-700"><li>Specs only.</li></ul>
+            <img src="/uploads/20260611119999-should-skip.jpg" alt="In description">
+        HTML;
+
+        $urls = (new SieummoProductDetailParser)->parseGalleryUrls($html);
+
+        $this->assertSame([
+            '/uploads/20260611114229-6d70dbc1.jpg',
+            '/uploads/20260611114230-abc12345.jpg',
+            '/uploads/20260611114231-def67890.webp',
+        ], $urls);
+    }
 }

@@ -79,21 +79,23 @@ class ProductDetailService
     /** @return list<string|null> */
     private function imageUrls(Product $product): array
     {
-        $images = [];
-
-        $main = $product->imageUrl();
-        if ($main) {
-            $images[] = $main;
-        }
+        $urls = [];
 
         foreach ($product->images as $image) {
             $url = $image->imageUrl();
-            if ($url && $url !== $main) {
-                $images[] = $url;
+
+            if ($url) {
+                $urls[] = $url;
             }
         }
 
-        return $images ?: [$main];
+        if ($urls !== []) {
+            return $urls;
+        }
+
+        $main = $product->imageUrl();
+
+        return $main ? [$main] : [];
     }
 
     /** @return array{id: int, user_id: int, name: string, logo_url: ?string, products_url: string}|null */

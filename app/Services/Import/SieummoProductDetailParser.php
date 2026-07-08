@@ -49,4 +49,37 @@ class SieummoProductDetailParser
 
         return null;
     }
+
+    /** @return list<string> */
+    public function parseGalleryUrls(string $html): array
+    {
+        $parts = preg_split('/Mô tả sản phẩm/u', $html, 2);
+        $galleryHtml = $parts[0] ?? $html;
+
+        return $this->extractUploadImageUrls($galleryHtml);
+    }
+
+    /** @return list<string> */
+    private function extractUploadImageUrls(string $html): array
+    {
+        if (! preg_match_all('/<img[^>]+src=["\']([^"\']+)["\']/i', $html, $matches)) {
+            return [];
+        }
+
+        $urls = [];
+
+        foreach ($matches[1] as $src) {
+            $src = trim(html_entity_decode((string) $src, ENT_QUOTES | ENT_HTML5));
+
+            if ($src === '' || ! str_contains($src, '/uploads/')) {
+                continue;
+            }
+
+            if (! in_array($src, $urls, true)) {
+                $urls[] = $src;
+            }
+        }
+
+        return $urls;
+    }
 }

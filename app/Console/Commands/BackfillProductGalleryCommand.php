@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Product;
 use App\Services\Import\DemoProductImporter;
+use App\Services\Import\SieummoProductImporter;
 use App\Services\Member\ProductDetailService;
 use Illuminate\Console\Command;
 
@@ -13,16 +14,21 @@ class BackfillProductGalleryCommand extends Command
                 {--limit= : Max products to update}
                 {--sleep=100 : Milliseconds between remote fetches}
                 {--skip-images : Update descriptions only, do not download images}
-                {--local-only : Skip demo API; use on-disk product images only}';
+                {--local-only : Skip demo API; use on-disk product images only}
+                {--source=https://sieummo.vn : Sieummo base URL for sm-* gallery sync}';
 
     protected $description = 'Backfill product gallery/description images (demo API + local fallback)';
 
-    public function handle(DemoProductImporter $importer, ProductDetailService $details): int
-    {
+    public function handle(
+        DemoProductImporter $importer,
+        SieummoProductImporter $sieummo,
+        ProductDetailService $details,
+    ): int {
         $limit = $this->option('limit') !== null ? max(1, (int) $this->option('limit')) : null;
         $sleepMs = max(0, (int) $this->option('sleep'));
         $skipImages = (bool) $this->option('skip-images');
         $localOnly = (bool) $this->option('local-only');
+        $sourceUrl = (string) $this->option('source');
         $updated = 0;
         $skipped = 0;
 
@@ -51,18 +57,37 @@ class BackfillProductGalleryCommand extends Command
             $synced = false;
 
             if (! $localOnly) {
-                $goodsId = null;
+                if (preg_match('/^sm-(\d+)$/', (string) $product->slug, $match)) {
+                    $product->loadMissing('shop');
+                    $shopId = $this->sieummoShopId($product);
 
-                if (preg_match('/^demo-(\d+)$/', (string) $product->slug, $match)) {
-                    $goodsId = (int) $match[1];
-                } else {
-                    $goodsId = $details->findDemoGoodsIdByName($product->name);
+                    if ($shopId !== null && $sieummo->syncGalleryForProduct(
+                        $product->fresh(),
+                        $sourceUrl,
+                        (int) $match[1],
+                        $shopId,
+                        $skipImages,
+                    )) {
+                        $updated++;
+                        $this->line("Updated #{$product->id} {$product->slug} from sieummo:{$match[1]}");
+                        $synced = true;
+                    }
                 }
 
-                if ($goodsId !== null && $importer->syncGalleryForProduct($product->fresh(), $goodsId, $skipImages)) {
-                    $updated++;
-                    $this->line("Updated #{$product->id} {$product->slug} from demo:{$goodsId}");
-                    $synced = true;
+                if (! $synced) {
+                    $goodsId = null;
+
+                    if (preg_match('/^demo-(\d+)$/', (string) $product->slug, $match)) {
+                        $goodsId = (int) $match[1];
+                    } else {
+                        $goodsId = $details->findDemoGoodsIdByName($product->name);
+                    }
+
+                    if ($goodsId !== null && $importer->syncGalleryForProduct($product->fresh(), $goodsId, $skipImages)) {
+                        $updated++;
+                        $this->line("Updated #{$product->id} {$product->slug} from demo:{$goodsId}");
+                        $synced = true;
+                    }
                 }
 
                 if ($synced && $sleepMs > 0) {
@@ -88,5 +113,16 @@ class BackfillProductGalleryCommand extends Command
         $this->info("Done. updated={$updated} skipped={$skipped}");
 
         return self::SUCCESS;
+    }
+
+    private function sieummoShopId(Product $product): ?int
+    {
+        $shopSlug = $product->shop?->slug;
+
+        if ($shopSlug === null || ! preg_match('/-(\d+)$/', $shopSlug, $match)) {
+            return null;
+        }
+
+        return (int) $match[1];
     }
 }

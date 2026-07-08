@@ -124,6 +124,16 @@ class SieummoProductImporter
 
             $this->ensureDistribution($shop, $product);
 
+            if ($withDetails) {
+                $this->syncGalleryForProduct(
+                    $product,
+                    $sourceUrl,
+                    $item['sieummo_id'],
+                    $item['sieummo_shop_id'],
+                    $skipImages,
+                );
+            }
+
             if (($index + 1) % 25 === 0) {
                 gc_collect_cycles();
             }
@@ -142,6 +152,62 @@ class SieummoProductImporter
     public function productSlug(int $sieummoId): string
     {
         return 'sm-'.$sieummoId;
+    }
+
+    public function syncGalleryForProduct(
+        Product $product,
+        string $sourceUrl,
+        int $sieummoId,
+        int $shopId,
+        bool $skipImages = false,
+    ): bool {
+        try {
+            $html = Http::timeout(30)
+                ->get(rtrim($sourceUrl, '/').'/product', ['id' => $sieummoId, 'shop' => $shopId])
+                ->body();
+        } catch (\Throwable) {
+            return false;
+        }
+
+        $urls = $this->detailParser->parseGalleryUrls($html);
+
+        if ($urls === []) {
+            return false;
+        }
+
+        $target = app(DemoProductImporter::class)->targetGalleryCount((float) $product->selling_price);
+        $urls = array_slice($urls, 0, $target);
+        $imagePaths = [];
+
+        if (! $skipImages) {
+            foreach ($urls as $index => $url) {
+                $path = $this->downloadAsset($sourceUrl, $url, 'products/sieummo');
+
+                if ($path === null) {
+                    continue;
+                }
+
+                $imagePaths[] = ['path' => $path, 'sort' => $index];
+            }
+        }
+
+        if ($imagePaths === [] && ! $skipImages) {
+            return false;
+        }
+
+        $payload = [];
+
+        if ($imagePaths !== []) {
+            $payload['image'] = $imagePaths[0]['path'];
+        }
+
+        if ($payload !== []) {
+            $product->update($payload);
+        }
+
+        $this->syncImages($product, $imagePaths);
+
+        return true;
     }
 
     /** @param  array<string, Shop>  $cache */
@@ -268,6 +334,19 @@ class SieummoProductImporter
 
         return $this->detailParser->parseDescriptionHtml($html)
             ?? $this->detailParser->parseDescription($html);
+    }
+
+    /** @param  list<array{path: string, sort: int}>  $imagePaths */
+    private function syncImages(Product $product, array $imagePaths): void
+    {
+        $product->images()->delete();
+
+        foreach ($imagePaths as $item) {
+            $product->images()->create([
+                'image' => $item['path'],
+                'sort_order' => $item['sort'],
+            ]);
+        }
     }
 
     private function downloadAsset(string $sourceUrl, string $path, string $folder): ?string
