@@ -27,7 +27,7 @@ class ProductDetailService
         $purchasePrice = (float) ($distribution?->purchase_price ?? $product->purchase_price);
         $sellingPrice = (float) ($distribution?->selling_price ?? $marketPrice);
         $profit = max(0, $sellingPrice - $purchasePrice);
-        $description = $this->resolveDescription($product, $sourceUrl);
+        $description = $this->stripDescriptionImages($this->resolveDescription($product, $sourceUrl));
         $isRecommended = $product->distributions()->available()->exists();
 
         return [
@@ -359,6 +359,19 @@ class ProductDetailService
     private function sanitizeDescriptionHtml(string $html): string
     {
         $html = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html) ?? $html;
+
+        return trim($html);
+    }
+
+    /**
+     * Product photos belong to the gallery slide, not the specs body. Drop the
+     * appended gallery block and any inline images so the detail tab is text-only.
+     */
+    public function stripDescriptionImages(string $html): string
+    {
+        $html = preg_replace('/<div class="product-desc-gallery">.*?<\/div>/is', '', $html) ?? $html;
+        $html = preg_replace('/<img\b[^>]*>/i', '', $html) ?? $html;
+        $html = preg_replace('/<p>\s*<\/p>/i', '', $html) ?? $html;
 
         return trim($html);
     }
