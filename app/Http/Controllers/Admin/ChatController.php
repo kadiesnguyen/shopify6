@@ -24,6 +24,7 @@ class ChatController extends Controller
             'chatSupportTitle' => SiteSettings::get(SiteSettings::KEY_CHAT_SUPPORT_TITLE),
             'chatSupportAvatarUrl' => SiteSettings::chatSupportAvatarUrl(),
             'chatSupportTitleDefault' => SiteSettings::chatSupportTitle(),
+            'chatSupportWelcomeMessage' => SiteSettings::get(SiteSettings::KEY_CHAT_WELCOME_MESSAGE),
         ]);
     }
 
@@ -34,6 +35,11 @@ class ChatController extends Controller
         SiteSettings::set(
             SiteSettings::KEY_CHAT_SUPPORT_TITLE,
             filled($data['chat_support_title'] ?? null) ? $data['chat_support_title'] : null,
+        );
+
+        SiteSettings::set(
+            SiteSettings::KEY_CHAT_WELCOME_MESSAGE,
+            filled($data['chat_support_welcome_message'] ?? null) ? $data['chat_support_welcome_message'] : null,
         );
 
         if ($request->boolean('remove_chat_support_avatar')) {

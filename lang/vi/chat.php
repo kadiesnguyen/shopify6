@@ -40,6 +40,8 @@ return [
     'settings_subtitle' => 'Ảnh đại diện và tên hiển thị trên khung chat phía user/guest.',
     'support_display_name' => 'Tên hiển thị CSKH',
     'support_display_name_hint' => 'Để trống sẽ dùng mặc định: :default',
+    'support_welcome_message' => 'Cài đặt tin nhắn chào mừng',
+    'support_welcome_message_placeholder' => 'Xin chào! Tôi có thể giúp gì cho bạn?',
     'support_avatar' => 'Ảnh đại diện CSKH',
     'remove_support_avatar' => 'Xóa ảnh đại diện',
     'save_settings' => 'Lưu cài đặt',

@@ -40,6 +40,8 @@ return [
     'settings_subtitle' => 'Avatar and display name shown on member and guest chat headers.',
     'support_display_name' => 'Support display name',
     'support_display_name_hint' => 'Leave blank to use default: :default',
+    'support_welcome_message' => 'Welcome message',
+    'support_welcome_message_placeholder' => 'Hello! How can I help you today?',
     'support_avatar' => 'Support avatar',
     'remove_support_avatar' => 'Remove avatar',
     'save_settings' => 'Save settings',

@@ -26,6 +26,8 @@ class SiteSettings
 
     public const KEY_CHAT_SUPPORT_AVATAR = 'chat_support_avatar_path';
 
+    public const KEY_CHAT_WELCOME_MESSAGE = 'chat_support_welcome_message';
+
     /** @return array<string, string|null> */
     public static function all(): array
     {
@@ -113,6 +115,13 @@ class SiteSettings
         }
 
         return self::publicStorageUrl($path);
+    }
+
+    public static function chatSupportWelcomeMessage(): ?string
+    {
+        $value = self::get(self::KEY_CHAT_WELCOME_MESSAGE);
+
+        return filled($value) ? $value : null;
     }
 
     public static function publicStorageUrl(string $path): string

@@ -40,19 +40,35 @@
                     </div>
                 </div>
 
-                <div class="min-w-0 flex-1 sm:min-w-[14rem]">
-                    <label for="chat_support_title" class="mb-1 block text-xs font-medium text-slate-700">{{ __('chat.support_display_name') }}</label>
-                    <input
-                        id="chat_support_title"
-                        type="text"
-                        name="chat_support_title"
-                        value="{{ old('chat_support_title', $chatSupportTitle) }}"
-                        placeholder="{{ $chatSupportTitleDefault }}"
-                        class="w-full rounded-lg border-slate-300 text-sm"
-                    >
-                    @error('chat_support_title')
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                    @enderror
+                <div class="min-w-0 flex flex-1 flex-col gap-3 sm:min-w-[14rem]">
+                    <div>
+                        <label for="chat_support_title" class="mb-1 block text-xs font-medium text-slate-700">{{ __('chat.support_display_name') }}</label>
+                        <input
+                            id="chat_support_title"
+                            type="text"
+                            name="chat_support_title"
+                            value="{{ old('chat_support_title', $chatSupportTitle) }}"
+                            placeholder="{{ $chatSupportTitleDefault }}"
+                            class="w-full rounded-lg border-slate-300 text-sm"
+                        >
+                        @error('chat_support_title')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="chat_support_welcome_message" class="mb-1 block text-xs font-medium text-slate-700">{{ __('chat.support_welcome_message') }}</label>
+                        <textarea
+                            id="chat_support_welcome_message"
+                            name="chat_support_welcome_message"
+                            rows="3"
+                            placeholder="{{ __('chat.support_welcome_message_placeholder') }}"
+                            class="w-full rounded-lg border-slate-300 text-sm"
+                        >{{ old('chat_support_welcome_message', $chatSupportWelcomeMessage) }}</textarea>
+                        @error('chat_support_welcome_message')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <button type="submit" class="w-full shrink-0 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark sm:w-auto">

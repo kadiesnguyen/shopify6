@@ -182,6 +182,7 @@ class ChatTest extends TestCase
             ->assertOk()
             ->assertSee(__('chat.admin_title'))
             ->assertSee(__('chat.support_display_name'))
+            ->assertSee(__('chat.support_welcome_message'))
             ->assertSee(__('chat.save_settings'))
             ->assertSee('admin-chat-shell', false)
             ->assertSee('adminChat', false);
@@ -194,19 +195,22 @@ class ChatTest extends TestCase
         $this->actingAs($this->admin)
             ->post(route('admin.chat.settings.update'), [
                 'chat_support_title' => 'Hotline VIP',
+                'chat_support_welcome_message' => 'Xin chào! Tôi có thể giúp gì cho bạn?',
                 'chat_support_avatar' => UploadedFile::fake()->create('avatar.jpg', 100, 'image/jpeg'),
             ])
             ->assertRedirect(route('admin.chat.index'))
             ->assertSessionHas('status', __('chat.settings_saved'));
 
         $this->assertSame('Hotline VIP', SiteSettings::chatSupportTitle());
+        $this->assertSame('Xin chào! Tôi có thể giúp gì cho bạn?', SiteSettings::chatSupportWelcomeMessage());
         $this->assertNotNull(SiteSettings::get(SiteSettings::KEY_CHAT_SUPPORT_AVATAR));
         Storage::disk('public')->assertExists(SiteSettings::get(SiteSettings::KEY_CHAT_SUPPORT_AVATAR));
 
         $this->actingAs($this->member)
             ->get(route('member.chat.index'))
             ->assertOk()
-            ->assertSee('Hotline VIP');
+            ->assertSee('Hotline VIP')
+            ->assertSee('Xin chào! Tôi có thể giúp gì cho bạn?');
     }
 
     public function test_member_chat_page_is_full_screen(): void

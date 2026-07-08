@@ -9,6 +9,7 @@
 
     $supportTitle = SiteSettings::chatSupportTitle();
     $supportAvatarUrl = SiteSettings::chatSupportAvatarUrl();
+    $supportWelcomeMessage = SiteSettings::chatSupportWelcomeMessage();
 @endphp
 
 <div
@@ -18,6 +19,7 @@
         brand: @js($brand),
         supportTitle: @js($supportTitle),
         supportAvatarUrl: @js($supportAvatarUrl),
+        welcomeMessage: @js($supportWelcomeMessage),
         csrf: @js(csrf_token()),
         labels: @js([
             'placeholder' => __('chat.placeholder'),
@@ -64,6 +66,11 @@
         </div>
 
         <div class="min-h-0 flex-1 space-y-3 overflow-y-auto p-4" x-ref="thread">
+            <div x-show="messages.length === 0 && welcomeMessage" class="flex justify-start" x-cloak>
+                <div class="max-w-[85%] rounded-2xl rounded-bl-md bg-gray-100 px-3 py-2 text-gray-900">
+                    <p class="whitespace-pre-wrap text-sm" x-text="welcomeMessage"></p>
+                </div>
+            </div>
             <template x-for="msg in messages" :key="msg.id">
                 <div :class="msg.sender_role === 'user' ? 'flex justify-end' : 'flex justify-start'">
                     <div
