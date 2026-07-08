@@ -20,7 +20,7 @@ class CheckoutController extends Controller
         private readonly ProductDistributionService $distributionService,
     ) {}
 
-    public function show(Product $product): View|RedirectResponse
+    public function show(Request $request, Product $product): View|RedirectResponse
     {
         abort_unless(ProductBuyableQuery::isBuyable($product), 404);
 
@@ -30,8 +30,9 @@ class CheckoutController extends Controller
             return redirect($redirect);
         }
 
+        $shopId = $request->integer('shop_id') ?: null;
         $product->load(['shop', 'category']);
-        $unitPrice = $this->distributionService->previewOrderPrice($product) ?? (float) $product->selling_price;
+        $unitPrice = $this->distributionService->previewOrderPrice($product, $shopId) ?? (float) $product->selling_price;
         $product->setAttribute('display_selling_price', $unitPrice);
 
         $address = ShippingAddress::query()
@@ -42,7 +43,7 @@ class CheckoutController extends Controller
 
         $wallet = auth()->user()->wallet;
 
-        return view('member.checkout.show', compact('product', 'address', 'wallet'));
+        return view('member.checkout.show', compact('product', 'address', 'wallet', 'shopId'));
     }
 
     public function store(Request $request, Product $product): RedirectResponse
@@ -58,8 +59,10 @@ class CheckoutController extends Controller
         $validated = $request->validate([
             'qty' => ['required', 'integer', 'min:1', 'max:9999'],
             'payment_method' => ['required', 'in:balance,cskh'],
+            'shop_id' => ['nullable', 'integer'],
         ]);
 
+        $shopId = ($validated['shop_id'] ?? 0) > 0 ? (int) $validated['shop_id'] : null;
         $qty = min($validated['qty'], $product->stock);
 
         if (! ShippingAddress::query()->where('user_id', auth()->id())->exists()) {
@@ -75,7 +78,7 @@ class CheckoutController extends Controller
         }
 
         $wallet = auth()->user()->wallet;
-        $unitPrice = $this->distributionService->previewOrderPrice($product) ?? (float) $product->selling_price;
+        $unitPrice = $this->distributionService->previewOrderPrice($product, $shopId) ?? (float) $product->selling_price;
         $total = $unitPrice * $qty;
 
         if (! $wallet || $wallet->balance < $total) {
@@ -85,7 +88,7 @@ class CheckoutController extends Controller
         }
 
         try {
-            $this->orderService->placeOrder(auth()->user(), $product, $qty);
+            $this->orderService->placeOrder(auth()->user(), $product, $qty, $shopId);
         } catch (\RuntimeException $exception) {
             return match ($exception->getMessage()) {
                 'insufficient_stock' => back()

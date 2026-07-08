@@ -40,8 +40,24 @@ class ProductDistributionService
         ]);
     }
 
-    public function resolveForOrder(Product $product): ?ProductDistribution
+    public function resolveForOrder(Product $product, ?int $displayShopId = null): ?ProductDistribution
     {
+        // Route the order to the shop the buyer was actually shown, so its owner
+        // receives the pending order instead of a load-balanced third party.
+        if ($displayShopId > 0) {
+            $preferred = ProductDistribution::query()
+                ->available()
+                ->where('product_id', $product->id)
+                ->whereHas('user.shop', fn ($query) => $query->whereKey($displayShopId))
+                ->orderByDesc('created_at')
+                ->lockForUpdate()
+                ->first();
+
+            if ($preferred) {
+                return $preferred;
+            }
+        }
+
         return ProductDistribution::query()
             ->available()
             ->where('product_id', $product->id)
@@ -112,8 +128,21 @@ class ProductDistributionService
         return $distribution->fresh();
     }
 
-    public function previewOrderPrice(Product $product): ?float
+    public function previewOrderPrice(Product $product, ?int $displayShopId = null): ?float
     {
+        if ($displayShopId > 0) {
+            $preferred = ProductDistribution::query()
+                ->available()
+                ->where('product_id', $product->id)
+                ->whereHas('user.shop', fn ($query) => $query->whereKey($displayShopId))
+                ->orderByDesc('created_at')
+                ->first();
+
+            if ($preferred) {
+                return (float) $preferred->selling_price;
+            }
+        }
+
         $distribution = ProductDistribution::query()
             ->available()
             ->where('product_id', $product->id)

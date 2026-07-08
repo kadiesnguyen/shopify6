@@ -19,9 +19,9 @@ class OrderService
         private readonly MemberNotificationService $notifications,
     ) {}
 
-    public function placeOrder(User $user, Product $product, int $qty = 1): Order
+    public function placeOrder(User $user, Product $product, int $qty = 1, ?int $displayShopId = null): Order
     {
-        return DB::transaction(function () use ($user, $product, $qty): Order {
+        return DB::transaction(function () use ($user, $product, $qty, $displayShopId): Order {
             $product = Product::query()
                 ->whereKey($product->id)
                 ->lockForUpdate()
@@ -29,7 +29,7 @@ class OrderService
 
             abort_unless($product->status === Product::STATUS_ACTIVE, 404);
 
-            $distribution = $this->distributionService->resolveForOrder($product);
+            $distribution = $this->distributionService->resolveForOrder($product, $displayShopId);
 
             if (! $distribution) {
                 throw new RuntimeException('product_not_distributed');

@@ -113,6 +113,46 @@ class OrderSettlementTest extends TestCase
         $this->assertSame(1, BellNotificationCache::unreadCount($this->seller->id));
     }
 
+    public function test_order_routes_to_displayed_shop_not_lowest_id_distribution(): void
+    {
+        // Platform distribution is created FIRST (lower id) so it would win
+        // load-balancing; the buyer was shown the shop created afterwards.
+        $product = Product::query()->create([
+            'category_id' => $this->product->category_id,
+            'user_id' => $this->seller->id,
+            'shop_id' => $this->seller->shop->id,
+            'name' => 'Routed Product',
+            'slug' => 'routed-product',
+            'selling_price' => 100,
+            'purchase_price' => 60,
+            'commission' => 15,
+            'stock' => 10,
+            'status' => 'active',
+        ]);
+
+        $platform = User::factory()->create(['status' => 'active']);
+        $platform->assignRole(['member', 'shop']);
+        Shop::query()->create([
+            'user_id' => $platform->id,
+            'name' => 'Platform Shop',
+            'slug' => 'platform-shop',
+            'status' => 'active',
+        ]);
+        app(ProductDistributionService::class)->distribute($platform, $product);
+        app(ProductDistributionService::class)->distribute($this->seller, $product);
+
+        $shopId = $this->seller->shop->id;
+
+        $order = app(OrderService::class)->placeOrder($this->buyer, $product, 1, $shopId);
+
+        $this->assertSame($this->seller->id, $order->seller_id);
+        $this->assertSame($shopId, $order->shop_id);
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $this->seller->id,
+            'type' => 'order_pending_payment',
+        ]);
+    }
+
     public function test_seller_receives_purchase_return_and_commission_when_order_is_completed(): void
     {
         $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);

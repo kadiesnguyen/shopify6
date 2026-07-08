@@ -10,6 +10,9 @@
         $walletBalance = (float) ($wallet->balance ?? 0);
     @endphp
 
+    @php
+        $checkoutSelfUrl = route('member.checkout.show', array_filter(['product' => $product, 'shop_id' => $shopId ?? null]));
+    @endphp
     <div
         class="portal-checkout-shell"
         x-data="{
@@ -33,7 +36,7 @@
                 @if ($address)
                     this.sheetOpen = true;
                 @else
-                    window.location.href = '{{ route('member.shipping.index', ['redirect' => route('member.checkout.show', $product)]) }}';
+                    window.location.href = '{{ route('member.shipping.index', ['redirect' => $checkoutSelfUrl]) }}';
                 @endif
             }
         }"
@@ -46,7 +49,7 @@
         </header>
 
         <div class="px-4 pt-3">
-            <a href="{{ route('member.shipping.index', ['redirect' => route('member.checkout.show', $product)]) }}" class="flex w-full items-center gap-2 py-3 text-left active:bg-gray-50">
+            <a href="{{ route('member.shipping.index', ['redirect' => $checkoutSelfUrl]) }}" class="flex w-full items-center gap-2 py-3 text-left active:bg-gray-50">
                 <x-member.icon name="map-pin" class="size-5 shrink-0 text-gray-600" />
                 @if ($address)
                     <span class="min-w-0 flex-1 text-sm text-gray-800">
@@ -144,6 +147,9 @@
                     @csrf
                     <input type="hidden" name="qty" :value="qty">
                     <input type="hidden" name="payment_method" :value="paymentMethod">
+                    @if (! empty($shopId))
+                        <input type="hidden" name="shop_id" value="{{ $shopId }}">
+                    @endif
 
                     <button type="button" @click="paymentMethod = 'balance'" class="flex w-full items-center gap-3 border-t border-gray-100 px-5 py-4 text-left">
                         <span class="grid size-9 place-items-center rounded-full bg-violet-500 text-white">
