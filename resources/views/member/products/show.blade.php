@@ -79,7 +79,11 @@
 
                 <section class="mt-4">
                     <p class="mb-2 text-sm font-semibold text-gray-900">{{ __('member.products.description') }}</p>
-                    <p class="whitespace-pre-line text-sm leading-relaxed text-gray-600">{{ $description }}</p>
+                    @if ($descriptionHtml)
+                        <div class="product-detail-html text-sm leading-relaxed text-gray-600">{!! $description !!}</div>
+                    @else
+                        <p class="whitespace-pre-line text-sm leading-relaxed text-gray-600">{{ $description }}</p>
+                    @endif
                 </section>
             </div>
         </div>

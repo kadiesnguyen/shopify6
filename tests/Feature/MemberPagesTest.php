@@ -161,6 +161,55 @@ class MemberPagesTest extends TestCase
             ->assertSee('Imported product description from sieummo.');
     }
 
+    public function test_manage_product_detail_renders_html_description(): void
+    {
+        $category = Category::query()->create([
+            'name' => 'Manage Category',
+            'slug' => 'manage-category',
+            'status' => 'active',
+        ]);
+
+        $shopOwner = User::factory()->create(['status' => 'active']);
+        $shopOwner->assignRole('shop');
+        $shop = Shop::query()->create([
+            'user_id' => $shopOwner->id,
+            'name' => 'Manage Shop',
+            'slug' => 'manage-shop',
+            'status' => 'active',
+        ]);
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'shop_id' => $shop->id,
+            'user_id' => $shopOwner->id,
+            'name' => 'Sponge cleaning cloth',
+            'slug' => 'sponge-cleaning-cloth',
+            'description' => '<p>Sponge cleaning cloth is built for shoppers.</p><ul><li>Soft and durable.</li></ul>',
+            'selling_price' => 2.56,
+            'purchase_price' => 2.56,
+            'commission' => 0,
+            'stock' => 100,
+            'status' => 'active',
+        ]);
+
+        ProductDistribution::query()->create([
+            'user_id' => $shopOwner->id,
+            'product_id' => $product->id,
+            'selling_price' => 2.56,
+            'purchase_price' => 2.56,
+            'commission' => 0,
+            'commission_type' => 'fixed',
+            'status' => ProductDistribution::STATUS_AVAILABLE,
+        ]);
+
+        $this->actingAs($shopOwner)
+            ->get(route('member.products.show', ['product' => $product, 'from' => 'manage']))
+            ->assertOk()
+            ->assertSee('Soft and durable.', false)
+            ->assertSee('<ul>', false)
+            ->assertDontSee('&lt;ul&gt;', false);
+    }
+
     public function test_member_product_detail_shop_link_uses_distributor_shop_products(): void
     {
         $category = Category::query()->create([
