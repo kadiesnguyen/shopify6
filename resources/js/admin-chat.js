@@ -3,6 +3,8 @@ import { chatComposerState } from './chat-composer';
 document.addEventListener('alpine:init', () => {
     Alpine.data('adminChat', (config) => ({
         ...chatComposerState(),
+        settingsOpen: false,
+        displayNameOpen: false,
         filter: config.initialFilter || 'all',
         conversations: [],
         messages: [],
@@ -67,6 +69,8 @@ document.addEventListener('alpine:init', () => {
 
         async openConversation(id) {
             this.activeId = id;
+            this.settingsOpen = false;
+            this.displayNameOpen = false;
             this.selectedIds = [];
             await this.loadThread(id);
         },

@@ -342,8 +342,7 @@ body {
     }
 
     .admin-chat-shell {
-        @apply flex min-h-0 flex-1 flex-col overflow-hidden;
-        max-height: 100%;
+        @apply flex min-h-0 flex-1 basis-0 flex-col overflow-hidden;
     }
 
     .portal-chat-shell {
@@ -368,6 +367,12 @@ body {
 
     .admin-chat-composer {
         @apply shrink-0 border-t border-slate-100 bg-white;
+    }
+
+    @media (max-width: 767px) {
+        .admin-chat-page .admin-chat-composer {
+            padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+        }
     }
 
     .checkout-airmail {
