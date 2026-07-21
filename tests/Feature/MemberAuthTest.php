@@ -52,6 +52,23 @@ class MemberAuthTest extends TestCase
         $this->assertDatabaseHas('wallets', ['user_id' => User::query()->where('email', 'seller@example.com')->value('id')]);
     }
 
+    public function test_register_user_code_skips_existing_u_codes_when_count_is_lower(): void
+    {
+        User::factory()->create(['user_code' => 'U000066', 'email' => 'taken@example.com']);
+
+        $this->post(route('auth.register'), [
+            'login' => '0911123456',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'terms' => '1',
+        ])->assertRedirect(route('member.home'));
+
+        $this->assertDatabaseHas('users', [
+            'phone' => '0911123456',
+            'user_code' => 'U000002',
+        ]);
+    }
+
     public function test_member_can_login_with_email(): void
     {
         $user = User::factory()->create(['email' => 'member@shopefy.test']);

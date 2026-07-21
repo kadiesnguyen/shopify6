@@ -15,8 +15,6 @@ use Illuminate\Support\Str;
 
 class AdminUserUpdateService
 {
-    public function __construct(private readonly AdminShopRoleTransitionService $shopRoleTransition) {}
-
     /** @param  array<string, mixed>  $data */
     public function update(User $user, array $data): User
     {
@@ -32,19 +30,9 @@ class AdminUserUpdateService
 
         $user->update($userData);
 
-        if (isset($data['role'])) {
-            $this->shopRoleTransition->beforeRoleChange($user, (string) $data['role']);
-
-            match ($data['role']) {
-                'member' => $user->syncRoles(['member']),
-                'shop', 'shop_personal', 'shop_business' => $user->syncRoles(['shop', 'member']),
-                default => $user->syncRoles([$data['role']]),
-            };
-        }
-
         $this->syncShippingAddress($user, $data);
 
-        if (User::isAdminShopFormRole($data['role'] ?? null)) {
+        if (User::isAdminShopFormRole($user->adminFormRole())) {
             $this->syncShopProfile($user, $data);
             $this->resolvePendingRegistrationApplications($user);
         }
@@ -186,8 +174,9 @@ class AdminUserUpdateService
             $shopPayload[$fileKey] = $this->storeShopImage($uploadedFile, $user, $fileKey);
         }
 
-        if (isset($data['role']) && User::isAdminShopFormRole($data['role'])) {
-            $shopPayload['seller_type'] = $data['role'] === 'shop_business'
+        $formRole = $user->adminFormRole();
+        if (User::isAdminShopFormRole($formRole)) {
+            $shopPayload['seller_type'] = $formRole === 'shop_business'
                 ? Shop::TYPE_BUSINESS
                 : Shop::TYPE_PERSONAL;
         }
@@ -208,7 +197,7 @@ class AdminUserUpdateService
                 'name' => $shopName,
                 'slug' => $this->uniqueShopSlug($shopName),
                 'status' => Shop::STATUS_ACTIVE,
-                'seller_type' => isset($data['role']) && $data['role'] === 'shop_business'
+                'seller_type' => User::isAdminShopFormRole($formRole) && $formRole === 'shop_business'
                     ? Shop::TYPE_BUSINESS
                     : Shop::TYPE_PERSONAL,
             ]);

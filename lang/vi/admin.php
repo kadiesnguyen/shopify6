@@ -172,6 +172,7 @@ return [
             'password_not_set' => '—',
             'edit_title' => 'Sửa người dùng',
             'role_change_hint' => 'Lưu ý: Hạ Cửa hàng cá nhân hoặc Doanh nghiệp xuống Người dùng sẽ xóa toàn bộ đơn chờ thanh toán của shop khỏi hệ thống (chỉ ẩn/xóa hiển thị, không hoàn tiền). Chuyển Doanh nghiệp → Cá nhân thì giữ nguyên các đơn chờ thanh toán.',
+            'role_locked_hint' => 'Quyền đã khóa — không thể đổi tại form này.',
             'role_downgrade_pending_orders_warning' => 'Bạn đang hạ cấp cửa hàng xuống Người dùng. Khi lưu, mọi đơn chờ thanh toán của shop sẽ bị xóa khỏi hiển thị (không hoàn tiền).',
             'password_leave_blank' => 'Mật khẩu (để trống nếu không đổi)',
             'payment_password_leave_blank' => 'Mật khẩu quỹ (để trống nếu không đổi)',

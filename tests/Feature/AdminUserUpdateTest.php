@@ -53,7 +53,6 @@ class AdminUserUpdateTest extends TestCase
                 'email' => $member->email,
                 'phone' => '0356674298',
                 'status' => User::STATUS_ACTIVE,
-                'role' => 'shop_personal',
                 'shop_name' => 'New Shop Name',
                 'followers' => 12,
                 'credit_score' => 88,
@@ -134,8 +133,7 @@ class AdminUserUpdateTest extends TestCase
             ->assertSee(__('admin.users.actions.edit_title'))
             ->assertSee(__('admin.users.actions.shipping_title'))
             ->assertSee(__('admin.users.actions.shipping_recipient'))
-            ->assertSee(__('admin.users.actions.role_change_hint'))
-            ->assertSee('wasShop', false);
+            ->assertSee(__('admin.users.actions.role_locked_hint'));
     }
 
     public function test_admin_can_update_member_shipping_address(): void
@@ -157,7 +155,6 @@ class AdminUserUpdateTest extends TestCase
                 'email' => $member->email,
                 'phone' => '0900111222',
                 'status' => User::STATUS_ACTIVE,
-                'role' => 'member',
                 'shipping_recipient_name' => 'Nguyen Van A',
                 'shipping_phone' => '0900111222',
                 'shipping_country' => 'Việt Nam',
@@ -197,7 +194,6 @@ class AdminUserUpdateTest extends TestCase
                 'email' => $member->email,
                 'phone' => $member->phone,
                 'status' => User::STATUS_ACTIVE,
-                'role' => 'member',
                 'payment_password' => '654321',
                 'payment_password_confirmation' => '654321',
             ])
@@ -229,14 +225,12 @@ class AdminUserUpdateTest extends TestCase
             ->get(route('admin.users.index', ['show_edit' => $member->id]));
 
         $response->assertOk();
-        $response->assertSee('role: \'shop_personal\'', false);
-        $response->assertSee('wasShop: true', false);
-        $response->assertSee(__('admin.users.actions.role_downgrade_pending_orders_warning'), false);
+        $response->assertSee(__('admin.users.actions.role_locked_hint'), false);
         $response->assertSee(__('admin.users.actions.buff_stats_title'));
         $response->assertSee(__('admin.users.actions.shop_name'));
     }
 
-    public function test_admin_can_downgrade_shop_to_member(): void
+    public function test_admin_cannot_change_role_from_edit_form(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
@@ -262,13 +256,13 @@ class AdminUserUpdateTest extends TestCase
                 'status' => User::STATUS_ACTIVE,
                 'role' => 'member',
             ])
-            ->assertRedirect(route('admin.users.index', ['show_edit' => $member->id]));
+            ->assertSessionHasErrors(['role']);
 
         $member->refresh();
 
         $this->assertTrue($member->hasRole('member'));
-        $this->assertFalse($member->hasRole('shop'));
-        $this->assertSame('member', $member->adminFormRole());
+        $this->assertTrue($member->hasRole('shop'));
+        $this->assertSame('shop_personal', $member->adminFormRole());
     }
 
     public function test_users_list_shows_member_role_when_shop_record_exists_without_shop_role(): void
@@ -295,7 +289,7 @@ class AdminUserUpdateTest extends TestCase
             ->assertSee(__('admin.roles.member'));
     }
 
-    public function test_admin_can_set_business_shop_role_from_edit_form(): void
+    public function test_role_change_via_edit_form_is_rejected(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
@@ -314,13 +308,10 @@ class AdminUserUpdateTest extends TestCase
                 'role' => 'shop_business',
                 'shop_name' => 'Business Shop',
             ])
-            ->assertRedirect(route('admin.users.index', ['show_edit' => $member->id]));
+            ->assertSessionHasErrors(['role']);
 
-        $shop = Shop::query()->where('user_id', $member->id)->first();
-
-        $this->assertNotNull($shop);
-        $this->assertSame(Shop::TYPE_BUSINESS, $shop->seller_type);
-        $this->assertSame('shop_business', $member->fresh()->adminFormRole());
+        $this->assertNull(Shop::query()->where('user_id', $member->id)->first());
+        $this->assertSame('member', $member->fresh()->adminFormRole());
     }
 
     public function test_admin_can_update_shop_user_with_blank_shop_name(): void
@@ -347,7 +338,6 @@ class AdminUserUpdateTest extends TestCase
                 'email' => $member->email,
                 'phone' => $member->phone,
                 'status' => User::STATUS_ACTIVE,
-                'role' => 'shop_personal',
                 'shop_name' => '',
                 'followers' => 0,
                 'credit_score' => 0,
@@ -380,7 +370,6 @@ class AdminUserUpdateTest extends TestCase
                 'email' => $member->email,
                 'phone' => $member->phone,
                 'status' => User::STATUS_ACTIVE,
-                'role' => 'shop_personal',
                 'display_pending_orders' => 5,
                 'display_completed_orders' => 11,
             ])
@@ -410,7 +399,6 @@ class AdminUserUpdateTest extends TestCase
                 'name' => '',
                 'email' => 'not-an-email',
                 'status' => User::STATUS_ACTIVE,
-                'role' => 'member',
             ])
             ->assertRedirect(route('admin.users.index', ['show_edit' => $member->id]))
             ->assertSessionHasErrors(['name', 'email']);

@@ -163,6 +163,7 @@ return [
             'password_not_set' => '—',
             'edit_title' => 'Edit user',
             'role_change_hint' => 'Note: Downgrading a personal or business shop to Member removes all of that shop\'s pending-payment orders from the system (display only — no refunds). Business → personal keeps pending-payment orders.',
+            'role_locked_hint' => 'Role is locked and cannot be changed from this form.',
             'role_downgrade_pending_orders_warning' => 'You are downgrading this shop to Member. Saving will remove all pending-payment orders from view (no refunds).',
             'password_leave_blank' => 'Password (leave blank to keep current)',
             'payment_password_leave_blank' => 'Fund password (leave blank to keep current)',

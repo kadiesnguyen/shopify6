@@ -24,6 +24,15 @@
         </div>
 
         <div class="grid grid-cols-2 gap-4">
+        @if ($user->exists)
+            <div>
+                <label class="mb-1 block text-sm font-medium">{{ ucfirst('role') }}</label>
+                <div class="flex min-h-[42px] items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                    <x-admin.role-badge :role="$user->adminFormRole()" :shop="$user->shop" />
+                </div>
+                <p class="mt-1 text-xs text-slate-500">{{ __('admin.users.actions.role_locked_hint') }}</p>
+            </div>
+        @else
             <div>
                 <label class="mb-1 block text-sm font-medium">Role</label>
                 <select name="role" class="w-full rounded-lg border-slate-300">
@@ -32,6 +41,7 @@
                     @endforeach
                 </select>
             </div>
+        @endif
             <div>
                 <label class="mb-1 block text-sm font-medium">Status</label>
                 <select name="status" class="w-full rounded-lg border-slate-300">

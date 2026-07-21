@@ -31,7 +31,10 @@ class UserRequest extends FormRequest
             'password' => [$this->isMethod('POST') ? 'required' : 'nullable', 'string', 'min:8'],
             'payment_password' => ['nullable', 'digits:6', 'confirmed'],
             'status' => ['required', 'in:active,inactive,banned'],
-            'role' => ['required', Rule::in(['admin', 'member', 'shop', 'shop_personal', 'shop_business'])],
+            'role' => [
+                $this->isMethod('POST') ? 'required' : 'prohibited',
+                Rule::in(['admin', 'member', 'shop', 'shop_personal', 'shop_business']),
+            ],
             'shop_name' => ['nullable', 'string', 'max:120'],
             'followers' => ['nullable', 'integer', 'min:0'],
             'credit_score' => ['nullable', 'integer', 'min:0'],

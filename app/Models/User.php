@@ -173,6 +173,21 @@ class User extends Authenticatable
         return $this->hasRole('admin');
     }
 
+    /** Next unique U###### code; avoids count()+1 collisions and skips taken codes. */
+    public static function allocateNextUserCode(): string
+    {
+        $start = max(1, (int) static::query()->max('id') + 1);
+
+        for ($n = $start; $n <= 999_999; $n++) {
+            $code = 'U'.str_pad((string) $n, 6, '0', STR_PAD_LEFT);
+            if (! static::query()->where('user_code', $code)->exists()) {
+                return $code;
+            }
+        }
+
+        throw new \RuntimeException('No available user_code in U###### range.');
+    }
+
     public function isShop(): bool
     {
         return $this->hasRole('shop');

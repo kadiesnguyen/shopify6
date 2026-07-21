@@ -48,7 +48,7 @@ class AuthController extends Controller
 
         $user = User::query()->create([
             'username' => $request->validated('username'),
-            'user_code' => 'U'.str_pad((string) (User::query()->count() + 1), 6, '0', STR_PAD_LEFT),
+            'user_code' => User::allocateNextUserCode(),
             'name' => $request->validated('name'),
             'email' => $request->validated('email'),
             'phone' => $request->validated('phone'),

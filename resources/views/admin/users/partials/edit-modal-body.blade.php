@@ -21,7 +21,6 @@
     action="{{ route('admin.users.update', $modalUser, false) }}?{{ http_build_query(array_merge($listQuery ?? request()->only(['q', 'role', 'shop_application']), ['show_edit' => $modalUser->id])) }}"
     enctype="multipart/form-data"
     class="space-y-5"
-    x-data="{ role: @js($selectedRole), wasShop: @js($modalUser->isShop()) }"
 >
     @csrf
     @method('PUT')
@@ -29,20 +28,10 @@
     <div class="grid gap-4 sm:grid-cols-2">
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('admin.columns.role') }}</label>
-            <select name="role" x-model="role" class="w-full rounded-lg border-slate-300 text-sm">
-                @foreach (\App\Models\User::adminMemberRoleOptions() as $roleOption)
-                    <option value="{{ $roleOption }}">{{ __('admin.roles.'.$roleOption) }}</option>
-                @endforeach
-            </select>
-            <p class="mt-2 text-xs leading-relaxed text-slate-500">{{ __('admin.users.actions.role_change_hint') }}</p>
-            <p
-                x-show="wasShop && role === 'member'"
-                x-cloak
-                class="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900"
-            >
-                {{ __('admin.users.actions.role_downgrade_pending_orders_warning') }}
-            </p>
-            @error('role')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+            <div class="flex min-h-[42px] items-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                <x-admin.role-badge :role="$selectedRole" :shop="$modalUser->shop" />
+            </div>
+            <p class="mt-2 text-xs leading-relaxed text-slate-500">{{ __('admin.users.actions.role_locked_hint') }}</p>
         </div>
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700">Email *</label>
@@ -148,12 +137,8 @@
         </div>
     </section>
 
-    <fieldset
-        class="space-y-5 border-0 p-0"
-        x-show="role === 'shop_personal' || role === 'shop_business'"
-        x-cloak
-        :disabled="role !== 'shop_personal' && role !== 'shop_business'"
-    >
+    @if (\App\Models\User::isAdminShopFormRole($selectedRole))
+    <fieldset class="space-y-5 border-0 p-0">
         <div class="grid gap-4 sm:grid-cols-2">
             <div>
                 <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('admin.users.actions.shop_name') }}</label>
@@ -282,6 +267,7 @@
             </div>
         </section>
     </fieldset>
+    @endif
 
     <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
         <a href="{{ $closeUrl }}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">{{ __('admin.actions.cancel') }}</a>

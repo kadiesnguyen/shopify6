@@ -21,6 +21,11 @@ class SyncShopRoles extends Command
         User::query()
             ->whereHas('shop')
             ->each(function (User $user) use (&$count): void {
+                // Never rewrite roles for admin accounts (syncRoles would drop the admin role).
+                if ($user->hasRole('admin')) {
+                    return;
+                }
+
                 if ($user->hasRole('shop')) {
                     return;
                 }
