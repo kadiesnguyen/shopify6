@@ -101,7 +101,8 @@ class OrderService
                 'processed_at' => now(),
             ]);
 
-            $this->distributionService->reserve($distribution);
+            // ponytail: no reserve — listing stays buyable after sale (demo resale).
+            // Ceiling: same distribution can fulfill concurrent orders.
 
             $this->notifications->notifyOrderNeedsPayment($order);
 

@@ -386,7 +386,7 @@ class OrderSettlementTest extends TestCase
         $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
         $balanceAfterDistribution = (float) $this->seller->wallet->fresh()->balance;
 
-        $this->assertSame(\App\Models\ProductDistribution::STATUS_RESERVED, $distribution->fresh()->status);
+        $this->assertSame(\App\Models\ProductDistribution::STATUS_AVAILABLE, $distribution->fresh()->status);
 
         app(OrderSettlementService::class)->applyStatusChange(
             $order,
@@ -400,7 +400,7 @@ class OrderSettlementTest extends TestCase
         $this->assertSame(500.0, (float) $this->buyer->wallet->fresh()->balance);
     }
 
-    public function test_completed_order_restores_distribution_to_shop_manage_list(): void
+    public function test_completed_order_keeps_distribution_available_for_resale(): void
     {
         $distribution = \App\Models\ProductDistribution::query()
             ->where('user_id', $this->seller->id)
@@ -408,7 +408,7 @@ class OrderSettlementTest extends TestCase
 
         $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
 
-        $this->assertSame(\App\Models\ProductDistribution::STATUS_RESERVED, $distribution->fresh()->status);
+        $this->assertSame(\App\Models\ProductDistribution::STATUS_AVAILABLE, $distribution->fresh()->status);
 
         app(OrderSettlementService::class)->applyStatusChange(
             $order->fresh(),
@@ -416,6 +416,43 @@ class OrderSettlementTest extends TestCase
             Order::STATUS_COMPLETED,
         );
 
+        $this->assertSame(\App\Models\ProductDistribution::STATUS_AVAILABLE, $distribution->fresh()->status);
+    }
+
+    public function test_place_order_keeps_distribution_available_and_visible_in_shop(): void
+    {
+        $distribution = \App\Models\ProductDistribution::query()
+            ->where('user_id', $this->seller->id)
+            ->firstOrFail();
+
+        app(OrderService::class)->placeOrder($this->buyer, $this->product);
+
+        $this->assertSame(\App\Models\ProductDistribution::STATUS_AVAILABLE, $distribution->fresh()->status);
+
+        $this->actingAs($this->seller)
+            ->get(route('member.products.manage.index'))
+            ->assertOk()
+            ->assertSee($this->product->name);
+
+        $shop = $this->seller->shop;
+        $this->actingAs($this->buyer)
+            ->get(route('member.products.index', ['shop_id' => $shop->id, 'shop' => $shop->name, 'q' => 'Settlement']))
+            ->assertOk()
+            ->assertSee($this->product->name);
+
+        $secondBuyer = User::factory()->create(['status' => 'active']);
+        $secondBuyer->assignRole('member');
+        Wallet::query()->create([
+            'user_id' => $secondBuyer->id,
+            'balance' => 500,
+            'balance_pending' => 0,
+            'balance_frozen' => 0,
+        ]);
+
+        $secondOrder = app(OrderService::class)->placeOrder($secondBuyer, $this->product, 1, $shop->id);
+
+        $this->assertSame($this->seller->id, $secondOrder->seller_id);
+        $this->assertSame($distribution->id, $secondOrder->product_distribution_id);
         $this->assertSame(\App\Models\ProductDistribution::STATUS_AVAILABLE, $distribution->fresh()->status);
     }
 
