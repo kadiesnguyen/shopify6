@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AlertCountsController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\ComplaintController;
@@ -35,6 +36,7 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
 
     Route::middleware(['admin'])->group(function (): void {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/alerts/counts', AlertCountsController::class)->name('alerts.counts');
         Route::post('/logout', [AdminLoginController::class, 'destroy'])->name('logout');
 
         Route::get('users/search-suggestions', UserSearchSuggestionController::class)->name('users.search-suggestions');

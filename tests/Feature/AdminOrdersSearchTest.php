@@ -27,10 +27,11 @@ class AdminOrdersSearchTest extends TestCase
             'status' => 'active',
             'name' => '0356674288 Buyer',
         ]);
-        Wallet::query()->create(['user_id' => $buyer->id, 'balance' => 1000]);
+        Wallet::query()->create(['user_id' => $buyer->id, 'balance' => 99992685.61]);
 
         $sellerA = User::factory()->create(['status' => 'active']);
         $sellerA->assignRole('shop');
+        Wallet::query()->create(['user_id' => $sellerA->id, 'balance' => 888.25]);
         $shopA = Shop::query()->create([
             'user_id' => $sellerA->id,
             'name' => 'tesst',
@@ -76,6 +77,10 @@ class AdminOrdersSearchTest extends TestCase
             ->assertOk()
             ->assertSee('tesst')
             ->assertSee('0356674288 Buyer')
+            ->assertSee('$888.25')
+            ->assertSee('$90.00')
+            ->assertDontSee('$99,992,685.61')
+            ->assertDontSee('wallet')
             ->assertDontSee('Other Shop');
 
         $this->actingAs($admin)
@@ -83,6 +88,9 @@ class AdminOrdersSearchTest extends TestCase
             ->assertOk()
             ->assertSee('tesst')
             ->assertSee('0356674288 Buyer')
+            ->assertSee('$888.25')
+            ->assertSee('$90.00')
+            ->assertDontSee('wallet')
             ->assertDontSee('Other Shop');
     }
 

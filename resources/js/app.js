@@ -3,6 +3,7 @@ import './mobile-keyboard';
 import './member-search-suggest';
 import './member-chat';
 import './admin-chat';
+import './admin-alerts';
 import Alpine from 'alpinejs';
 import 'flowbite';
 import Swal from 'sweetalert2';

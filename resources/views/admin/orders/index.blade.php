@@ -42,8 +42,8 @@
                         <td class="px-2 py-2 align-top">{{ $order->items->sum('qty') }}</td>
                         <td class="px-2 py-2 align-top whitespace-nowrap">${{ number_format($order->total, 2) }}</td>
                         <td class="px-2 py-2 align-top whitespace-nowrap">${{ number_format($order->commission, 2) }}</td>
-                        <td class="px-2 py-2 align-top">{{ $order->payment_method }}</td>
-                        <td class="px-2 py-2 align-top text-xs whitespace-nowrap text-slate-600">${{ number_format($order->buyer?->wallet?->balance ?? 0, 2) }}</td>
+                        <td class="px-2 py-2 align-top whitespace-nowrap">${{ number_format($order->total - $order->commission, 2) }}</td>
+                        <td class="px-2 py-2 align-top text-xs whitespace-nowrap text-slate-600">${{ number_format($order->seller?->wallet?->balance ?? 0, 2) }}</td>
                         <td class="admin-orders-table__actions px-2 py-2 align-top">
                             <div class="flex min-w-[10.5rem] flex-col gap-2">
                                 <form method="POST" action="{{ route('admin.orders.update', $order) }}" class="flex flex-wrap gap-1">

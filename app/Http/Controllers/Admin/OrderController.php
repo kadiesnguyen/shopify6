@@ -23,7 +23,7 @@ class OrderController extends Controller
         $shopId = $request->integer('shop_id');
 
         $orders = Order::query()
-            ->with(['buyer.wallet', 'shop', 'items'])
+            ->with(['buyer', 'seller.wallet', 'shop', 'items'])
             ->when($status !== '', fn ($q) => $q->where('status', $status))
             ->when($shopId > 0, fn ($q) => $q->where('shop_id', $shopId))
             ->when($shopId <= 0 && $keyword !== '', fn ($q) => $q->whereHas(

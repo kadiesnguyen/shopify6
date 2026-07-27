@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\ChatConversation;
+use App\Models\ChatMessage;
 use App\Models\Product;
 use App\Models\RechargeMethod;
 use App\Models\RechargeRequest;
@@ -51,6 +53,72 @@ class AdminPagesTest extends TestCase
             ->get('/admin/users')
             ->assertOk()
             ->assertSee(__('admin.users.title'));
+    }
+
+    public function test_admin_alert_counts_include_recharge_withdrawal_and_chat(): void
+    {
+        $member = User::factory()->create(['status' => 'active']);
+        $member->assignRole('member');
+
+        $conversation = ChatConversation::query()->create([
+            'user_id' => $member->id,
+            'last_message_at' => now(),
+        ]);
+
+        ChatMessage::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_role' => ChatMessage::ROLE_USER,
+            'sender_user_id' => $member->id,
+            'body' => 'Need help',
+        ]);
+        ChatMessage::query()->create([
+            'conversation_id' => $conversation->id,
+            'sender_role' => ChatMessage::ROLE_USER,
+            'sender_user_id' => $member->id,
+            'body' => 'About wallet',
+        ]);
+
+        $rechargeMethod = RechargeMethod::query()->create([
+            'name' => 'Bank',
+            'type' => 'bank',
+            'status' => 'active',
+        ]);
+
+        RechargeRequest::query()->create([
+            'user_id' => $member->id,
+            'recharge_method_id' => $rechargeMethod->id,
+            'amount' => 100,
+            'status' => RechargeRequest::STATUS_PENDING,
+        ]);
+
+        $withdrawalMethod = WithdrawalMethod::query()->create([
+            'name' => 'Bank',
+            'type' => 'bank',
+            'status' => 'active',
+        ]);
+
+        WithdrawalRequest::query()->create([
+            'user_id' => $member->id,
+            'withdrawal_method_id' => $withdrawalMethod->id,
+            'amount' => 40,
+            'status' => WithdrawalRequest::STATUS_PENDING,
+            'payout_details' => ['details' => '123'],
+        ]);
+
+        $this->actingAs($this->admin)
+            ->getJson(route('admin.alerts.counts'))
+            ->assertOk()
+            ->assertJsonPath('recharge_pending', 1)
+            ->assertJsonPath('withdrawal_pending', 1)
+            ->assertJsonPath('chat_unread', 2);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('adminAlerts(', false)
+            ->assertSee(__('admin.menu.recharge_requests'))
+            ->assertSee(__('admin.menu.withdrawal_requests'))
+            ->assertSee(__('admin.menu.chat'));
     }
 
     public function test_admin_can_create_product(): void
