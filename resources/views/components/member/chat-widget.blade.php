@@ -65,12 +65,17 @@
             >
         </div>
 
-        <div class="min-h-0 flex-1 space-y-3 overflow-y-auto p-4" x-ref="thread">
+        <div class="min-h-0 flex-1 space-y-3 overflow-y-auto p-4" x-ref="thread" @scroll.passive="onThreadScroll()">
             <div x-show="messages.length === 0 && welcomeMessage" class="flex justify-start" x-cloak>
                 <div class="max-w-[85%] rounded-2xl rounded-bl-md bg-gray-100 px-3 py-2 text-gray-900">
                     <p class="whitespace-pre-wrap text-sm" x-text="welcomeMessage"></p>
                 </div>
             </div>
+            <p
+                x-show="loadingOlder"
+                x-cloak
+                class="py-1 text-center text-[11px] text-gray-400"
+            >{{ __('chat.loading') }}</p>
             <template x-for="msg in messages" :key="msg.id">
                 <div :class="msg.sender_role === 'user' ? 'flex justify-end' : 'flex justify-start'">
                     <div

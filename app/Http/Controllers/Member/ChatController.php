@@ -36,13 +36,22 @@ class ChatController extends Controller
             }
         }
 
-        $messages = $this->chat
-            ->messagesForConversation($conversation, forAdmin: false)
-            ->map(fn (ChatMessage $m) => $this->messagePayload($m));
+        $beforeId = $request->integer('before_id') ?: null;
+        $afterId = $request->integer('after_id') ?: null;
+        $limit = $request->integer('limit') ?: 40;
+
+        $page = $this->chat->pageMessages(
+            $conversation,
+            forAdmin: false,
+            beforeId: $beforeId,
+            afterId: $afterId,
+            limit: $limit,
+        );
 
         return response()->json([
             'conversation_id' => $conversation->id,
-            'messages' => $messages,
+            'messages' => $page['messages']->map(fn (ChatMessage $m) => $this->messagePayload($m))->values(),
+            'has_more' => $page['has_more'],
         ]);
     }
 

@@ -93,6 +93,69 @@ class ChatService
             ->get();
     }
 
+    /**
+     * Cursor page of messages (oldest→newest within the page).
+     *
+     * - no cursor: latest page
+     * - before_id: older messages than that id
+     * - after_id: newer messages than that id
+     *
+     * @return array{messages: Collection<int, ChatMessage>, has_more: bool}
+     */
+    public function pageMessages(
+        ChatConversation $conversation,
+        bool $forAdmin,
+        ?int $beforeId = null,
+        ?int $afterId = null,
+        int $limit = 40,
+    ): array {
+        $limit = max(1, min($limit, 100));
+
+        if ($forAdmin) {
+            $this->markReadByAdmin($conversation);
+        } else {
+            $this->markReadByUser($conversation);
+        }
+
+        $query = $conversation->messages()->with('sender');
+
+        if ($afterId !== null) {
+            $messages = (clone $query)
+                ->where('id', '>', $afterId)
+                ->orderBy('id')
+                ->limit($limit)
+                ->get();
+
+            return [
+                'messages' => $messages,
+                'has_more' => false,
+            ];
+        }
+
+        if ($beforeId !== null) {
+            $messages = (clone $query)
+                ->where('id', '<', $beforeId)
+                ->orderByDesc('id')
+                ->limit($limit + 1)
+                ->get();
+        } else {
+            $messages = (clone $query)
+                ->orderByDesc('id')
+                ->limit($limit + 1)
+                ->get();
+        }
+
+        $hasMore = $messages->count() > $limit;
+        if ($hasMore) {
+            $messages = $messages->take($limit);
+        }
+
+        return [
+            'messages' => $messages->sortBy('id')->values(),
+            'has_more' => $hasMore,
+        ];
+    }
+
     public function sendMessage(
         ChatConversation $conversation,
         string $role,

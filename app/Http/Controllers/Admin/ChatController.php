@@ -72,16 +72,32 @@ class ChatController extends Controller
         return response()->json(['conversations' => $conversations]);
     }
 
-    public function show(ChatConversation $conversation): JsonResponse
+    public function show(Request $request, ChatConversation $conversation): JsonResponse
     {
-        $messages = $this->chat
-            ->messagesForConversation($conversation, forAdmin: true)
-            ->map(fn (ChatMessage $m) => $this->messagePayload($m));
+        $beforeId = $request->integer('before_id') ?: null;
+        $afterId = $request->integer('after_id') ?: null;
+        $limit = $request->integer('limit') ?: 40;
 
-        return response()->json([
-            'conversation' => $this->conversationPayload($conversation->fresh(['user', 'latestMessage'])),
-            'messages' => $messages,
-        ]);
+        $page = $this->chat->pageMessages(
+            $conversation,
+            forAdmin: true,
+            beforeId: $beforeId,
+            afterId: $afterId,
+            limit: $limit,
+        );
+
+        $payload = [
+            'messages' => $page['messages']->map(fn (ChatMessage $m) => $this->messagePayload($m))->values(),
+            'has_more' => $page['has_more'],
+        ];
+
+        if ($beforeId === null && $afterId === null) {
+            $payload['conversation'] = $this->conversationPayload(
+                $conversation->fresh(['user', 'latestMessage']),
+            );
+        }
+
+        return response()->json($payload);
     }
 
     public function updateDisplayName(Request $request, ChatConversation $conversation): JsonResponse
@@ -134,13 +150,12 @@ class ChatController extends Controller
 
         $deleted = $this->chat->deleteUserMessages($conversation, $data['message_ids']);
 
-        $messages = $this->chat
-            ->messagesForConversation($conversation, forAdmin: false)
-            ->map(fn (ChatMessage $m) => $this->messagePayload($m));
+        $page = $this->chat->pageMessages($conversation, forAdmin: false);
 
         return response()->json([
             'deleted' => $deleted,
-            'messages' => $messages,
+            'messages' => $page['messages']->map(fn (ChatMessage $m) => $this->messagePayload($m))->values(),
+            'has_more' => $page['has_more'],
         ]);
     }
 

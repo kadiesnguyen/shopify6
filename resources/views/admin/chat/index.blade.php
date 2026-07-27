@@ -286,7 +286,17 @@
                             </button>
                         </div>
 
-                        <div class="admin-chat-thread space-y-3 p-2 md:p-3" x-ref="thread">
+                        <div
+                            class="admin-chat-thread space-y-3 p-2 md:p-3"
+                            x-ref="thread"
+                            @scroll.passive="onThreadScroll()"
+                        >
+                            <p
+                                x-show="loadingOlder"
+                                x-cloak
+                                class="py-1 text-center text-[11px] text-slate-400"
+                                x-text="labels.loading"
+                            ></p>
                             <template x-for="msg in messages" :key="msg.id">
                                 <div :class="msg.sender_role === 'admin' ? 'flex justify-end' : 'flex justify-start gap-2'">
                                     <input

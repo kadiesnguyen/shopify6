@@ -73,7 +73,8 @@ class ChatTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('admin.chat.show', $conversation))
             ->assertOk()
-            ->assertJsonPath('messages.0.body', 'Need help');
+            ->assertJsonPath('messages.0.body', 'Need help')
+            ->assertJsonPath('has_more', false);
 
         $this->actingAs($this->admin)
             ->post(route('admin.chat.messages.store', $conversation), ['body' => 'We can help'])
@@ -84,6 +85,61 @@ class ChatTest extends TestCase
             'sender_role' => ChatMessage::ROLE_ADMIN,
             'body' => 'We can help',
         ]);
+    }
+
+    public function test_admin_chat_messages_support_cursor_pagination(): void
+    {
+        $conversation = ChatConversation::query()->create([
+            'user_id' => $this->member->id,
+            'last_message_at' => now(),
+        ]);
+
+        $ids = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $ids[] = ChatMessage::query()->create([
+                'conversation_id' => $conversation->id,
+                'sender_role' => ChatMessage::ROLE_USER,
+                'sender_user_id' => $this->member->id,
+                'body' => "msg-{$i}",
+                'created_at' => now()->subMinutes(6 - $i),
+                'updated_at' => now()->subMinutes(6 - $i),
+            ])->id;
+        }
+
+        $latest = $this->actingAs($this->admin)
+            ->getJson(route('admin.chat.show', ['conversation' => $conversation, 'limit' => 2]))
+            ->assertOk()
+            ->assertJsonPath('has_more', true)
+            ->assertJsonCount(2, 'messages')
+            ->json('messages');
+
+        $this->assertSame(['msg-4', 'msg-5'], array_column($latest, 'body'));
+
+        $older = $this->actingAs($this->admin)
+            ->getJson(route('admin.chat.show', [
+                'conversation' => $conversation,
+                'before_id' => $latest[0]['id'],
+                'limit' => 2,
+            ]))
+            ->assertOk()
+            ->assertJsonPath('has_more', true)
+            ->assertJsonCount(2, 'messages')
+            ->json('messages');
+
+        $this->assertSame(['msg-2', 'msg-3'], array_column($older, 'body'));
+
+        $newer = $this->actingAs($this->admin)
+            ->getJson(route('admin.chat.show', [
+                'conversation' => $conversation,
+                'after_id' => $ids[2],
+                'limit' => 10,
+            ]))
+            ->assertOk()
+            ->assertJsonPath('has_more', false)
+            ->assertJsonCount(2, 'messages')
+            ->json('messages');
+
+        $this->assertSame(['msg-4', 'msg-5'], array_column($newer, 'body'));
     }
 
     public function test_admin_can_set_display_name_and_delete_user_messages(): void
