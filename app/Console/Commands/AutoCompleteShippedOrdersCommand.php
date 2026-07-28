@@ -10,13 +10,20 @@ class AutoCompleteShippedOrdersCommand extends Command
 {
     protected $signature = 'orders:auto-complete-shipped';
 
-    protected $description = 'Move shipped orders to completed after the configured delivery window';
+    protected $description = 'Move shipped orders to completed after the configured delivery window (disabled when hours <= 0)';
 
     public function handle(OrderSettlementService $settlement): int
     {
-        $hours = max(1, (int) config('portal.order_auto_complete_hours', 1));
-        $cutoff = now()->subHours($hours);
+        $hours = (int) config('portal.order_auto_complete_hours', 0);
 
+        // ponytail: 0/negative = off. Admin must complete orders explicitly.
+        if ($hours <= 0) {
+            $this->info('Auto-complete disabled (ORDER_AUTO_COMPLETE_HOURS <= 0).');
+
+            return self::SUCCESS;
+        }
+
+        $cutoff = now()->subHours($hours);
         $completed = 0;
 
         Order::query()

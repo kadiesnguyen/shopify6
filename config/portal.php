@@ -5,8 +5,8 @@ return [
     'logo' => 'images/portal/logo.jpg',
     'max_width' => '420px',
 
-    // ponytail: shipped → completed after N hours; override via ORDER_AUTO_COMPLETE_HOURS
-    'order_auto_complete_hours' => (int) env('ORDER_AUTO_COMPLETE_HOURS', 1),
+    // ponytail: shipped → completed after N hours; 0 = disabled (default). Set ORDER_AUTO_COMPLETE_HOURS to enable.
+    'order_auto_complete_hours' => (int) env('ORDER_AUTO_COMPLETE_HOURS', 0),
 
     'banners' => [
         'images/portal/banners/banner1.jpg',

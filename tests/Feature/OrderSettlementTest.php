@@ -375,6 +375,28 @@ class OrderSettlementTest extends TestCase
         $this->assertSame($balanceBeforeComplete + 95.0, (float) $this->seller->wallet->fresh()->balance);
     }
 
+    public function test_shipped_orders_do_not_auto_complete_when_disabled(): void
+    {
+        config(['portal.order_auto_complete_hours' => 0]);
+
+        $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
+        app(OrderSettlementService::class)->confirmPlatformShipping($order->fresh());
+        app(OrderSettlementService::class)->applyStatusChange(
+            $order->fresh(),
+            Order::STATUS_WAITING_SHIPMENT,
+            Order::STATUS_SHIPPED,
+        );
+
+        $order->update(['shipped_at' => now()->subDays(30)]);
+
+        $this->artisan('orders:auto-complete-shipped')
+            ->assertSuccessful()
+            ->expectsOutput('Auto-complete disabled (ORDER_AUTO_COMPLETE_HOURS <= 0).');
+
+        $this->assertSame(Order::STATUS_SHIPPED, $order->fresh()->status);
+        $this->assertNull($order->fresh()->completed_at);
+    }
+
     public function test_cancelled_order_refunds_buyer_without_returning_distribution_cost_to_seller(): void
     {
         $distribution = \App\Models\ProductDistribution::query()

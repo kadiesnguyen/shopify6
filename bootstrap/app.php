@@ -54,6 +54,9 @@ return Application::configure(basePath: dirname(__DIR__))
         \App\Console\Commands\AutoCompleteShippedOrdersCommand::class,
     ])
     ->withSchedule(function (Schedule $schedule): void {
-        $schedule->command('orders:auto-complete-shipped')->everyFiveMinutes();
+        // Guard also lives in the command (hours <= 0 no-ops); skip schedule when disabled.
+        if ((int) config('portal.order_auto_complete_hours', 0) > 0) {
+            $schedule->command('orders:auto-complete-shipped')->everyFiveMinutes();
+        }
     })
     ->create();
