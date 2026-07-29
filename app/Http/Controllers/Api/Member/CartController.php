@@ -113,7 +113,7 @@ class CartController extends Controller
         $total = $items->sum(fn (CartItem $item): float => $item->lineTotal());
         $wallet = $user->wallet;
 
-        if (! $wallet || (float) $wallet->balance < $total) {
+        if (! $wallet || ! $wallet->canSpend($total)) {
             return response()->json(['message' => 'Insufficient balance.'], 422);
         }
 

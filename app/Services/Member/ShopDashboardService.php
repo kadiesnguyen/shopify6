@@ -26,7 +26,7 @@ class ShopDashboardService
 
         $totalOrders = (clone $activeOrders)->count();
         $totalSales = (float) (clone $completedOrders)->sum('total');
-        $availableBalance = (float) ($user->wallet?->balance ?? 0);
+        $availableBalance = (float) ($user->wallet?->spendableBalance() ?? 0);
         $completedOrderCount = (clone $completedOrders)->count();
         $failedOrderCount = Order::query()
             ->where('seller_id', $user->id)

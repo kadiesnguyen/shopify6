@@ -45,7 +45,7 @@ class MySummaryController extends Controller
             : $completedProfit;
         $totalIncome = $completedProfit + (float) (clone $completedOrders)->sum($isSeller ? 'purchase_cost' : 'total');
 
-        $walletBalance = (float) ($user->wallet?->balance ?? 0);
+        $walletBalance = (float) ($user->wallet?->spendableBalance() ?? 0);
         $shopStats = null;
 
         if ($isSeller && $user->shop) {

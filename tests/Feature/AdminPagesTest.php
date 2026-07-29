@@ -348,6 +348,11 @@ class AdminPagesTest extends TestCase
             ->assertSee('0901111222');
 
         $this->actingAs($this->admin)
+            ->get(route('admin.users.index', ['show_balance' => $member->id]))
+            ->assertOk()
+            ->assertSee(__('admin.users.actions.balance_frozen_hint'), false);
+
+        $this->actingAs($this->admin)
             ->patch(route('admin.users.balance.update', $member), [
                 'balance_pending' => 20,
                 'balance' => 150,

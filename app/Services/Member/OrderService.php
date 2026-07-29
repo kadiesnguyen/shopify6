@@ -55,7 +55,7 @@ class OrderService
         $purchaseCost = (float) $distribution->purchase_price * $qty;
         $commission = $this->distributionService->profitForQuantity($distribution, $qty);
 
-            if (! $wallet || (float) $wallet->balance < $subtotal) {
+            if (! $wallet || ! $wallet->canSpend($subtotal)) {
                 throw new RuntimeException('insufficient_balance');
             }
 

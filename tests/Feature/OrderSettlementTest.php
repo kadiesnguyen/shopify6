@@ -274,6 +274,35 @@ class OrderSettlementTest extends TestCase
         app(OrderSettlementService::class)->confirmPlatformShipping($order->fresh());
     }
 
+    public function test_seller_confirm_platform_shipping_fails_when_only_frozen_balance_is_high(): void
+    {
+        $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
+        $this->seller->wallet->update(['balance' => 10, 'balance_frozen' => 1000]);
+
+        try {
+            app(OrderSettlementService::class)->confirmPlatformShipping($order->fresh());
+            $this->fail('Expected insufficient_balance exception.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('insufficient_balance', $exception->getMessage());
+        }
+
+        $wallet = $this->seller->wallet->fresh();
+        $this->assertSame('10.00', $wallet->balance);
+        $this->assertSame('1000.00', $wallet->balance_frozen);
+    }
+
+    public function test_seller_confirm_platform_shipping_debits_available_balance_not_frozen(): void
+    {
+        $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);
+        $this->seller->wallet->update(['balance' => 100, 'balance_frozen' => 1000]);
+
+        app(OrderSettlementService::class)->confirmPlatformShipping($order->fresh());
+
+        $wallet = $this->seller->wallet->fresh();
+        $this->assertSame('40.00', $wallet->balance);
+        $this->assertSame('1000.00', $wallet->balance_frozen);
+    }
+
     public function test_cancelled_shipped_order_refunds_seller_product_cost(): void
     {
         $order = app(OrderService::class)->placeOrder($this->buyer, $this->product);

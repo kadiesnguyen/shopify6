@@ -71,7 +71,7 @@ class WalletController extends Controller
         $amount = (float) $request->validated('amount');
         $method = WithdrawalMethod::query()->findOrFail($request->validated('withdrawal_method_id'));
 
-        if (! $wallet || $wallet->balance < $amount) {
+        if (! $wallet || ! $wallet->canSpend($amount)) {
             return response()->json(['message' => __('member.wallet.insufficient_balance')], 422);
         }
 

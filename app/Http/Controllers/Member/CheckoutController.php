@@ -81,7 +81,7 @@ class CheckoutController extends Controller
         $unitPrice = $this->distributionService->previewOrderPrice($product, $shopId, auth()->id()) ?? (float) $product->selling_price;
         $total = $unitPrice * $qty;
 
-        if (! $wallet || $wallet->balance < $total) {
+        if (! $wallet || ! $wallet->canSpend($total)) {
             return back()
                 ->withInput()
                 ->withErrors(['payment_method' => __('member.checkout.insufficient_balance')]);

@@ -88,6 +88,7 @@
                             <input type="number" step="0.01" min="0" name="{{ $field }}" value="{{ old($field, $modalUser->wallet?->$field ?? 0) }}" required class="w-full rounded-lg border-slate-300 text-sm">
                         </div>
                     @endforeach
+                    <p class="text-xs text-slate-500">{{ __('admin.users.actions.balance_frozen_hint') }}</p>
                     <div class="flex justify-end gap-2 border-t border-slate-100 pt-4">
                         <a href="{{ $closeUrl }}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">{{ __('admin.actions.cancel') }}</a>
                         <button type="submit" class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white">{{ __('admin.users.actions.update_balance') }}</button>

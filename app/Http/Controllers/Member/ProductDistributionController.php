@@ -54,7 +54,7 @@ class ProductDistributionController extends Controller
             ]);
         }
 
-        $balance = (float) (auth()->user()->wallet?->balance ?? 0);
+        $balance = (float) (auth()->user()->wallet?->spendableBalance() ?? 0);
 
         return view('member.products.distributions', compact('products', 'distributedIds', 'balance', 'sort'));
     }

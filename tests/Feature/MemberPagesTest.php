@@ -973,6 +973,29 @@ class MemberPagesTest extends TestCase
             ->assertSessionHasErrors('amount');
     }
 
+    public function test_member_withdrawal_rejects_amount_above_available_when_frozen_is_high(): void
+    {
+        $method = WithdrawalMethod::query()->first();
+        $this->member->update(['payment_password' => '123456']);
+        $this->member->wallet->update(['balance' => 10, 'balance_frozen' => 1000]);
+
+        $this->actingAs($this->member)
+            ->post('/home/withdrawal', [
+                'withdrawal_method_id' => $method->id,
+                'amount' => 50,
+                'bank_account_name' => 'Nguyen Van A',
+                'bank_name' => 'Vietcombank',
+                'bank_account_number' => '0123456789',
+                'payment_password' => '123456',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasErrors('amount');
+
+        $wallet = $this->member->wallet->fresh();
+        $this->assertSame('10.00', $wallet->balance);
+        $this->assertSame('1000.00', $wallet->balance_frozen);
+    }
+
     public function test_member_withdrawal_rejects_invalid_password(): void
     {
         $method = WithdrawalMethod::query()->first();

@@ -126,7 +126,7 @@ class OrderSettlementService
             ->lockForUpdate()
             ->first();
 
-        if (! $wallet || (float) $wallet->balance < $amount) {
+        if (! $wallet || ! $wallet->canSpend($amount)) {
             throw new RuntimeException('insufficient_balance');
         }
 
@@ -302,7 +302,7 @@ class OrderSettlementService
             return;
         }
 
-        $wallet->decrement('balance', min((float) $wallet->balance, $amount));
+        $wallet->decrement('balance', min($wallet->spendableBalance(), $amount));
 
         Transaction::query()->create([
             'user_id' => $order->seller_id,
@@ -343,7 +343,7 @@ class OrderSettlementService
             return;
         }
 
-        $wallet->decrement('balance', min((float) $wallet->balance, $commission));
+        $wallet->decrement('balance', min($wallet->spendableBalance(), $commission));
 
         Transaction::query()->create([
             'user_id' => $order->seller_id,

@@ -65,7 +65,7 @@ class WalletApprovalService
         DB::transaction(function () use ($request): void {
             $wallet = Wallet::query()->where('user_id', $request->user_id)->lockForUpdate()->first();
 
-            if (! $wallet || $wallet->balance < $request->amount) {
+            if (! $wallet || ! $wallet->canSpend($request->amount)) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'amount' => __('admin.requests.insufficient_balance'),
                 ]);

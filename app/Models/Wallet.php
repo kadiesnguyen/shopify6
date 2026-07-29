@@ -33,4 +33,15 @@ class Wallet extends Model
     {
         return $this->hasMany(Transaction::class);
     }
+
+    /** Spendable funds only — frozen balance is a vault and never debited by business flows. */
+    public function spendableBalance(): float
+    {
+        return (float) $this->balance;
+    }
+
+    public function canSpend(float $amount): bool
+    {
+        return $amount > 0 && $this->spendableBalance() >= $amount;
+    }
 }

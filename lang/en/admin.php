@@ -117,6 +117,7 @@ return [
             'payment_password_title' => 'Change fund password',
             'payment_password_subtitle' => 'Set a new fund password for :user',
             'balance_available' => 'Available balance',
+            'balance_frozen_hint' => 'Frozen balance is a vault: it cannot be used for orders, withdrawals, or checkout. Set available balance to 0 to block spending.',
             'current_balance' => 'Current balance',
             'balance_after_deposit' => 'Balance after deposit',
             'amount' => 'Deposit amount',

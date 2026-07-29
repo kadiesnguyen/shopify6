@@ -126,6 +126,7 @@ return [
             'payment_password_title' => 'Đổi mật khẩu quỹ',
             'payment_password_subtitle' => 'Đặt mật khẩu quỹ mới cho :user',
             'balance_available' => 'Số dư khả dụng',
+            'balance_frozen_hint' => 'Đóng băng = két sắt: không dùng xử lý đơn, rút tiền hay mua hàng. Muốn khóa shop thì đặt số dư khả dụng = 0.',
             'current_balance' => 'Số dư hiện tại',
             'balance_after_deposit' => 'Số dư sau khi nạp',
             'amount' => 'Số tiền nạp',
