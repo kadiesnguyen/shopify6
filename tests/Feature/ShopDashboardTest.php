@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\Shop;
 use App\Models\User;
+use App\Models\Wallet;
 use App\Support\Member\ShopOrderStatusBadges;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -127,10 +128,47 @@ class ShopDashboardTest extends TestCase
         $this->assertSame(500.0, $stats['total_sales']);
         $this->assertSame(163, $stats['total_orders']);
         $this->assertSame(57939.85, $stats['available_balance']);
+        $this->assertSame(0.0, $stats['spendable_balance']);
+        $this->assertSame(0.0, $stats['frozen_balance']);
         $this->assertSame(7, $stats['orders_today']);
         $this->assertCount(10, $stats['chart_labels']);
         $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $stats['chart_labels'][0]);
         $this->assertArrayHasKey('monthly_chart_labels', $stats);
+    }
+
+    public function test_shop_hub_available_balance_includes_frozen_with_breakdown(): void
+    {
+        Role::findOrCreate('shop');
+        $this->member->assignRole('shop');
+
+        Shop::query()->create([
+            'user_id' => $this->member->id,
+            'name' => 'Cát Tường Boutique 4',
+            'slug' => 'cat-tuong-boutique-4',
+            'status' => 'active',
+        ]);
+
+        Wallet::query()->create([
+            'user_id' => $this->member->id,
+            'balance' => 427.27,
+            'balance_pending' => 0,
+            'balance_frozen' => 8662.21,
+        ]);
+
+        $stats = app(\App\Services\Member\ShopDashboardService::class)->statsFor($this->member->fresh());
+
+        $this->assertSame(9089.48, $stats['available_balance']);
+        $this->assertSame(427.27, $stats['spendable_balance']);
+        $this->assertSame(8662.21, $stats['frozen_balance']);
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.shop-hub.index'))
+            ->assertOk()
+            ->assertSee('$9,089.48')
+            ->assertSee('$427.27')
+            ->assertSee('$8,662.21')
+            ->assertSee(__('member.shop_hub.spendable_hint'))
+            ->assertSee(__('member.shop_hub.frozen_hint'));
     }
 
     public function test_shop_hub_order_badges_use_unseen_counts_not_display_overrides(): void

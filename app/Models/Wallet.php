@@ -44,4 +44,14 @@ class Wallet extends Model
     {
         return $amount > 0 && $this->spendableBalance() >= $amount;
     }
+
+    public function frozenBalance(): float
+    {
+        return (float) $this->balance_frozen;
+    }
+
+    public function totalBalance(): float
+    {
+        return round($this->spendableBalance() + $this->frozenBalance(), 2);
+    }
 }

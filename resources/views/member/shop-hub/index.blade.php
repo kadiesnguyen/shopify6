@@ -110,9 +110,26 @@
                         <p class="text-[13px] text-gray-600">{{ __('member.shop_hub.order_count') }}</p>
                         <p class="mt-1 text-[28px] font-bold leading-none text-gray-900">{{ number_format($stats['total_orders']) }}</p>
                     </div>
-                    <div class="text-right">
+                    <div class="min-w-0 text-right">
                         <p class="text-[13px] text-gray-600">{{ __('member.shop_hub.available_balance') }}</p>
                         <p class="mt-1 text-[22px] font-bold leading-none text-emerald-600">${{ number_format($stats['available_balance'], 2) }}</p>
+                    </div>
+
+                    <div class="col-span-2 min-w-0 space-y-2 border-t border-gray-100 pt-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="text-xs font-medium text-gray-900">{{ __('member.shop_hub.spendable_balance') }}</p>
+                                <p class="text-xs leading-snug text-gray-500">{{ __('member.shop_hub.spendable_hint') }}</p>
+                            </div>
+                            <p class="shrink-0 whitespace-nowrap text-sm font-semibold text-gray-900">${{ number_format($stats['spendable_balance'], 2) }}</p>
+                        </div>
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="text-xs font-medium text-gray-900">{{ __('member.shop_hub.frozen_balance') }}</p>
+                                <p class="text-xs leading-snug text-gray-500">{{ __('member.shop_hub.frozen_hint') }}</p>
+                            </div>
+                            <p class="shrink-0 whitespace-nowrap text-sm font-semibold text-gray-900">${{ number_format($stats['frozen_balance'], 2) }}</p>
+                        </div>
                     </div>
 
                     <div class="col-span-2">
