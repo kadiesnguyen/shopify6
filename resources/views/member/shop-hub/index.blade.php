@@ -115,22 +115,17 @@
                         <p class="mt-1 text-[22px] font-bold leading-none text-emerald-600">${{ number_format($stats['available_balance'], 2) }}</p>
                     </div>
 
-                    <div class="col-span-2 min-w-0 space-y-2 border-t border-gray-100 pt-3">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <p class="text-xs font-medium text-gray-900">{{ __('member.shop_hub.spendable_balance') }}</p>
-                                <p class="text-xs leading-snug text-gray-500">{{ __('member.shop_hub.spendable_hint') }}</p>
+                    @if ($stats['frozen_balance'] >= 0.01)
+                        <div class="col-span-2 min-w-0 border-t border-gray-100 pt-3">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <p class="text-xs font-medium text-gray-900">{{ __('member.shop_hub.spendable_balance') }}</p>
+                                    <p class="text-xs leading-snug text-gray-500">{{ __('member.shop_hub.spendable_hint') }}</p>
+                                </div>
+                                <p class="shrink-0 whitespace-nowrap text-sm font-semibold text-gray-900">${{ number_format($stats['spendable_balance'], 2) }}</p>
                             </div>
-                            <p class="shrink-0 whitespace-nowrap text-sm font-semibold text-gray-900">${{ number_format($stats['spendable_balance'], 2) }}</p>
                         </div>
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <p class="text-xs font-medium text-gray-900">{{ __('member.shop_hub.frozen_balance') }}</p>
-                                <p class="text-xs leading-snug text-gray-500">{{ __('member.shop_hub.frozen_hint') }}</p>
-                            </div>
-                            <p class="shrink-0 whitespace-nowrap text-sm font-semibold text-gray-900">${{ number_format($stats['frozen_balance'], 2) }}</p>
-                        </div>
-                    </div>
+                    @endif
 
                     <div class="col-span-2">
                         <p class="text-[13px] text-gray-600">{{ __('member.shop_hub.total_revenue') }}</p>

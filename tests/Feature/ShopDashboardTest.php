@@ -166,9 +166,40 @@ class ShopDashboardTest extends TestCase
             ->assertOk()
             ->assertSee('$9,089.48')
             ->assertSee('$427.27')
-            ->assertSee('$8,662.21')
             ->assertSee(__('member.shop_hub.spendable_hint'))
-            ->assertSee(__('member.shop_hub.frozen_hint'));
+            ->assertDontSee('$8,662.21')
+            ->assertDontSee(__('member.shop_hub.frozen_balance'))
+            ->assertDontSee(__('member.shop_hub.frozen_hint'));
+    }
+
+    public function test_shop_hub_hides_spendable_breakdown_when_nothing_is_frozen(): void
+    {
+        Role::findOrCreate('shop');
+        $this->member->assignRole('shop');
+
+        Shop::query()->create([
+            'user_id' => $this->member->id,
+            'name' => 'Open Shop',
+            'slug' => 'open-shop',
+            'status' => 'active',
+            'display_balance' => 8050.50,
+        ]);
+
+        Wallet::query()->create([
+            'user_id' => $this->member->id,
+            'balance' => 57833.07,
+            'balance_pending' => 0,
+            'balance_frozen' => 0,
+        ]);
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.shop-hub.index'))
+            ->assertOk()
+            ->assertSee('$8,050.50')
+            ->assertDontSee('$57,833.07')
+            ->assertDontSee(__('member.shop_hub.spendable_hint'))
+            ->assertDontSee(__('member.shop_hub.frozen_balance'))
+            ->assertDontSee(__('member.shop_hub.frozen_hint'));
     }
 
     public function test_shop_hub_order_badges_use_unseen_counts_not_display_overrides(): void

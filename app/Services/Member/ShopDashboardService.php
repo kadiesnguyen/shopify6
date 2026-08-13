@@ -50,7 +50,9 @@ class ShopDashboardService
 
         if ($shop) {
             $totalOrders = $shop->resolveDisplayInt($totalOrders, 'display_total_orders');
-            $availableBalance = $shop->resolveDisplayAmount($availableBalance, 'display_balance');
+            if ($frozenBalance < 0.01) {
+                $availableBalance = $shop->resolveDisplayAmount($availableBalance, 'display_balance');
+            }
             $totalSales = $shop->resolveDisplayAmount($totalSales, 'display_total_sales');
             $totalProfit = $shop->resolveDisplayAmount($totalProfit, 'display_total_profit');
             $ordersToday = $shop->resolveDisplayInt($ordersToday, 'display_orders_today');
