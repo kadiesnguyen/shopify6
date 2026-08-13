@@ -8,6 +8,7 @@ use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AdminUserActionService
 {
@@ -18,13 +19,40 @@ class AdminUserActionService
             ['balance' => 0, 'balance_pending' => 0, 'balance_frozen' => 0],
         );
 
+        [$available, $frozen] = $this->applyFrozenTransfer($wallet, $data);
+
         $wallet->update([
             'balance_pending' => $data['balance_pending'],
-            'balance' => $data['balance'],
-            'balance_frozen' => $data['balance_frozen'],
+            'balance' => $available,
+            'balance_frozen' => $frozen,
         ]);
 
         return $wallet->fresh();
+    }
+
+    /** @param  array{balance: mixed, balance_frozen: mixed}  $data */
+    private function applyFrozenTransfer(Wallet $wallet, array $data): array
+    {
+        $oldAvailable = round((float) $wallet->balance, 2);
+        $oldFrozen = round((float) $wallet->balance_frozen, 2);
+        $available = round((float) $data['balance'], 2);
+        $frozen = round((float) $data['balance_frozen'], 2);
+        $deltaFrozen = round($frozen - $oldFrozen, 2);
+        $deltaAvailable = round($available - $oldAvailable, 2);
+
+        // ponytail: freeze is a vault transfer. If admin only raises/lowers frozen
+        // and leaves available as-is, move the delta out of / back into available.
+        if (abs($deltaFrozen) >= 0.01 && abs($deltaAvailable) < 0.01) {
+            $available = round($oldAvailable - $deltaFrozen, 2);
+        }
+
+        if ($available < 0) {
+            throw ValidationException::withMessages([
+                'balance_frozen' => __('admin.users.actions.balance_frozen_exceeds_available'),
+            ]);
+        }
+
+        return [$available, $frozen];
     }
 
     public function deposit(User $user, float $amount, ?string $note = null): Wallet

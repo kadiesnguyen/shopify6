@@ -363,6 +363,7 @@ class AdminPagesTest extends TestCase
         $wallet = $member->wallet->fresh();
         $this->assertEquals('150.00', $wallet->balance);
         $this->assertEquals('20.00', $wallet->balance_pending);
+        $this->assertEquals('0.00', $wallet->balance_frozen);
 
         $this->actingAs($this->admin)
             ->post(route('admin.users.deposit', $member), ['amount' => 50, 'note' => 'Test'])
@@ -443,5 +444,81 @@ class AdminPagesTest extends TestCase
             ->assertRedirect(route('admin.withdrawal-methods.index'));
 
         $this->assertSame(WithdrawalMethod::STATUS_ACTIVE, $method->fresh()->status);
+    }
+
+    public function test_admin_freeze_moves_funds_out_of_available_balance(): void
+    {
+        $member = User::factory()->create(['status' => 'active']);
+        $member->assignRole('member');
+        Wallet::query()->create([
+            'user_id' => $member->id,
+            'balance' => 8662.21,
+            'balance_pending' => 0,
+            'balance_frozen' => 0,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->patch(route('admin.users.balance.update', $member), [
+                'balance_pending' => 0,
+                'balance' => 8662.21,
+                'balance_frozen' => 8662.21,
+            ])
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHas('status');
+
+        $wallet = $member->wallet->fresh();
+        $this->assertSame('0.00', $wallet->balance);
+        $this->assertSame('8662.21', $wallet->balance_frozen);
+        $this->assertSame(0.0, $wallet->spendableBalance());
+    }
+
+    public function test_admin_unfreeze_returns_funds_to_available_balance(): void
+    {
+        $member = User::factory()->create(['status' => 'active']);
+        $member->assignRole('member');
+        Wallet::query()->create([
+            'user_id' => $member->id,
+            'balance' => 0,
+            'balance_pending' => 0,
+            'balance_frozen' => 100,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->patch(route('admin.users.balance.update', $member), [
+                'balance_pending' => 0,
+                'balance' => 0,
+                'balance_frozen' => 40,
+            ])
+            ->assertRedirect(route('admin.users.index'));
+
+        $wallet = $member->wallet->fresh();
+        $this->assertSame('60.00', $wallet->balance);
+        $this->assertSame('40.00', $wallet->balance_frozen);
+    }
+
+    public function test_admin_cannot_freeze_more_than_available_balance(): void
+    {
+        $member = User::factory()->create(['status' => 'active']);
+        $member->assignRole('member');
+        Wallet::query()->create([
+            'user_id' => $member->id,
+            'balance' => 50,
+            'balance_pending' => 0,
+            'balance_frozen' => 0,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->from(route('admin.users.index', ['show_balance' => $member->id]))
+            ->patch(route('admin.users.balance.update', $member), [
+                'balance_pending' => 0,
+                'balance' => 50,
+                'balance_frozen' => 80,
+            ])
+            ->assertRedirect(route('admin.users.index', ['show_balance' => $member->id]))
+            ->assertSessionHasErrors('balance_frozen');
+
+        $wallet = $member->wallet->fresh();
+        $this->assertSame('50.00', $wallet->balance);
+        $this->assertSame('0.00', $wallet->balance_frozen);
     }
 }

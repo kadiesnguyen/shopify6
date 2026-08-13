@@ -85,7 +85,18 @@
                     @foreach (['balance_pending' => __('admin.columns.balance_pending'), 'balance' => __('admin.users.actions.balance_available'), 'balance_frozen' => __('admin.columns.balance_frozen')] as $field => $label)
                         <div>
                             <label class="mb-1 block text-sm font-medium text-slate-700">{{ $label }}</label>
-                            <input type="number" step="0.01" min="0" name="{{ $field }}" value="{{ old($field, $modalUser->wallet?->$field ?? 0) }}" required class="w-full rounded-lg border-slate-300 text-sm">
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="{{ $field }}"
+                                value="{{ old($field, $modalUser->wallet?->$field ?? 0) }}"
+                                required
+                                class="w-full rounded-lg border-slate-300 text-sm"
+                                @if (in_array($field, ['balance', 'balance_frozen'], true))
+                                    data-balance-transfer="{{ $field }}"
+                                @endif
+                            >
                         </div>
                     @endforeach
                     <p class="text-xs text-slate-500">{{ __('admin.users.actions.balance_frozen_hint') }}</p>
@@ -177,6 +188,36 @@
         @endif
     </div>
 </div>
+
+@if ($activeModal === 'balance')
+    <script>
+        (() => {
+            const available = document.querySelector('[data-balance-transfer="balance"]');
+            const frozen = document.querySelector('[data-balance-transfer="balance_frozen"]');
+
+            if (!available || !frozen) {
+                return;
+            }
+
+            const origAvailable = Number.parseFloat(available.value || '0') || 0;
+            const origFrozen = Number.parseFloat(frozen.value || '0') || 0;
+            const money = (value) => (Math.round(value * 100) / 100).toFixed(2);
+
+            frozen.addEventListener('input', () => {
+                const nextFrozen = Number.parseFloat(frozen.value || '0') || 0;
+                const nextAvailable = origAvailable - (nextFrozen - origFrozen);
+
+                if (nextAvailable < 0) {
+                    frozen.value = money(origFrozen + origAvailable);
+                    available.value = money(0);
+                    return;
+                }
+
+                available.value = money(nextAvailable);
+            });
+        })();
+    </script>
+@endif
 
 @if ($activeModal === 'deposit')
     <script>
