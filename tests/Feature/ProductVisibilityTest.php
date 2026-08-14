@@ -266,7 +266,7 @@ class ProductVisibilityTest extends TestCase
             ->assertSee(__('member.products.old_price'));
     }
 
-    public function test_home_card_shows_catalog_cents_and_opens_detail_without_shop_id(): void
+    public function test_home_card_shows_edited_selling_price_and_links_shop_detail(): void
     {
         $this->product->update(['selling_price' => 74.42, 'purchase_price' => 50.42]);
         $this->distributeAsShop($this->shopUser);
@@ -275,16 +275,16 @@ class ProductVisibilityTest extends TestCase
         ProductDistribution::query()
             ->where('user_id', $this->shopUser->id)
             ->where('product_id', $this->product->id)
-            ->update(['selling_price' => 74, 'commission' => 23.58]);
+            ->update(['selling_price' => 70.12, 'commission' => 19.70]);
 
         $shop = Shop::query()->where('user_id', $this->shopUser->id)->firstOrFail();
 
         $this->actingAs($this->member)
             ->get(route('member.home'))
             ->assertOk()
-            ->assertSee('$74.42', false)
-            ->assertDontSee('$74.00', false)
-            ->assertDontSee(route('member.products.show', [
+            ->assertSee('$70.12', false)
+            ->assertDontSee('$74.42', false)
+            ->assertSee(route('member.products.show', [
                 'product' => $this->product,
                 'from' => 'home',
                 'shop_id' => $shop->id,

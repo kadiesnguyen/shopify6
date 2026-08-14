@@ -32,9 +32,8 @@ class PortalProductDisplayService
             $featuredOnly,
         );
 
-        $hasShopFilter = $shopUserIds !== [];
-        $products->each(function (Product $product) use ($distributions, $hasShopFilter): void {
-            $this->applyDistributionDisplay($product, $distributions->get($product->id), withPrice: $hasShopFilter);
+        $products->each(function (Product $product) use ($distributions): void {
+            $this->applyDistributionDisplay($product, $distributions->get($product->id), withPrice: true);
         });
     }
 
@@ -98,8 +97,7 @@ class PortalProductDisplayService
             $product->setAttribute('display_shop_logo', $shop->displayLogoUrl());
         }
 
-        // Only overlay the shop's edited price when the buyer is in that shop.
-        // General home stays on catalog cents so 74.42 does not become 74.00.
+        // Always use the selected distribution's selling price on cards.
         if ($withPrice) {
             $product->setAttribute('display_selling_price', (float) $distribution->selling_price);
         }
