@@ -19,8 +19,8 @@
         $displayShopLogo = $detail['shop']['logo_url'] ?? null;
         $shopProductsUrl = $detail['shop']['products_url'] ?? null;
         $shopUserId = $detail['shop']['user_id'] ?? null;
-        $requestShopId = (int) request('shop_id');
-        $checkoutShopId = $requestShopId > 0 ? $requestShopId : null;
+        $displayShopId = $detail['shop']['id'] ?? null;
+        $checkoutShopId = ((int) request('shop_id') ?: $displayShopId) ?: null;
         $checkoutUrl = $product->stock > 0
             ? route('member.checkout.show', array_filter(['product' => $product, 'shop_id' => $checkoutShopId]))
             : '#';
@@ -217,7 +217,7 @@
                     <p class="text-2xl font-bold text-orange-600">${{ number_format($sellingPrice, 2) }}</p>
                     @if ($showMarketPrice)
                         <p class="mt-1 text-sm text-gray-500">
-                            {{ __('member.products.market_price') }}:
+                            {{ __('member.products.old_price') }}:
                             <span class="font-medium text-gray-400 line-through">${{ number_format($marketPrice, 2) }}</span>
                         </p>
                     @endif

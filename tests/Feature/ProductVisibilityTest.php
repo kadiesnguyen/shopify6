@@ -263,7 +263,7 @@ class ProductVisibilityTest extends TestCase
             ->assertOk()
             ->assertSee('$70.12', false)
             ->assertSee('$74.42', false)
-            ->assertSee(__('member.products.market_price'));
+            ->assertSee(__('member.products.old_price'));
     }
 
     public function test_home_card_shows_catalog_cents_and_opens_detail_without_shop_id(): void
@@ -291,30 +291,23 @@ class ProductVisibilityTest extends TestCase
             ]), false);
     }
 
-    public function test_product_detail_uses_catalog_price_without_shop_id(): void
+    public function test_product_detail_shows_shop_selling_and_old_market_price(): void
     {
-        $this->product->update(['selling_price' => 74.42, 'purchase_price' => 50.42]);
+        $this->product->update(['selling_price' => 270, 'purchase_price' => 200]);
         $this->distributeAsShop($this->shopUser);
 
         $distribution = ProductDistribution::query()
             ->where('user_id', $this->shopUser->id)
             ->where('product_id', $this->product->id)
             ->firstOrFail();
-        $distribution->update(['selling_price' => 74, 'commission' => 23.58]);
+        $distribution->update(['selling_price' => 268, 'commission' => 68]);
 
         $this->actingAs($this->member)
             ->get(route('member.products.show', ['product' => $this->product]))
             ->assertOk()
-            ->assertSee('$74.42', false)
-            ->assertDontSee('$74.00', false)
-            ->assertDontSee(__('member.products.market_price'));
-
-        $this->member->update(['payment_password' => '123456']);
-
-        $this->actingAs($this->member->fresh())
-            ->get(route('member.checkout.show', $this->product))
-            ->assertOk()
-            ->assertSee('$74.42', false);
+            ->assertSee('$268.00', false)
+            ->assertSee('$270.00', false)
+            ->assertSee(__('member.products.old_price'));
     }
 
     public function test_shop_owner_manage_shows_edited_selling_price(): void

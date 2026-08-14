@@ -25,10 +25,7 @@ class ProductDetailService
         $distribution = $this->resolveDisplayDistribution($product, $displayShopId, $shopOwnerUserId);
         $marketPrice = (float) $product->selling_price;
         $purchasePrice = (float) ($distribution?->purchase_price ?? $product->purchase_price);
-        $useShopPrice = $shopOwnerUserId || $displayShopId > 0;
-        $sellingPrice = $useShopPrice
-            ? (float) ($distribution?->selling_price ?? $marketPrice)
-            : $marketPrice;
+        $sellingPrice = (float) ($distribution?->selling_price ?? $marketPrice);
         $profit = max(0, $sellingPrice - $purchasePrice);
         $description = $this->stripDescriptionImages($this->resolveDescription($product, $sourceUrl));
         $isRecommended = $product->distributions()->available()->exists();
@@ -43,7 +40,7 @@ class ProductDetailService
             'purchase_price' => $purchasePrice,
             'selling_price' => $sellingPrice,
             'market_price' => $marketPrice,
-            'show_market_price' => $useShopPrice && $distribution !== null && $sellingPrice + 0.001 < $marketPrice,
+            'show_market_price' => $distribution !== null && $sellingPrice + 0.001 < $marketPrice,
             'profit' => $profit,
             'stock' => (int) $product->stock,
             'is_recommended' => $isRecommended,

@@ -142,6 +142,7 @@ return [
         'edit' => 'Edit',
         'save_content' => 'Save',
         'market_price' => 'Market price',
+        'old_price' => 'Old price',
         'catalog_price' => 'Price',
         'cost_price' => 'Cost price',
         'price_to' => 'Market price',

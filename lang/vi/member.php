@@ -142,6 +142,7 @@ return [
         'edit' => 'Chỉnh sửa',
         'save_content' => 'Lưu nội dung',
         'market_price' => 'Giá thị trường',
+        'old_price' => 'Giá cũ',
         'catalog_price' => 'Giá cả',
         'cost_price' => 'Giá gốc',
         'price_to' => 'Giá thị trường',
