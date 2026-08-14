@@ -2,11 +2,12 @@
 
 @php
     $displayShopId = $product->getAttribute('display_shop_id');
+    $hasShopPrice = $product->getAttribute('display_selling_price') !== null;
     $productImageUrl = $product->imageUrl();
     $detailParams = array_filter([
         'product' => $product,
         'from' => $detailFrom,
-        'shop_id' => $displayShopId,
+        'shop_id' => $hasShopPrice ? $displayShopId : null,
     ]);
     $detailUrl = route('member.products.show', $detailParams);
 @endphp

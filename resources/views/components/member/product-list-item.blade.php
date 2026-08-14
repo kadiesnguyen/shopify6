@@ -2,12 +2,13 @@
 
 @php
     $displayShopId = $product->getAttribute('display_shop_id');
+    $hasShopPrice = $product->getAttribute('display_selling_price') !== null;
     $displayShopName = $product->getAttribute('display_shop_name') ?: $product->shop?->name;
     $displayShopLogo = $product->getAttribute('display_shop_logo') ?: $product->shop?->displayLogoUrl();
     $detailUrl = route('member.products.show', array_filter([
         'product' => $product,
         'from' => $detailFrom,
-        'shop_id' => $displayShopId,
+        'shop_id' => $hasShopPrice ? $displayShopId : null,
     ]));
 @endphp
 

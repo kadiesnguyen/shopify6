@@ -19,9 +19,10 @@
         $displayShopLogo = $detail['shop']['logo_url'] ?? null;
         $shopProductsUrl = $detail['shop']['products_url'] ?? null;
         $shopUserId = $detail['shop']['user_id'] ?? null;
-        $displayShopId = $detail['shop']['id'] ?? null;
+        $requestShopId = (int) request('shop_id');
+        $checkoutShopId = $requestShopId > 0 ? $requestShopId : null;
         $checkoutUrl = $product->stock > 0
-            ? route('member.checkout.show', array_filter(['product' => $product, 'shop_id' => $displayShopId]))
+            ? route('member.checkout.show', array_filter(['product' => $product, 'shop_id' => $checkoutShopId]))
             : '#';
         $canBuy = $product->stock > 0;
         $galleryImages = array_values(array_filter($detail['images'] ?? []));
@@ -322,7 +323,7 @@
                 :stock="$detail['stock']"
                 :image-url="$primaryImage"
                 :images="$galleryImages"
-                :shop-user-id="$shopUserId"
+                :shop-user-id="$checkoutShopId ? $shopUserId : null"
                 :shop-url="$shopProductsUrl"
                 :checkout-url="$checkoutUrl"
                 :can-buy="$canBuy"

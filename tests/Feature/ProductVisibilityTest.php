@@ -232,23 +232,24 @@ class ProductVisibilityTest extends TestCase
         $this->assertEquals('13.00', $distribution->fresh()->commission);
     }
 
-    public function test_shop_storefront_shows_custom_distribution_price(): void
+    public function test_shop_storefront_keeps_catalog_cents(): void
     {
+        $this->product->update(['selling_price' => 74.42, 'purchase_price' => 50.42]);
         $this->distributeAsShop($this->shopUser);
 
         $distribution = ProductDistribution::query()
             ->where('user_id', $this->shopUser->id)
             ->where('product_id', $this->product->id)
             ->firstOrFail();
-
-        $distribution->update(['selling_price' => 22, 'commission' => 12]);
+        $distribution->update(['selling_price' => 74, 'commission' => 23.58]);
 
         $shop = Shop::query()->where('user_id', $this->shopUser->id)->firstOrFail();
 
         $this->actingAs($this->member)
             ->get(route('member.products.index', ['shop_id' => $shop->id]))
             ->assertOk()
-            ->assertSee('$22.00', false);
+            ->assertSee('$74.42', false)
+            ->assertDontSee('$74.00', false);
 
         $this->actingAs($this->member)
             ->get(route('member.products.show', [
@@ -256,20 +257,95 @@ class ProductVisibilityTest extends TestCase
                 'shop_id' => $shop->id,
             ]))
             ->assertOk()
-            ->assertSee('$22.00', false)
-            ->assertSee('$25.00', false)
-            ->assertSee(__('member.products.market_price'));
+            ->assertSee('$74.42', false)
+            ->assertDontSee('$74.00', false)
+            ->assertDontSee(__('member.products.market_price'));
     }
 
-    public function test_product_detail_shows_market_price_without_shop_id_after_distribute(): void
+    public function test_home_card_shows_catalog_cents_and_opens_detail_without_shop_id(): void
     {
+        $this->product->update(['selling_price' => 74.42, 'purchase_price' => 50.42]);
         $this->distributeAsShop($this->shopUser);
+        $this->markDistributionFeatured($this->shopUser);
+
+        ProductDistribution::query()
+            ->where('user_id', $this->shopUser->id)
+            ->where('product_id', $this->product->id)
+            ->update(['selling_price' => 74, 'commission' => 23.58]);
+
+        $shop = Shop::query()->where('user_id', $this->shopUser->id)->firstOrFail();
+
+        $this->actingAs($this->member)
+            ->get(route('member.home'))
+            ->assertOk()
+            ->assertSee('$74.42', false)
+            ->assertDontSee('$74.00', false)
+            ->assertDontSee(route('member.products.show', [
+                'product' => $this->product,
+                'from' => 'home',
+                'shop_id' => $shop->id,
+            ]), false);
+    }
+
+    public function test_product_detail_uses_catalog_price_without_shop_id(): void
+    {
+        $this->product->update(['selling_price' => 74.42, 'purchase_price' => 50.42]);
+        $this->distributeAsShop($this->shopUser);
+
+        $distribution = ProductDistribution::query()
+            ->where('user_id', $this->shopUser->id)
+            ->where('product_id', $this->product->id)
+            ->firstOrFail();
+        $distribution->update(['selling_price' => 74, 'commission' => 23.58]);
 
         $this->actingAs($this->member)
             ->get(route('member.products.show', ['product' => $this->product]))
             ->assertOk()
-            ->assertSee(__('member.products.market_price'))
-            ->assertSee('$25.00', false);
+            ->assertSee('$74.42', false)
+            ->assertDontSee('$74.00', false)
+            ->assertDontSee(__('member.products.market_price'));
+
+        $this->member->update(['payment_password' => '123456']);
+
+        $this->actingAs($this->member->fresh())
+            ->get(route('member.checkout.show', $this->product))
+            ->assertOk()
+            ->assertSee('$74.42', false);
+    }
+
+    public function test_shop_owner_detail_keeps_catalog_cents(): void
+    {
+        $this->product->update(['selling_price' => 74.42, 'purchase_price' => 50.42]);
+        $this->distributeAsShop($this->shopUser);
+
+        ProductDistribution::query()
+            ->where('user_id', $this->shopUser->id)
+            ->where('product_id', $this->product->id)
+            ->update(['selling_price' => 74, 'commission' => 23.58]);
+
+        $this->actingAs($this->shopUser)
+            ->get(route('member.products.manage.index'))
+            ->assertOk()
+            ->assertSee('$74.42', false)
+            ->assertDontSee('$74.00', false);
+
+        $this->actingAs($this->shopUser)
+            ->get(route('member.products.show', [
+                'product' => $this->product,
+                'from' => 'manage',
+            ]))
+            ->assertOk()
+            ->assertSee('$74.42', false)
+            ->assertDontSee('$74.00', false);
+
+        $this->actingAs($this->shopUser)
+            ->get(route('member.products.show', [
+                'product' => $this->product,
+                'from' => 'distribution',
+            ]))
+            ->assertOk()
+            ->assertSee('$74.42', false)
+            ->assertDontSee('$74.00', false);
     }
 
     public function test_shop_cannot_set_selling_price_above_market(): void

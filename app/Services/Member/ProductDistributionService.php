@@ -172,34 +172,6 @@ class ProductDistributionService
 
     public function previewOrderPrice(Product $product, ?int $displayShopId = null, ?int $excludeSellerUserId = null): ?float
     {
-        if ($displayShopId > 0) {
-            $preferred = ProductDistribution::query()
-                ->available()
-                ->where('product_id', $product->id)
-                ->whereHas('user.shop', fn ($query) => $query->whereKey($displayShopId))
-                ->when($excludeSellerUserId, fn ($query) => $query->where('user_id', '!=', $excludeSellerUserId))
-                ->orderByDesc('created_at')
-                ->first();
-
-            if ($preferred) {
-                return (float) $preferred->selling_price;
-            }
-        }
-
-        $distribution = ProductDistribution::query()
-            ->available()
-            ->where('product_id', $product->id)
-            ->when($excludeSellerUserId, fn ($query) => $query->where('user_id', '!=', $excludeSellerUserId))
-            ->withCount(['orders as active_orders_count' => function ($query): void {
-                $query->whereNotIn('status', [
-                    \App\Models\Order::STATUS_COMPLETED,
-                    \App\Models\Order::STATUS_CANCELLED,
-                ]);
-            }])
-            ->orderBy('active_orders_count')
-            ->orderBy('id')
-            ->first();
-
-        return $distribution ? (float) $distribution->selling_price : null;
+        return (float) $product->selling_price;
     }
 }

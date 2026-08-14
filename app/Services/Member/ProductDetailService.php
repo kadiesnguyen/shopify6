@@ -25,7 +25,9 @@ class ProductDetailService
         $distribution = $this->resolveDisplayDistribution($product, $displayShopId, $shopOwnerUserId);
         $marketPrice = (float) $product->selling_price;
         $purchasePrice = (float) ($distribution?->purchase_price ?? $product->purchase_price);
-        $sellingPrice = (float) ($distribution?->selling_price ?? $marketPrice);
+        // Always catalog selling_price. Shop distribution rows are often whole dollars (74.00)
+        // while the listing already showed catalog cents (74.42) — home and shop storefront.
+        $sellingPrice = $marketPrice;
         $profit = max(0, $sellingPrice - $purchasePrice);
         $description = $this->stripDescriptionImages($this->resolveDescription($product, $sourceUrl));
         $isRecommended = $product->distributions()->available()->exists();
@@ -40,7 +42,7 @@ class ProductDetailService
             'purchase_price' => $purchasePrice,
             'selling_price' => $sellingPrice,
             'market_price' => $marketPrice,
-            'show_market_price' => $distribution !== null && $sellingPrice < $marketPrice,
+            'show_market_price' => false,
             'profit' => $profit,
             'stock' => (int) $product->stock,
             'is_recommended' => $isRecommended,
