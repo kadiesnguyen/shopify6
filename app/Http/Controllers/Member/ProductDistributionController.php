@@ -185,6 +185,13 @@ class ProductDistributionController extends Controller
         abort_unless($user->isShop(), 403);
         abort_unless($distribution->user_id === $user->id, 404);
 
+        $rawPrice = $request->input('selling_price');
+        if (is_string($rawPrice)) {
+            $request->merge([
+                'selling_price' => str_replace(',', '.', preg_replace('/[^\d,.\-]/', '', $rawPrice) ?? $rawPrice),
+            ]);
+        }
+
         $validated = $request->validate([
             'selling_price' => ['required', 'numeric', 'min:0'],
         ]);

@@ -71,7 +71,7 @@
                                 <a href="{{ route('member.products.show', ['product' => $product, 'from' => 'manage']) }}" class="line-clamp-2 text-sm font-medium text-gray-900 no-underline">
                                     {{ $product->name }}
                                 </a>
-                                <p class="mt-1 text-base font-semibold text-red-600">${{ number_format($marketPrice, 2) }}</p>
+                                <p class="mt-1 text-base font-semibold text-red-600">${{ number_format($distribution->selling_price, 2) }}</p>
                             </div>
 
                             <div class="relative shrink-0">
@@ -125,7 +125,7 @@
                                         .then(async (response) => {
                                             const payload = await response.json().catch(() => ({}));
                                             if (!response.ok) {
-                                                throw new Error(payload.message || @js(__('member.products.price_update_failed')));
+                                                throw new Error(payload.errors?.selling_price?.[0] || payload.message || @js(__('member.products.price_update_failed')));
                                             }
                                             window.location.reload();
                                         })

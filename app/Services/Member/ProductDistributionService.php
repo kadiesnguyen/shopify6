@@ -172,6 +172,18 @@ class ProductDistributionService
 
     public function previewOrderPrice(Product $product, ?int $displayShopId = null, ?int $excludeSellerUserId = null): ?float
     {
-        return (float) $product->selling_price;
+        if (! ($displayShopId > 0)) {
+            return (float) $product->selling_price;
+        }
+
+        $preferred = ProductDistribution::query()
+            ->available()
+            ->where('product_id', $product->id)
+            ->whereHas('user.shop', fn ($query) => $query->whereKey($displayShopId))
+            ->when($excludeSellerUserId, fn ($query) => $query->where('user_id', '!=', $excludeSellerUserId))
+            ->orderByDesc('created_at')
+            ->first();
+
+        return $preferred ? (float) $preferred->selling_price : (float) $product->selling_price;
     }
 }

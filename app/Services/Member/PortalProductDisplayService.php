@@ -32,8 +32,9 @@ class PortalProductDisplayService
             $featuredOnly,
         );
 
-        $products->each(function (Product $product) use ($distributions): void {
-            $this->applyDistributionDisplay($product, $distributions->get($product->id));
+        $hasShopFilter = $shopUserIds !== [];
+        $products->each(function (Product $product) use ($distributions, $hasShopFilter): void {
+            $this->applyDistributionDisplay($product, $distributions->get($product->id), withPrice: $hasShopFilter);
         });
     }
 
@@ -47,7 +48,7 @@ class PortalProductDisplayService
             ->keyBy('product_id');
 
         $products->each(function (Product $product) use ($distributions): void {
-            $this->applyDistributionDisplay($product, $distributions->get($product->id));
+            $this->applyDistributionDisplay($product, $distributions->get($product->id), withPrice: true);
         });
     }
 
@@ -83,6 +84,7 @@ class PortalProductDisplayService
     private function applyDistributionDisplay(
         Product $product,
         ?ProductDistribution $distribution,
+        bool $withPrice = false,
     ): void {
         if (! $distribution) {
             return;
@@ -94,6 +96,12 @@ class PortalProductDisplayService
             $product->setAttribute('display_shop_id', $shop->id);
             $product->setAttribute('display_shop_name', $shop->name);
             $product->setAttribute('display_shop_logo', $shop->displayLogoUrl());
+        }
+
+        // Only overlay the shop's edited price when the buyer is in that shop.
+        // General home stays on catalog cents so 74.42 does not become 74.00.
+        if ($withPrice) {
+            $product->setAttribute('display_selling_price', (float) $distribution->selling_price);
         }
     }
 }

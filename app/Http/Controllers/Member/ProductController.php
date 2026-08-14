@@ -76,7 +76,7 @@ class ProductController extends Controller
         $from = $request->string('from')->toString();
         $user = $request->user();
         $isShopView = in_array($from, ['manage', 'distribution'], true);
-        $shopOwnerUserId = $isShopView && $user->isShop() ? $user->id : null;
+        $shopOwnerUserId = $from === 'manage' && $user->isShop() ? $user->id : null;
 
         $detail = $this->productDetails->resolve(
             $product,
