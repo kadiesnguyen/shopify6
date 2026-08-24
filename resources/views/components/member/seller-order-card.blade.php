@@ -63,7 +63,7 @@
                 <span class="font-semibold text-[#fa3534]">${{ number_format($order->purchase_cost, 2) }}</span>
             </span>
             <span>
-                {{ __('member.products.market_price') }}:
+                {{ __('member.products.selling_price') }}:
                 <span class="font-semibold text-[#fa3534]">${{ number_format($order->total, 2) }}</span>
             </span>
         </div>

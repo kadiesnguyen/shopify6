@@ -333,7 +333,7 @@ class OrderSettlementTest extends TestCase
             ->assertOk()
             ->assertSee(__('member.orders.seller_status_pending'), false)
             ->assertSee(__('member.products.cost_price'), false)
-            ->assertSee(__('member.products.market_price'), false)
+            ->assertSee(__('member.products.selling_price'), false)
             ->assertSee(__('member.orders.confirm_platform_shipping'), false);
 
         $this->actingAs($this->seller)
