@@ -66,9 +66,9 @@ class CategoryBrowseController extends Controller
                 ->with('category')
                 ->where('status', Product::STATUS_ACTIVE)
                 ->whereIn('category_id', $allowedIds)
+                ->when($activeCategory, fn ($query) => $query->where('category_id', $activeCategory->id))
                 ->when($keyword !== '', fn ($query) => $query->where('name', 'like', "%{$keyword}%"))
-                ->when($keyword === '' && $activeCategory, fn ($query) => $query->where('category_id', $activeCategory->id))
-                ->latest()
+                ->orderBy('id')
                 ->limit(48)
                 ->get();
         } elseif ($activeCategory) {

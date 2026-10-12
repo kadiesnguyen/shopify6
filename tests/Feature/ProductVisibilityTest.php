@@ -302,12 +302,18 @@ class ProductVisibilityTest extends TestCase
             ->firstOrFail();
         $distribution->update(['selling_price' => 268, 'commission' => 68]);
 
+        Shop::query()->where('user_id', $this->shopUser->id)->update([
+            'description' => 'Cửa hàng đồ gia dụng chính hãng',
+        ]);
+
         $this->actingAs($this->member)
             ->get(route('member.products.show', ['product' => $this->product]))
             ->assertOk()
             ->assertSee('$268.00', false)
             ->assertSee('$270.00', false)
-            ->assertSee(__('member.products.old_price'));
+            ->assertSee(__('member.products.old_price'))
+            ->assertSee('Cửa hàng đồ gia dụng chính hãng')
+            ->assertDontSee(__('member.products.trusted_quality'));
     }
 
     public function test_shop_owner_manage_shows_edited_selling_price(): void

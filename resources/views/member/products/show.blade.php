@@ -17,6 +17,7 @@
         $salesCount = $detail['sales_count'] ?? 0;
         $displayShopName = $detail['shop']['name'] ?? null;
         $displayShopLogo = $detail['shop']['logo_url'] ?? null;
+        $displayShopDescription = $detail['shop']['description'] ?? null;
         $shopProductsUrl = $detail['shop']['products_url'] ?? null;
         $shopUserId = $detail['shop']['user_id'] ?? null;
         $displayShopId = $detail['shop']['id'] ?? null;
@@ -256,7 +257,7 @@
                                     <span class="truncate font-semibold text-gray-900">{{ $displayShopName }}</span>
                                     <span class="shrink-0 text-xs font-bold text-orange-600">✓</span>
                                 </span>
-                                <span class="mt-0.5 block text-xs text-gray-500">{{ __('member.products.trusted_quality') }}</span>
+                                <span class="mt-0.5 line-clamp-2 block text-xs text-gray-500">{{ $displayShopDescription ?: __('member.products.trusted_quality') }}</span>
                             </span>
                             <x-member.icon name="chevron-right" class="size-5 shrink-0 text-gray-300" />
                         </a>

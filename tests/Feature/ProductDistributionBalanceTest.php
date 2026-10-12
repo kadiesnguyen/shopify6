@@ -139,7 +139,7 @@ class ProductDistributionBalanceTest extends TestCase
             ->assertSee(__('member.products.edit'));
     }
 
-    public function test_distribute_mode_categories_search_finds_product_across_categories(): void
+    public function test_distribute_mode_search_stays_inside_selected_category(): void
     {
         $otherCategory = Category::query()->create([
             'name' => 'Massage Category',
@@ -161,12 +161,22 @@ class ProductDistributionBalanceTest extends TestCase
         $this->actingAs($this->shopUser)
             ->get(route('member.categories.index', [
                 'mode' => 'distribute',
+                'category' => $otherCategory->id,
                 'q' => 'Massage Chair',
             ]))
             ->assertOk()
             ->assertSee($massageProduct->name)
             ->assertSee(__('member.products.distribution_search'))
             ->assertDontSee('Second Product');
+
+        $this->actingAs($this->shopUser)
+            ->get(route('member.categories.index', [
+                'mode' => 'distribute',
+                'category' => $this->product->category_id,
+                'q' => 'Massage Chair',
+            ]))
+            ->assertOk()
+            ->assertDontSee($massageProduct->name);
     }
 
     public function test_distribution_center_shows_purchase_selling_and_profit(): void
