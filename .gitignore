@@ -10,13 +10,14 @@
 .env
 .env.*
 !.env.example
-
+info.md
 # Laravel runtime
 /bootstrap/cache/*.php
 !/bootstrap/cache/.gitignore
 /storage/*.key
 /storage/pail
-
+key_4.225.253.8
+key_4.225.253.8.pub
 # Logs & test cache
 *.log
 .phpunit.result.cache
