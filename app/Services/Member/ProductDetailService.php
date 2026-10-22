@@ -2,10 +2,13 @@
 
 namespace App\Services\Member;
 
+use App\Jobs\FetchProductDescriptionJob;
 use App\Models\Product;
 use App\Models\ProductDistribution;
 use App\Models\Shop;
 use App\Services\Import\SieummoProductDetailParser;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
@@ -22,16 +25,19 @@ class ProductDetailService
     ): array {
         $product->loadMissing(['category', 'shop', 'images'])->loadCount('orderItems');
 
-        $distribution = $this->resolveDisplayDistribution($product, $displayShopId, $shopOwnerUserId);
+        $distributions = $product->distributions()
+            ->available()
+            ->with(['user.shop'])
+            ->get();
+        $distribution = $this->pickDisplayDistribution($distributions, $displayShopId, $shopOwnerUserId);
         $marketPrice = (float) $product->selling_price;
         $purchasePrice = (float) ($distribution?->purchase_price ?? $product->purchase_price);
         $sellingPrice = (float) ($distribution?->selling_price ?? $marketPrice);
         $profit = max(0, $sellingPrice - $purchasePrice);
         $description = $this->stripDescriptionImages($this->resolveDescription($product, $sourceUrl));
-        $isRecommended = $product->distributions()->available()->exists();
 
         return [
-            'product' => $product->fresh(['category', 'shop', 'images']),
+            'product' => $product,
             'name' => $product->name,
             'image_url' => $product->imageUrl(),
             'images' => $this->imageUrls($product),
@@ -43,10 +49,10 @@ class ProductDetailService
             'show_market_price' => $distribution !== null && $sellingPrice + 0.001 < $marketPrice,
             'profit' => $profit,
             'stock' => (int) $product->stock,
-            'is_recommended' => $isRecommended,
+            'is_recommended' => $distributions->isNotEmpty(),
             'sales_count' => (int) $product->order_items_count,
             'category' => $product->category?->name,
-            'shop' => $this->resolveDisplayShop($product, $displayShopId),
+            'shop' => $this->resolveDisplayShop($product, $distributions, $displayShopId),
         ];
     }
 
@@ -98,17 +104,16 @@ class ProductDetailService
         return $main ? [$main] : [];
     }
 
-    /** @return array{id: int, user_id: int, name: string, description: ?string, logo_url: ?string, products_url: string}|null */
-    private function resolveDisplayShop(Product $product, ?int $preferredShopId = null): ?array
+    /**
+     * @param  Collection<int, ProductDistribution>  $distributions
+     * @return array{id: int, user_id: int, name: string, description: ?string, logo_url: ?string, products_url: string}|null
+     */
+    private function resolveDisplayShop(Product $product, Collection $distributions, ?int $preferredShopId = null): ?array
     {
-        $distributions = $product->distributions()
-            ->available()
-            ->with(['user.shop'])
-            ->orderByDesc('created_at')
-            ->get();
+        $ordered = $distributions->sortByDesc(fn (ProductDistribution $distribution): int => $distribution->created_at?->getTimestamp() ?? 0);
 
         if ($preferredShopId > 0) {
-            foreach ($distributions as $distribution) {
+            foreach ($ordered as $distribution) {
                 $shop = $distribution->user?->shop;
 
                 if ($shop && (int) $shop->id === $preferredShopId) {
@@ -117,9 +122,47 @@ class ProductDetailService
             }
         }
 
-        $shop = $distributions->first()?->user?->shop ?? $product->shop;
+        $shop = $ordered->first()?->user?->shop ?? $product->shop;
 
         return $shop ? $this->shopPayload($shop) : null;
+    }
+
+    /**
+     * @param  Collection<int, ProductDistribution>  $distributions
+     */
+    private function pickDisplayDistribution(
+        Collection $distributions,
+        ?int $displayShopId = null,
+        ?int $shopOwnerUserId = null,
+    ): ?ProductDistribution {
+        if ($shopOwnerUserId) {
+            return $distributions->first(
+                fn (ProductDistribution $distribution): bool => (int) $distribution->user_id === $shopOwnerUserId,
+            );
+        }
+
+        if ($displayShopId > 0) {
+            return $distributions
+                ->filter(fn (ProductDistribution $distribution): bool => (int) ($distribution->user?->shop?->id) === $displayShopId)
+                ->sortByDesc(fn (ProductDistribution $distribution): int => $distribution->created_at?->getTimestamp() ?? 0)
+                ->first();
+        }
+
+        return $distributions
+            ->sort(function (ProductDistribution $left, ProductDistribution $right): int {
+                return $this->distributionRank($right) <=> $this->distributionRank($left);
+            })
+            ->first();
+    }
+
+    /** @return array{0: int, 1: int, 2: int} */
+    private function distributionRank(ProductDistribution $distribution): array
+    {
+        return [
+            $distribution->is_featured ? 1 : 0,
+            $distribution->featured_at?->getTimestamp() ?? 0,
+            $distribution->created_at?->getTimestamp() ?? 0,
+        ];
     }
 
     /** @return array{id: int, user_id: int, name: string, description: ?string, logo_url: ?string, products_url: string} */
@@ -140,54 +183,51 @@ class ProductDetailService
         ];
     }
 
-    private function resolveDisplayDistribution(
-        Product $product,
-        ?int $displayShopId = null,
-        ?int $shopOwnerUserId = null,
-    ): ?ProductDistribution {
-        if ($shopOwnerUserId) {
-            return ProductDistribution::query()
-                ->available()
-                ->where('product_id', $product->id)
-                ->where('user_id', $shopOwnerUserId)
-                ->first();
-        }
-
-        if ($displayShopId > 0) {
-            return ProductDistribution::query()
-                ->available()
-                ->where('product_id', $product->id)
-                ->whereHas('user.shop', fn ($query) => $query->whereKey($displayShopId))
-                ->orderByDesc('created_at')
-                ->first();
-        }
-
-        return ProductDistribution::query()
-            ->available()
-            ->where('product_id', $product->id)
-            ->orderByDesc('is_featured')
-            ->orderByDesc('featured_at')
-            ->orderByDesc('created_at')
-            ->first();
-    }
-
     private function resolveDescription(Product $product, string $sourceUrl): string
     {
         $current = trim((string) $product->description);
-
-        if ($this->isRichDescription($current, $product->name) && ! $this->needsHtmlUpgrade($product, $current)) {
-            return $current;
-        }
-
-        $fetched = $this->fetchRemoteDescription($product, $sourceUrl);
-
-        if ($fetched !== null && $fetched !== '' && $this->isRichDescription($fetched, $product->name)) {
-            $product->update(['description' => $fetched]);
-
-            return $fetched;
-        }
+        $this->queueRemoteDescription($product, $current, $sourceUrl);
 
         return $current !== '' ? $current : $product->name;
+    }
+
+    public function fetchAndStoreRemoteDescription(Product $product, string $sourceUrl = 'https://sieummo.vn'): ?string
+    {
+        $fetched = $this->fetchRemoteDescription($product, $sourceUrl);
+
+        if ($fetched === null || $fetched === '' || ! $this->isRichDescription($fetched, $product->name)) {
+            return null;
+        }
+
+        $product->update(['description' => $fetched]);
+
+        return $fetched;
+    }
+
+    private function queueRemoteDescription(Product $product, string $current, string $sourceUrl): void
+    {
+        if (config('queue.default') === 'sync') {
+            return;
+        }
+
+        $needsFetch = ! $this->isRichDescription($current, $product->name)
+            || $this->needsHtmlUpgrade($product, $current);
+
+        if (! $needsFetch) {
+            return;
+        }
+
+        $cacheKey = 'product:desc-fetch:'.$product->id;
+
+        if (! Cache::add($cacheKey, 1, now()->addDay())) {
+            return;
+        }
+
+        try {
+            FetchProductDescriptionJob::dispatch($product->id, $sourceUrl);
+        } catch (\Throwable) {
+            Cache::forget($cacheKey);
+        }
     }
 
     private function fetchRemoteDescription(Product $product, string $sourceUrl): ?string
@@ -282,13 +322,18 @@ class ProductDetailService
         });
     }
 
+    private function remoteHttp(): PendingRequest
+    {
+        return Http::connectTimeout(3)->timeout(8);
+    }
+
     /** @param  array<string, mixed>  $params */
     private function demoApiCall(string $endpoint, array $params = []): array
     {
         $secretKey = (string) config('services.demo_api.secret_key');
         $baseUrl = rtrim((string) config('services.demo_api.base_url'), '/');
 
-        $response = Http::asForm()->timeout(60)->post(
+        $response = $this->remoteHttp()->asForm()->post(
             $baseUrl.'/'.$endpoint.'?lang='.config('services.demo_api.locale').'&t='.now()->getTimestampMs(),
             array_merge([
                 'api_token' => md5($endpoint.$secretKey),
@@ -324,7 +369,7 @@ class ProductDetailService
         [$sieummoProductId, $sieummoShopId] = $ids;
 
         try {
-            $html = Http::timeout(20)
+            $html = $this->remoteHttp()
                 ->get(rtrim($sourceUrl, '/').'/product', [
                     'id' => $sieummoProductId,
                     'shop' => $sieummoShopId,

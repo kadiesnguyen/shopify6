@@ -37,16 +37,15 @@ class BackfillProductDescriptionsCommand extends Command
         foreach ($products as $product) {
             $before = trim((string) $product->description);
 
-        if ($details->isRichDescription($before, $product->name) && ! $details->needsHtmlUpgrade($product, $before)) {
+            if ($details->isRichDescription($before, $product->name) && ! $details->needsHtmlUpgrade($product, $before)) {
                 $skipped++;
 
                 continue;
             }
 
-            $payload = $details->resolve($product);
-            $after = trim((string) ($payload['description'] ?? ''));
+            $after = $details->fetchAndStoreRemoteDescription($product);
 
-            if ($after !== $before && $details->isRichDescription($after, $product->name)) {
+            if ($after !== null && $after !== $before) {
                 $updated++;
                 $this->line("Updated #{$product->id} {$product->slug}");
             } else {

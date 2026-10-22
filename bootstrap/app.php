@@ -1,5 +1,12 @@
 <?php
 
+use App\Console\Commands\AutoCompleteShippedOrdersCommand;
+use App\Console\Commands\DatabaseUpgradeCommand;
+use App\Console\Commands\DbBackupCommand;
+use App\Console\Commands\DbGuardCommand;
+use App\Console\Commands\EnsureDatabaseReadyCommand;
+use App\Console\Commands\MigrateFreshCommand;
+use App\Console\Commands\SeedCommand;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureAdminApi;
 use App\Http\Middleware\EnsureMember;
@@ -45,18 +52,22 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withCommands([
-        \App\Console\Commands\MigrateFreshCommand::class,
-        \App\Console\Commands\SeedCommand::class,
-        \App\Console\Commands\DbBackupCommand::class,
-        \App\Console\Commands\DbGuardCommand::class,
-        \App\Console\Commands\DatabaseUpgradeCommand::class,
-        \App\Console\Commands\EnsureDatabaseReadyCommand::class,
-        \App\Console\Commands\AutoCompleteShippedOrdersCommand::class,
+        MigrateFreshCommand::class,
+        SeedCommand::class,
+        DbBackupCommand::class,
+        DbGuardCommand::class,
+        DatabaseUpgradeCommand::class,
+        EnsureDatabaseReadyCommand::class,
+        AutoCompleteShippedOrdersCommand::class,
     ])
     ->withSchedule(function (Schedule $schedule): void {
         // Guard also lives in the command (hours <= 0 no-ops); skip schedule when disabled.
         if ((int) config('portal.order_auto_complete_hours', 0) > 0) {
             $schedule->command('orders:auto-complete-shipped')->everyFiveMinutes();
         }
+
+        $schedule->command('queue:work --stop-when-empty --max-time=55 --tries=1 --timeout=30')
+            ->everyMinute()
+            ->withoutOverlapping(5);
     })
     ->create();

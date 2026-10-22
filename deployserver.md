@@ -103,6 +103,12 @@ php artisan shops:sync-roles --no-interaction
 | SSH | `Host ServerSand` → `14.225.253.8` |
 | DB | Xem `info.md` (local, không commit) |
 
+## Cache và session
+
+Production dùng Redis (predis, không cần ext php-redis): `CACHE_STORE=redis`, `SESSION_DRIVER=redis`, `REDIS_CLIENT=predis`. Queue vẫn `database`. Cron `schedule:run` bên dưới cũng chạy `queue:work --stop-when-empty` để job lấy mô tả sản phẩm không chặn request.
+
+Đổi các biến này trong `.env` server rồi `php artisan config:cache`. User đang đăng nhập phải đăng nhập lại một lần.
+
 ## Cron (server)
 
 ```cron
