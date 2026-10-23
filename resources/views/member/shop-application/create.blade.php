@@ -99,10 +99,10 @@
                 const problems = [];
                 const add = (el, message) => problems.push({ el, message });
                 if (! this.industryId) {
-                    add(form.querySelector('[data-field="industry"]'), this.msg.industry);
+                    add(form.querySelector('[data-field=industry]'), this.msg.industry);
                 }
                 if (! this.categoryIds.length) {
-                    add(form.querySelector('[data-field="categories"]'), this.msg.categories);
+                    add(form.querySelector('[data-field=categories]'), this.msg.categories);
                 }
                 ['shop_name', 'shop_description', 'real_name', 'phone', 'id_number', 'address', 'country'].forEach((name) => {
                     const el = form.elements[name];
