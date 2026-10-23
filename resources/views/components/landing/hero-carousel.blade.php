@@ -10,7 +10,7 @@
 
     if ($slides->isEmpty() && $banners->isNotEmpty()) {
         $slides = $banners->map(fn ($banner) => [
-            'image' => $banner->image_url ?? asset('images/landing/hero/TG11.png'),
+            'image' => $banner->image_url ?? asset('images/landing/hero/TG11.jpg'),
             'alt' => $banner->translate('title'),
         ]);
     }

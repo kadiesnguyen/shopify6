@@ -16,7 +16,7 @@ class LandingPagesTest extends TestCase
         $response = $this->get('/');
 
         $response->assertOk()->assertSee('Lợi Thế Của Chúng Tôi');
-        $response->assertSee('/images/landing/hero/TG11.png', false);
+        $response->assertSee('/images/landing/hero/TG11.jpg', false);
         $response->assertSee('/images/landing/features/logistics-bg.jpg', false);
         $response->assertSee('/images/landing/opportunities/case1.jpg', false);
     }

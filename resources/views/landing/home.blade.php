@@ -4,7 +4,7 @@
 
 @push('meta')
 @php
-    $heroLcp = asset('images/landing/'.(config('landing.hero_slides.0.image') ?? 'hero/TG11.png'));
+    $heroLcp = asset('images/landing/'.(config('landing.hero_slides.0.image') ?? 'hero/TG11.jpg'));
 @endphp
 <link rel="preload" as="image" href="{{ $heroLcp }}" fetchpriority="high">
 <script type="application/ld+json">

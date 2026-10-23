@@ -16,9 +16,9 @@ return [
     ],
 
     'hero_slides' => [
-        ['image' => 'hero/TG11.png', 'alt' => 'Shopify Full Hosting Service'],
-        ['image' => 'hero/TG22.png', 'alt' => 'Shopify New Store Free Commission'],
-        ['image' => 'hero/TG3.png', 'alt' => 'Shopify Cross-border E-commerce Platform'],
+        ['image' => 'hero/TG11.jpg', 'alt' => 'Shopify Full Hosting Service'],
+        ['image' => 'hero/TG22.jpg', 'alt' => 'Shopify New Store Free Commission'],
+        ['image' => 'hero/TG3.jpg', 'alt' => 'Shopify Cross-border E-commerce Platform'],
     ],
 
     'feature_images' => [
@@ -33,10 +33,10 @@ return [
     'opportunity_cards' => [
         'opportunities/case1.jpg',
         'opportunities/case2.jpg',
-        'opportunities/TG12.png',
+        'opportunities/TG12.jpg',
         'opportunities/case3.jpg',
         'opportunities/case4.jpg',
         'opportunities/case5.jpg',
-        'opportunities/case7.png',
+        'opportunities/case7.jpg',
     ],
 ];
