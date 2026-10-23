@@ -21,7 +21,7 @@
     <div
         class="min-h-screen bg-gray-100 pb-8"
         x-data="{
-            step: {{ $isUpgrade ? 2 : 1 }},
+            step: {{ ($errors->any() || $isUpgrade) ? 2 : 1 }},
             sellerType: '{{ $defaultType }}',
             industries: {{ json_encode($industryPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }},
             industryId: @js($oldIndustry),
@@ -71,6 +71,13 @@
                 const industry = this.industries.find(item => item.id === this.industryId);
                 return industry ? industry.categories : [];
             },
+            rejectLargeFile(event, maxMb, message) {
+                const file = event.target.files && event.target.files[0];
+                if (file && file.size > maxMb * 1024 * 1024) {
+                    event.target.value = '';
+                    window.alert(message);
+                }
+            },
         }"
     >
         <header class="sticky top-0 z-10 flex items-center bg-black px-4 py-3 text-white">
@@ -111,6 +118,22 @@
                 @endif
             </h1>
         </header>
+
+        @if (str_contains(request()->userAgent() ?? '', 'GSA/'))
+            <div class="mx-4 mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                {{ __('member.shop_application.open_in_safari') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="mx-4 mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+                <ul class="list-disc space-y-1 pl-4">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         @if (session('status'))
             <div class="mx-4 mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
@@ -156,8 +179,8 @@
             </div>
         @endunless
 
+        <template x-if="step === 2">
         <form
-            @unless($isUpgrade) x-show="step === 2" x-cloak @endunless
             method="POST"
             action="{{ route('member.shop-application.store') }}"
             enctype="multipart/form-data"
@@ -204,7 +227,7 @@
 
                 <div class="border-b border-gray-100 px-4 py-4">
                     <label class="mb-2 block text-sm font-medium text-gray-900">{{ __('member.shop_application.logo') }}</label>
-                    <input type="file" name="logo" accept="image/*" class="w-full text-sm text-gray-600">
+                    <input type="file" name="logo" accept="image/*,.heic,.heif" @change="rejectLargeFile($event, 4, @js(__('member.shop_application.logo_too_large')))" class="w-full text-sm text-gray-600">
                     @error('logo')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
@@ -253,12 +276,14 @@
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
                     <label class="mb-2 block text-sm font-medium text-gray-900">{{ $isUpgrade ? __('member.shop_application.business_license_front') : __('member.shop_application.id_front') }}</label>
-                    <input type="file" name="id_front" accept="image/*" required class="w-full text-sm text-gray-600">
+                    <input type="file" name="id_front" accept="image/*,.heic,.heif" required @change="rejectLargeFile($event, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
+                    <p class="mt-1 text-xs text-gray-400">{{ __('member.shop_application.id_image_hint') }}</p>
                     @error('id_front')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
                     <label class="mb-2 block text-sm font-medium text-gray-900">{{ $isUpgrade ? __('member.shop_application.business_license_back') : __('member.shop_application.id_back') }}</label>
-                    <input type="file" name="id_back" accept="image/*" required class="w-full text-sm text-gray-600">
+                    <input type="file" name="id_back" accept="image/*,.heic,.heif" required @change="rejectLargeFile($event, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
+                    <p class="mt-1 text-xs text-gray-400">{{ __('member.shop_application.id_image_hint') }}</p>
                     @error('id_back')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
             </div>
@@ -275,7 +300,11 @@
             @error('terms')<p class="mx-4 mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
 
             <div class="p-4">
-                <button type="submit" class="w-full rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white hover:bg-orange-600">
+                <button
+                    type="submit"
+                    class="w-full rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white hover:bg-orange-600"
+                    @click="const form = $el.form; if (form && ! form.checkValidity()) { form.querySelector(':invalid')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }"
+                >
                     {{ __('member.shop_application.submit_send') }}
                 </button>
             </div>
@@ -307,5 +336,6 @@
                 </div>
             </div>
         </form>
+        </template>
     </div>
 @endsection
