@@ -45,6 +45,7 @@
                 id_front: @js(__('member.shop_application.id_front_required')),
                 id_back: @js(__('member.shop_application.id_back_required')),
                 terms: @js(__('member.shop_application.terms_required')),
+                too_large: @js(__('member.shop_application.id_image_too_large')),
             },
             init() {
                 if (this.industryId) {
@@ -88,7 +89,39 @@
                 const industry = this.industries.find(item => item.id === this.industryId);
                 return industry ? industry.categories : [];
             },
-            rejectLargeFile(event, maxMb, message) {
+            async shrinkInput(input, maxEdge) {
+                const file = input && input.files && input.files[0];
+                if (!file || typeof createImageBitmap !== 'function') {
+                    return;
+                }
+                let bitmap;
+                try {
+                    bitmap = await createImageBitmap(file);
+                } catch (error) {
+                    return;
+                }
+                const edge = Math.max(bitmap.width, bitmap.height);
+                const scale = edge > maxEdge ? maxEdge / edge : 1;
+                const width = Math.max(1, Math.round(bitmap.width * scale));
+                const height = Math.max(1, Math.round(bitmap.height * scale));
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height);
+                if (bitmap.close) {
+                    bitmap.close();
+                }
+                const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.72));
+                if (!blob || blob.size >= file.size) {
+                    return;
+                }
+                const smaller = new File([blob], 'cccd.jpg', { type: 'image/jpeg' });
+                const transfer = new DataTransfer();
+                transfer.items.add(smaller);
+                input.files = transfer.files;
+            },
+            async prepareImage(event, maxEdge, maxMb, message) {
+                await this.shrinkInput(event.target, maxEdge);
                 const file = event.target.files && event.target.files[0];
                 if (file && file.size > maxMb * 1024 * 1024) {
                     event.target.value = '';
@@ -122,12 +155,13 @@
                 }
                 return problems;
             },
-            onSubmit(event) {
+            async onSubmit(event) {
                 if (this.submitting) {
                     event.preventDefault();
                     return;
                 }
-                const problems = this.fieldProblems(event.target);
+                const form = event.target;
+                const problems = this.fieldProblems(form);
                 if (problems.length) {
                     event.preventDefault();
                     this.submitError = problems.map((item) => item.message);
@@ -136,8 +170,24 @@
                     });
                     return;
                 }
+                event.preventDefault();
                 this.submitError = [];
                 this.submitting = true;
+                await this.shrinkInput(form.elements.id_front, 1600);
+                await this.shrinkInput(form.elements.id_back, 1600);
+                await this.shrinkInput(form.elements.logo, 800);
+                const oversized = ['id_front', 'id_back', 'logo'].some((name) => {
+                    const el = form.elements[name];
+                    const file = el && el.files && el.files[0];
+                    const limit = name === 'logo' ? 4 : 12;
+                    return file && file.size > limit * 1024 * 1024;
+                });
+                if (oversized) {
+                    this.submitting = false;
+                    this.submitError = [this.msg.too_large];
+                    return;
+                }
+                form.submit();
             },
         }"
     >
@@ -291,7 +341,7 @@
 
                 <div class="border-b border-gray-100 px-4 py-4">
                     <label class="mb-2 block text-sm font-medium text-gray-900">{{ __('member.shop_application.logo') }}</label>
-                    <input type="file" name="logo" accept="image/*,.heic,.heif" @change="rejectLargeFile($event, 4, @js(__('member.shop_application.logo_too_large')))" class="w-full text-sm text-gray-600">
+                    <input type="file" name="logo" accept="image/*,.heic,.heif" @change="prepareImage($event, 800, 4, @js(__('member.shop_application.logo_too_large')))" class="w-full text-sm text-gray-600">
                     @error('logo')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
@@ -340,13 +390,13 @@
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
                     <label class="mb-2 block text-sm font-medium text-gray-900">{{ $isUpgrade ? __('member.shop_application.business_license_front') : __('member.shop_application.id_front') }}</label>
-                    <input type="file" name="id_front" accept="image/*,.heic,.heif" @change="rejectLargeFile($event, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
+                    <input type="file" name="id_front" accept="image/*,.heic,.heif" @change="prepareImage($event, 1600, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
                     <p class="mt-1 text-xs text-gray-400">{{ __('member.shop_application.id_image_hint') }}</p>
                     @error('id_front')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
                     <label class="mb-2 block text-sm font-medium text-gray-900">{{ $isUpgrade ? __('member.shop_application.business_license_back') : __('member.shop_application.id_back') }}</label>
-                    <input type="file" name="id_back" accept="image/*,.heic,.heif" @change="rejectLargeFile($event, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
+                    <input type="file" name="id_back" accept="image/*,.heic,.heif" @change="prepareImage($event, 1600, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
                     <p class="mt-1 text-xs text-gray-400">{{ __('member.shop_application.id_image_hint') }}</p>
                     @error('id_back')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
