@@ -173,8 +173,8 @@
                 event.preventDefault();
                 this.submitError = [];
                 this.submitting = true;
-                await this.shrinkInput(form.elements.id_front, 1600);
-                await this.shrinkInput(form.elements.id_back, 1600);
+                await this.shrinkInput(form.elements.id_front, 800);
+                await this.shrinkInput(form.elements.id_back, 800);
                 await this.shrinkInput(form.elements.logo, 800);
                 const oversized = ['id_front', 'id_back', 'logo'].some((name) => {
                     const el = form.elements[name];
@@ -390,13 +390,13 @@
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
                     <label class="mb-2 block text-sm font-medium text-gray-900">{{ $isUpgrade ? __('member.shop_application.business_license_front') : __('member.shop_application.id_front') }}</label>
-                    <input type="file" name="id_front" accept="image/*,.heic,.heif" @change="prepareImage($event, 1600, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
+                    <input type="file" name="id_front" accept="image/*,.heic,.heif" @change="prepareImage($event, 800, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
                     <p class="mt-1 text-xs text-gray-400">{{ __('member.shop_application.id_image_hint') }}</p>
                     @error('id_front')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
                     <label class="mb-2 block text-sm font-medium text-gray-900">{{ $isUpgrade ? __('member.shop_application.business_license_back') : __('member.shop_application.id_back') }}</label>
-                    <input type="file" name="id_back" accept="image/*,.heic,.heif" @change="prepareImage($event, 1600, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
+                    <input type="file" name="id_back" accept="image/*,.heic,.heif" @change="prepareImage($event, 800, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
                     <p class="mt-1 text-xs text-gray-400">{{ __('member.shop_application.id_image_hint') }}</p>
                     @error('id_back')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
