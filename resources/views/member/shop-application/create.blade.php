@@ -2,6 +2,7 @@
 
 @section('title', $mode === \App\Models\ShopApplication::KIND_UPGRADE ? __('member.shop_application.upgrade_title') : __('member.shop_application.title'))
 @section('hide_portal_header', '1')
+@section('hide_bottom_nav', '1')
 @section('full_bleed', '1')
 
 @section('content')
@@ -29,6 +30,22 @@
             categoryIds: @js($oldCategories),
             categoryNames: '',
             businessOpen: false,
+            submitError: [],
+            submitting: false,
+            msg: {
+                industry: @js(__('member.shop_application.industry_required')),
+                categories: @js(__('member.shop_application.business_categories_required')),
+                shop_name: @js(__('member.shop_application.shop_name_placeholder')),
+                shop_description: @js(__('member.shop_application.shop_description_required')),
+                real_name: @js(__('member.shop_application.real_name_placeholder')),
+                phone: @js(__('member.shop_application.phone_placeholder')),
+                id_number: @js(__('member.shop_application.id_number_placeholder')),
+                address: @js(__('member.shop_application.address_placeholder')),
+                country: @js(__('member.shop_application.country_placeholder')),
+                id_front: @js(__('member.shop_application.id_front_required')),
+                id_back: @js(__('member.shop_application.id_back_required')),
+                terms: @js(__('member.shop_application.terms_required')),
+            },
             init() {
                 if (this.industryId) {
                     this.syncIndustry(this.industryId);
@@ -77,6 +94,50 @@
                     event.target.value = '';
                     window.alert(message);
                 }
+            },
+            fieldProblems(form) {
+                const problems = [];
+                const add = (el, message) => problems.push({ el, message });
+                if (! this.industryId) {
+                    add(form.querySelector('[data-field="industry"]'), this.msg.industry);
+                }
+                if (! this.categoryIds.length) {
+                    add(form.querySelector('[data-field="categories"]'), this.msg.categories);
+                }
+                ['shop_name', 'shop_description', 'real_name', 'phone', 'id_number', 'address', 'country'].forEach((name) => {
+                    const el = form.elements[name];
+                    if (el && String(el.value || '').trim() === '') {
+                        add(el, this.msg[name]);
+                    }
+                });
+                ['id_front', 'id_back'].forEach((name) => {
+                    const el = form.elements[name];
+                    if (el && (! el.files || el.files.length === 0)) {
+                        add(el, this.msg[name]);
+                    }
+                });
+                const terms = form.elements.terms;
+                if (terms && ! terms.checked) {
+                    add(terms, this.msg.terms);
+                }
+                return problems;
+            },
+            onSubmit(event) {
+                if (this.submitting) {
+                    event.preventDefault();
+                    return;
+                }
+                const problems = this.fieldProblems(event.target);
+                if (problems.length) {
+                    event.preventDefault();
+                    this.submitError = problems.map((item) => item.message);
+                    this.$nextTick(() => {
+                        this.$root.querySelector('[data-submit-error]')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    });
+                    return;
+                }
+                this.submitError = [];
+                this.submitting = true;
             },
         }"
     >
@@ -184,7 +245,9 @@
             method="POST"
             action="{{ route('member.shop-application.store') }}"
             enctype="multipart/form-data"
-            class="mt-2"
+            novalidate
+            class="mt-2 pb-10"
+            @submit="onSubmit($event)"
         >
             @csrf
             <input type="hidden" name="seller_type" :value="sellerType">
@@ -198,10 +261,10 @@
                 <div class="border-b border-gray-100 px-4 py-4">
                     <label class="mb-2 block text-sm text-gray-700">{{ __('member.shop_application.industry_label') }}</label>
                     <select
+                        data-field="industry"
                         x-model="industryId"
                         @change="syncIndustry($event.target.value)"
                         class="w-full rounded-lg border-gray-200 text-sm"
-                        required
                     >
                         <option value="">{{ __('member.shop_application.industry_placeholder') }}</option>
                         @foreach ($industries as $industry)
@@ -215,6 +278,7 @@
                     <label class="mb-2 block text-sm text-gray-700">{{ __('member.shop_application.business_categories_label') }}</label>
                     <button
                         type="button"
+                        data-field="categories"
                         @click="businessOpen = true"
                         :disabled="! industryId"
                         class="flex w-full items-center justify-between rounded-lg border border-gray-200 px-3 py-2.5 text-left text-sm disabled:cursor-not-allowed disabled:bg-gray-50"
@@ -239,11 +303,11 @@
             <div class="mt-3 bg-white px-4 py-3 text-sm font-semibold text-gray-900">{{ __('member.shop_application.shop_info') }}</div>
             <div class="bg-white">
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <input name="shop_name" value="{{ old('shop_name', $shop?->name) }}" required placeholder="{{ __('member.shop_application.shop_name_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
+                    <input name="shop_name" value="{{ old('shop_name', $shop?->name) }}" placeholder="{{ __('member.shop_application.shop_name_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
                     @error('shop_name')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <textarea name="shop_description" rows="3" required placeholder="{{ __('member.shop_application.shop_description_placeholder') }}" class="w-full resize-none border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">{{ old('shop_description', $shop?->description) }}</textarea>
+                    <textarea name="shop_description" rows="3" placeholder="{{ __('member.shop_application.shop_description_placeholder') }}" class="w-full resize-none border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">{{ old('shop_description', $shop?->description) }}</textarea>
                     @error('shop_description')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
             </div>
@@ -251,23 +315,23 @@
             <div class="mt-3 bg-white px-4 py-3 text-sm font-semibold text-gray-900">{{ __('member.shop_application.cert_info') }}</div>
             <div class="bg-white">
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <input name="real_name" value="{{ old('real_name', auth()->user()->name) }}" required placeholder="{{ __('member.shop_application.real_name_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
+                    <input name="real_name" value="{{ old('real_name', auth()->user()->name) }}" placeholder="{{ __('member.shop_application.real_name_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
                     @error('real_name')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <input name="phone" value="{{ old('phone', auth()->user()->phone) }}" required placeholder="{{ __('member.shop_application.phone_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
+                    <input name="phone" value="{{ old('phone', auth()->user()->phone) }}" placeholder="{{ __('member.shop_application.phone_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
                     @error('phone')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <input name="id_number" value="{{ old('id_number', $shop?->id_number) }}" required placeholder="{{ $isUpgrade ? __('member.shop_application.business_license_placeholder') : __('member.shop_application.id_number_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
+                    <input name="id_number" value="{{ old('id_number', $shop?->id_number) }}" placeholder="{{ $isUpgrade ? __('member.shop_application.business_license_placeholder') : __('member.shop_application.id_number_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
                     @error('id_number')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <input name="address" value="{{ old('address', $shop?->address) }}" required placeholder="{{ __('member.shop_application.address_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
+                    <input name="address" value="{{ old('address', $shop?->address) }}" placeholder="{{ __('member.shop_application.address_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
                     @error('address')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
-                    <input name="country" value="{{ old('country', $shop?->country) }}" required placeholder="{{ __('member.shop_application.country_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
+                    <input name="country" value="{{ old('country', $shop?->country) }}" placeholder="{{ __('member.shop_application.country_placeholder') }}" class="w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400">
                     @error('country')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
@@ -276,13 +340,13 @@
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
                     <label class="mb-2 block text-sm font-medium text-gray-900">{{ $isUpgrade ? __('member.shop_application.business_license_front') : __('member.shop_application.id_front') }}</label>
-                    <input type="file" name="id_front" accept="image/*,.heic,.heif" required @change="rejectLargeFile($event, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
+                    <input type="file" name="id_front" accept="image/*,.heic,.heif" @change="rejectLargeFile($event, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
                     <p class="mt-1 text-xs text-gray-400">{{ __('member.shop_application.id_image_hint') }}</p>
                     @error('id_front')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div class="border-b border-gray-100 px-4 py-4">
                     <label class="mb-2 block text-sm font-medium text-gray-900">{{ $isUpgrade ? __('member.shop_application.business_license_back') : __('member.shop_application.id_back') }}</label>
-                    <input type="file" name="id_back" accept="image/*,.heic,.heif" required @change="rejectLargeFile($event, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
+                    <input type="file" name="id_back" accept="image/*,.heic,.heif" @change="rejectLargeFile($event, 12, @js(__('member.shop_application.id_image_too_large')))" class="w-full text-sm text-gray-600">
                     <p class="mt-1 text-xs text-gray-400">{{ __('member.shop_application.id_image_hint') }}</p>
                     @error('id_back')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
@@ -294,18 +358,30 @@
             </div>
 
             <label class="mx-4 mt-4 flex items-start gap-2 text-sm text-gray-800">
-                <input type="checkbox" name="terms" value="1" required class="mt-0.5 rounded border-gray-300 text-orange-500" {{ old('terms') ? 'checked' : '' }}>
+                <input type="checkbox" name="terms" value="1" class="mt-0.5 rounded border-gray-300 text-orange-500" {{ old('terms') ? 'checked' : '' }}>
                 <span>{{ __('member.shop_application.terms_agree') }}</span>
             </label>
             @error('terms')<p class="mx-4 mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+
+            <ul
+                x-show="submitError.length"
+                x-cloak
+                data-submit-error
+                class="mx-4 mt-4 list-disc space-y-1 rounded-lg bg-red-50 px-6 py-3 text-sm text-red-700"
+            >
+                <template x-for="(message, index) in submitError" :key="index">
+                    <li x-text="message"></li>
+                </template>
+            </ul>
 
             <div class="p-4">
                 <button
                     type="submit"
                     class="w-full rounded-lg bg-orange-500 py-3 text-sm font-semibold text-white hover:bg-orange-600"
-                    @click="const form = $el.form; if (form && ! form.checkValidity()) { form.querySelector(':invalid')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }"
+                    :class="submitting ? 'opacity-70' : ''"
                 >
-                    {{ __('member.shop_application.submit_send') }}
+                    <span x-show="! submitting">{{ __('member.shop_application.submit_send') }}</span>
+                    <span x-show="submitting" x-cloak>{{ __('member.shop_application.sending') }}</span>
                 </button>
             </div>
 
