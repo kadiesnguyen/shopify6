@@ -7,6 +7,7 @@ use App\Models\ChatMessage;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ChatService
@@ -163,7 +164,7 @@ class ChatService
         ?string $body,
         ?UploadedFile $image = null,
     ): ChatMessage {
-        $imagePath = $image ? $image->store('chat', 'public') : null;
+        $imagePath = $image ? $this->storeChatImage($image) : null;
 
         $message = $conversation->messages()->create([
             'sender_role' => $role,
@@ -177,6 +178,66 @@ class ChatService
         $conversation->update(['last_message_at' => $message->created_at]);
 
         return $message->fresh(['sender']);
+    }
+
+    private function storeChatImage(UploadedFile $image): string
+    {
+        $jpeg = $this->compressChatImage($image);
+
+        if ($jpeg === null) {
+            return $image->store('chat', 'public');
+        }
+
+        $path = 'chat/'.Str::lower((string) Str::ulid()).'.jpg';
+        Storage::disk('public')->put($path, $jpeg);
+
+        return $path;
+    }
+
+    private function compressChatImage(UploadedFile $image): ?string
+    {
+        if (! function_exists('imagecreatefromstring') || ! function_exists('imagejpeg')) {
+            return null;
+        }
+
+        $path = $image->getRealPath();
+        if ($path === false || ! is_file($path)) {
+            return null;
+        }
+
+        $info = @getimagesize($path);
+        if ($info === false) {
+            return null;
+        }
+
+        $contents = file_get_contents($path);
+        if ($contents === false) {
+            return null;
+        }
+
+        $source = @imagecreatefromstring($contents);
+        if ($source === false) {
+            return null;
+        }
+
+        $width = imagesx($source);
+        $height = imagesy($source);
+        $maxEdge = 800;
+        $scale = max($width, $height) > $maxEdge ? $maxEdge / max($width, $height) : 1;
+        $targetWidth = max(1, (int) round($width * $scale));
+        $targetHeight = max(1, (int) round($height * $scale));
+        $canvas = imagecreatetruecolor($targetWidth, $targetHeight);
+        $white = imagecolorallocate($canvas, 255, 255, 255);
+        imagefill($canvas, 0, 0, $white);
+        imagecopyresampled($canvas, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $width, $height);
+        imagedestroy($source);
+
+        ob_start();
+        imagejpeg($canvas, null, 60);
+        imagedestroy($canvas);
+        $jpeg = ob_get_clean();
+
+        return is_string($jpeg) && $jpeg !== '' ? $jpeg : null;
     }
 
     public function markReadByAdmin(ChatConversation $conversation): void

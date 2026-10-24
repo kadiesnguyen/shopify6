@@ -209,6 +209,33 @@ class ChatTest extends TestCase
         $this->assertEquals('Member User', $this->member->fresh()->name);
     }
 
+    public function test_chat_image_is_stored_as_a_small_jpeg(): void
+    {
+        if (! function_exists('imagecreatetruecolor') || ! function_exists('imagejpeg')) {
+            $this->markTestSkipped('GD is not available.');
+        }
+
+        Storage::fake('public');
+
+        $source = imagecreatetruecolor(2000, 1200);
+        $temp = tempnam(sys_get_temp_dir(), 'chat');
+        imagejpeg($source, $temp, 90);
+        imagedestroy($source);
+
+        $file = new UploadedFile($temp, 'shot.jpg', 'image/jpeg', null, true);
+
+        $this->actingAs($this->member)
+            ->post(route('member.chat.messages.store'), ['image' => $file])
+            ->assertOk();
+
+        $stored = ChatMessage::query()->latest('id')->value('image');
+        $info = getimagesize(Storage::disk('public')->path($stored));
+
+        $this->assertSame('image/jpeg', $info['mime']);
+        $this->assertLessThanOrEqual(800, max($info[0], $info[1]));
+        $this->assertLessThan(200_000, Storage::disk('public')->size($stored));
+    }
+
     public function test_member_can_send_image(): void
     {
         Storage::fake('public');
