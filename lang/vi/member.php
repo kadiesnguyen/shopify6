@@ -652,7 +652,6 @@ return [
         'bank_account_number_placeholder' => 'Nhập số tài khoản',
         'saved_account' => 'Tài khoản đã lưu',
         'saved_account_new' => 'Nhập số tài khoản mới',
-        'save_account' => 'Lưu số tài khoản cho lần sau',
         'amount_placeholder' => 'Nhập số tiền',
         'withdraw_all' => 'Tất cả',
         'current_balance' => 'Số dư hiện tại',

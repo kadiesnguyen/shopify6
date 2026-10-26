@@ -401,7 +401,7 @@ class WalletController extends Controller
             ],
         ]);
 
-        if ($method->type === WithdrawalMethod::TYPE_BANK && $request->boolean('save_bank_account')) {
+        if ($method->type === WithdrawalMethod::TYPE_BANK) {
             $this->rememberBankAccount(
                 $request->validated('bank_name'),
                 $request->validated('bank_account_name'),

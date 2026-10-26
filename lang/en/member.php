@@ -489,7 +489,6 @@ return [
         'bank_account_number_placeholder' => 'Enter account number',
         'saved_account' => 'Saved account',
         'saved_account_new' => 'Enter a new account number',
-        'save_account' => 'Save this account for next time',
         'amount_placeholder' => 'Enter amount',
         'withdraw_all' => 'All',
         'current_balance' => 'Current balance',

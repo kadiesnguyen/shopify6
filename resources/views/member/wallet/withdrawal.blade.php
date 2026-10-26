@@ -131,11 +131,6 @@
                                     class="portal-plain-input"
                                 >
                             </x-member.form-field>
-
-                            <label class="flex items-center gap-2 border-b border-gray-100 py-3 text-sm text-gray-700">
-                                <input type="checkbox" name="save_bank_account" value="1" x-model="saveAccount" class="size-4 rounded border-gray-300">
-                                <span>{{ __('member.wallet.save_account') }}</span>
-                            </label>
                         </div>
                     </template>
 
@@ -237,7 +232,6 @@ function withdrawalForm(config) {
         bankAccountNumber: config.oldBankAccountNumber || '',
         savedAccounts: config.savedAccounts || [],
         selectedAccountId: '',
-        saveAccount: true,
         amount: config.oldAmount || '',
         paymentPassword: '',
         methodSheetOpen: false,
