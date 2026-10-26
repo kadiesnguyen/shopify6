@@ -170,8 +170,6 @@ return [
             'password_leave_blank' => 'Password (leave blank to keep current)',
             'payment_password_leave_blank' => 'Fund password (leave blank to keep current)',
             'payment_password_digits_hint' => '6 digits',
-            'payout_bank_title' => 'Withdrawal bank account',
-            'payout_bank_hint' => 'One account holder, one bank, one account number. Leave all three blank to keep the current account.',
             'shop_name_placeholder' => 'Enter shop name',
             'id_number_placeholder' => 'Enter ID / passport number',
             'address_placeholder' => 'Current residential address',

@@ -487,7 +487,8 @@ return [
         'search_bank_placeholder' => 'Quick bank search',
         'bank_account_number' => 'Account number',
         'bank_account_number_placeholder' => 'Enter account number',
-        'bank_locked_hint' => 'This account is linked. Only an administrator can change it.',
+        'saved_account' => 'Saved account',
+        'saved_account_new' => 'Enter a new account number',
         'amount_placeholder' => 'Enter amount',
         'withdraw_all' => 'All',
         'current_balance' => 'Current balance',
@@ -664,7 +665,6 @@ return [
         'type_bank' => 'Bank',
         'type_crypto' => 'Crypto wallet',
         'bank_fields_required' => 'Bank account fields are required.',
-        'bank_locked' => 'This bank account is already linked. Only an administrator can change it.',
         'crypto_fields_required' => 'Crypto wallet fields are required.',
     ],
 ];

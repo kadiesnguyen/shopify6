@@ -18,37 +18,29 @@
                     <p class="text-sm text-gray-500">
                         @if ($account->type === 'bank')
                             {{ $account->account_name }} · {{ $account->account_number }}
-                            <span class="mt-1 block text-xs text-gray-400">{{ __('member.payout_accounts.bank_locked') }}</span>
                         @else
                             {{ $account->crypto_network }} · {{ $account->crypto_address }}
                         @endif
                     </p>
                 </div>
-                @if ($account->type !== 'bank')
-                    <form method="POST" action="{{ route('member.payout-accounts.destroy', $account) }}" onsubmit="return confirm(@js(__('member.payout_accounts.delete_confirm')))">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="text-sm text-red-600">{{ __('member.shop_hub.delete') }}</button>
-                    </form>
-                @endif
+                <form method="POST" action="{{ route('member.payout-accounts.destroy', $account) }}" onsubmit="return confirm(@js(__('member.payout_accounts.delete_confirm')))">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="text-sm text-red-600">{{ __('member.shop_hub.delete') }}</button>
+                </form>
             </div>
         @empty
             <p class="px-4 py-6 text-center text-sm text-gray-500">{{ __('member.payout_accounts.empty') }}</p>
         @endforelse
     </div>
 
-    @php($hasBankAccount = $accounts->contains('type', 'bank'))
-    <form method="POST" action="{{ route('member.payout-accounts.store') }}" class="portal-wallet-form space-y-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100" x-data="{ type: @js($hasBankAccount ? 'crypto' : 'bank') }">
+    <form method="POST" action="{{ route('member.payout-accounts.store') }}" class="portal-wallet-form space-y-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100" x-data="{ type: 'bank' }">
         @csrf
         <h2 class="text-sm font-semibold text-gray-900">{{ __('member.payout_accounts.add') }}</h2>
-        @if ($hasBankAccount)
-            <input type="hidden" name="type" value="crypto">
-        @else
-            <select name="type" class="portal-plain-input" x-model="type">
-                <option value="bank">{{ __('member.payout_accounts.type_bank') }}</option>
-                <option value="crypto">{{ __('member.payout_accounts.type_crypto') }}</option>
-            </select>
-        @endif
+        <select name="type" class="portal-plain-input" x-model="type">
+            <option value="bank">{{ __('member.payout_accounts.type_bank') }}</option>
+            <option value="crypto">{{ __('member.payout_accounts.type_crypto') }}</option>
+        </select>
         <input name="label" type="text" class="portal-plain-input" placeholder="{{ __('member.payout_accounts.label') }}">
         <template x-if="type === 'bank'">
             <div class="space-y-3">

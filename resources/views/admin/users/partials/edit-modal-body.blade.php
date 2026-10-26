@@ -66,29 +66,6 @@
         </div>
     </div>
 
-    @php($bankPayout = \App\Models\UserPayoutAccount::bankFor($modalUser))
-    <div class="grid gap-4 sm:grid-cols-2">
-        <div class="sm:col-span-2">
-            <h3 class="text-sm font-semibold text-slate-900">{{ __('admin.users.actions.payout_bank_title') }}</h3>
-            <p class="mt-1 text-xs text-slate-500">{{ __('admin.users.actions.payout_bank_hint') }}</p>
-        </div>
-        <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('member.wallet.bank_account_name') }}</label>
-            <input type="text" name="payout_account_name" value="{{ old('payout_account_name', $bankPayout?->account_name) }}" class="w-full rounded-lg border-slate-300 text-sm">
-            @error('payout_account_name')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-        </div>
-        <div>
-            <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('member.wallet.bank_name') }}</label>
-            <input type="text" name="payout_bank_name" value="{{ old('payout_bank_name', $bankPayout?->bank_name) }}" class="w-full rounded-lg border-slate-300 text-sm">
-            @error('payout_bank_name')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-        </div>
-        <div class="sm:col-span-2">
-            <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('member.wallet.bank_account_number') }}</label>
-            <input type="text" name="payout_account_number" value="{{ old('payout_account_number', $bankPayout?->account_number) }}" class="w-full rounded-lg border-slate-300 text-sm sm:max-w-xs">
-            @error('payout_account_number')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
-        </div>
-    </div>
-
     <div class="grid gap-4 sm:grid-cols-2">
         <div>
             <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('admin.users.actions.real_name') }}</label>

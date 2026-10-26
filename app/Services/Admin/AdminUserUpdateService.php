@@ -6,7 +6,6 @@ use App\Models\ShippingAddress;
 use App\Models\Shop;
 use App\Models\ShopApplication;
 use App\Models\User;
-use App\Models\UserPayoutAccount;
 use App\Support\Storage\PublicUploadStorage;
 use App\Support\Storage\ShopDocumentStorage;
 use Illuminate\Http\UploadedFile;
@@ -32,7 +31,6 @@ class AdminUserUpdateService
         $user->update($userData);
 
         $this->syncShippingAddress($user, $data);
-        $this->syncBankPayout($user, $data);
 
         if (User::isAdminShopFormRole($user->adminFormRole())) {
             $this->syncShopProfile($user, $data);
@@ -122,20 +120,6 @@ class AdminUserUpdateService
         }
 
         ShippingAddress::query()->create($createPayload);
-    }
-
-    /** @param  array<string, mixed>  $data */
-    private function syncBankPayout(User $user, array $data): void
-    {
-        $bankName = trim((string) ($data['payout_bank_name'] ?? ''));
-        $accountName = trim((string) ($data['payout_account_name'] ?? ''));
-        $accountNumber = trim((string) ($data['payout_account_number'] ?? ''));
-
-        if ($bankName === '' && $accountName === '' && $accountNumber === '') {
-            return;
-        }
-
-        UserPayoutAccount::replaceBank($user, $bankName, $accountName, $accountNumber);
     }
 
     /** @param  array<string, mixed>  $data */

@@ -179,8 +179,6 @@ return [
             'password_leave_blank' => 'Mật khẩu (để trống nếu không đổi)',
             'payment_password_leave_blank' => 'Mật khẩu quỹ (để trống nếu không đổi)',
             'payment_password_digits_hint' => '6 chữ số',
-            'payout_bank_title' => 'Tài khoản ngân hàng rút tiền',
-            'payout_bank_hint' => 'Một họ tên, một ngân hàng, một số tài khoản. Để trống cả ba ô nếu không đổi.',
             'shop_name_placeholder' => 'Vui lòng nhập tên shop',
             'id_number_placeholder' => 'Vui lòng nhập số giấy tờ.',
             'address_placeholder' => 'Địa chỉ cư trú hiện tại',

@@ -165,14 +165,21 @@ class WalletController extends Controller
 
         $wallet = $user->wallet;
         $balance = (float) ($wallet?->balance ?? 0);
-        $saved = UserPayoutAccount::bankFor($user);
-        $savedBank = $saved ? [
-            'bank_name' => $saved->bank_name,
-            'account_name' => $saved->account_name,
-            'account_number' => $saved->account_number,
-        ] : null;
+        $savedBankAccounts = $user->payoutAccounts()
+            ->where('type', UserPayoutAccount::TYPE_BANK)
+            ->orderByDesc('is_default')
+            ->latest()
+            ->get(['id', 'bank_name', 'account_name', 'account_number', 'is_default'])
+            ->map(fn (UserPayoutAccount $account): array => [
+                'id' => $account->id,
+                'bank_name' => $account->bank_name,
+                'account_name' => $account->account_name,
+                'account_number' => $account->account_number,
+                'is_default' => (bool) $account->is_default,
+            ])
+            ->values();
 
-        return view('member.wallet.withdrawal', compact('methods', 'balance', 'savedBank'));
+        return view('member.wallet.withdrawal', compact('methods', 'balance', 'savedBankAccounts'));
     }
 
     /** @return array<string, mixed> */
@@ -366,14 +373,12 @@ class WalletController extends Controller
         $quote = $this->withdrawalQuote->quote($method, $amount, $network);
 
         if ($method->type === WithdrawalMethod::TYPE_BANK) {
-            $account = UserPayoutAccount::rememberBank(
-                auth()->user(),
-                $request->validated('bank_name'),
-                $request->validated('bank_account_name'),
-                $request->validated('bank_account_number'),
-            );
             $currency = $method->config['currency'] ?? 'VND';
-            $address = $account?->bankAddress() ?? '';
+            $address = implode(' · ', array_filter([
+                $request->validated('bank_account_name'),
+                $request->validated('bank_name'),
+                $request->validated('bank_account_number'),
+            ]));
         } else {
             $currency = $request->validated('currency');
             $address = $request->validated('crypto_address');
@@ -396,9 +401,56 @@ class WalletController extends Controller
             ],
         ]);
 
+        if ($method->type === WithdrawalMethod::TYPE_BANK) {
+            $this->rememberBankAccount(
+                $request->validated('bank_name'),
+                $request->validated('bank_account_name'),
+                $request->validated('bank_account_number'),
+            );
+        }
+
         return redirect()
             ->route('member.wallet.fund-records', ['type' => 'withdrawal'])
             ->with('status', __('member.wallet.withdraw_success'));
+    }
+
+    private function rememberBankAccount(?string $bankName, ?string $accountName, ?string $accountNumber): void
+    {
+        $bankName = trim((string) $bankName);
+        $accountName = trim((string) $accountName);
+        $accountNumber = trim((string) $accountNumber);
+
+        if ($bankName === '' || $accountName === '' || $accountNumber === '') {
+            return;
+        }
+
+        $user = auth()->user();
+        $existing = $user->payoutAccounts()
+            ->where('type', UserPayoutAccount::TYPE_BANK)
+            ->where('bank_name', $bankName)
+            ->where('account_number', $accountNumber)
+            ->first();
+
+        $user->payoutAccounts()
+            ->when($existing, fn ($query, $account) => $query->whereKeyNot($account->id))
+            ->update(['is_default' => false]);
+
+        if ($existing) {
+            $existing->update([
+                'account_name' => $accountName,
+                'is_default' => true,
+            ]);
+
+            return;
+        }
+
+        $user->payoutAccounts()->create([
+            'type' => UserPayoutAccount::TYPE_BANK,
+            'bank_name' => $bankName,
+            'account_name' => $accountName,
+            'account_number' => $accountNumber,
+            'is_default' => true,
+        ]);
     }
 
     public function withdrawalRecords(Request $request): RedirectResponse

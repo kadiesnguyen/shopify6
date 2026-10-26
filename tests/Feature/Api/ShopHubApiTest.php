@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Models\UserPayoutAccount;
 use App\Models\Wallet;
 use App\Models\WithdrawalMethod;
-use App\Models\WithdrawalRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
@@ -114,27 +113,9 @@ class ShopHubApiTest extends TestCase
             'is_default' => true,
         ])->assertCreated();
 
-        $this->postJson('/api/member/payout-accounts', [
-            'type' => UserPayoutAccount::TYPE_BANK,
-            'bank_name' => 'ACB',
-            'account_name' => 'Other',
-            'account_number' => '654321',
-        ])->assertStatus(422);
-
-        $payout = UserPayoutAccount::query()->where('type', UserPayoutAccount::TYPE_BANK)->first();
-        $this->assertNotNull($payout);
+        $payout = UserPayoutAccount::query()->first();
         $this->getJson('/api/member/payout-accounts')->assertOk()->assertJsonPath('data.0.bank_name', 'VCB');
-        $this->deleteJson('/api/member/payout-accounts/'.$payout->id)->assertForbidden();
-        $this->assertSame(1, UserPayoutAccount::query()->where('type', UserPayoutAccount::TYPE_BANK)->count());
-
-        $crypto = $this->postJson('/api/member/payout-accounts', [
-            'type' => UserPayoutAccount::TYPE_CRYPTO,
-            'crypto_currency' => 'USDT',
-            'crypto_network' => 'TRC20',
-            'crypto_address' => 'T123',
-        ])->assertCreated()->json('data.id');
-
-        $this->deleteJson('/api/member/payout-accounts/'.$crypto)->assertOk();
+        $this->deleteJson('/api/member/payout-accounts/'.$payout->id)->assertOk();
     }
 
     public function test_seller_refund_api(): void
@@ -188,18 +169,5 @@ class ShopHubApiTest extends TestCase
             'bank_account_number' => '999',
             'payment_password' => '123456',
         ])->assertCreated();
-
-        $this->postJson('/api/member/wallet/withdrawal', [
-            'withdrawal_method_id' => $method->id,
-            'amount' => 20,
-            'bank_account_name' => 'Other',
-            'bank_name' => 'ACB',
-            'bank_account_number' => '888',
-            'payment_password' => '123456',
-        ])->assertCreated();
-
-        $this->assertSame(1, UserPayoutAccount::query()->where('user_id', $this->seller->id)->where('type', UserPayoutAccount::TYPE_BANK)->count());
-        $latest = WithdrawalRequest::query()->where('user_id', $this->seller->id)->latest('id')->first();
-        $this->assertStringContainsString('999', (string) ($latest?->payout_details['address'] ?? ''));
     }
 }
