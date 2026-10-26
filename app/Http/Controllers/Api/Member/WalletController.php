@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Controller;
 use App\Http\Requests\Member\MemberWithdrawalRequest;
 use App\Http\Resources\WalletResource;
 use App\Models\RechargeRequest;
+use App\Models\UserPayoutAccount;
 use App\Models\WithdrawalMethod;
 use App\Models\WithdrawalRequest;
 use App\Services\Member\WithdrawalQuoteService;
@@ -79,12 +80,14 @@ class WalletController extends Controller
         $quote = $this->withdrawalQuote->quote($method, $amount, $network);
 
         if ($method->type === WithdrawalMethod::TYPE_BANK) {
-            $currency = $method->config['currency'] ?? 'VND';
-            $address = implode(' · ', array_filter([
-                $request->validated('bank_account_name'),
+            $account = UserPayoutAccount::rememberBank(
+                auth()->user(),
                 $request->validated('bank_name'),
+                $request->validated('bank_account_name'),
                 $request->validated('bank_account_number'),
-            ]));
+            );
+            $currency = $method->config['currency'] ?? 'VND';
+            $address = $account?->bankAddress() ?? '';
         } else {
             $currency = $request->validated('currency');
             $address = $request->validated('crypto_address');

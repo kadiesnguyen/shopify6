@@ -568,6 +568,7 @@ return [
         'type_bank' => 'Ngân hàng',
         'type_crypto' => 'Ví crypto',
         'bank_fields_required' => 'Vui lòng nhập đủ thông tin ngân hàng.',
+        'bank_locked' => 'Số tài khoản đã được liên kết. Chỉ quản trị viên mới đổi được.',
         'crypto_fields_required' => 'Vui lòng nhập đủ thông tin ví crypto.',
     ],
 
@@ -650,8 +651,7 @@ return [
         'search_bank_placeholder' => 'Tìm nhanh ngân hàng',
         'bank_account_number' => 'Số tài khoản',
         'bank_account_number_placeholder' => 'Nhập số tài khoản',
-        'saved_account' => 'Tài khoản đã lưu',
-        'saved_account_new' => 'Nhập số tài khoản mới',
+        'bank_locked_hint' => 'Số tài khoản đã liên kết. Chỉ quản trị viên mới đổi được.',
         'amount_placeholder' => 'Nhập số tiền',
         'withdraw_all' => 'Tất cả',
         'current_balance' => 'Số dư hiện tại',

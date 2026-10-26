@@ -32,13 +32,28 @@ class PayoutAccountController extends Controller
             'is_default' => ['sometimes', 'boolean'],
         ]);
 
+        $user = auth()->user();
+
         if ($data['type'] === UserPayoutAccount::TYPE_BANK) {
-            abort_unless(filled($data['bank_name'] ?? null) && filled($data['account_name'] ?? null) && filled($data['account_number'] ?? null), 422);
-        } else {
-            abort_unless(filled($data['crypto_currency'] ?? null) && filled($data['crypto_network'] ?? null) && filled($data['crypto_address'] ?? null), 422);
+            if (! filled($data['bank_name'] ?? null) || ! filled($data['account_name'] ?? null) || ! filled($data['account_number'] ?? null)) {
+                return back()->withErrors(['account_number' => __('member.payout_accounts.bank_fields_required')]);
+            }
+
+            if (UserPayoutAccount::bankFor($user)) {
+                return back()->withErrors(['account_number' => __('member.payout_accounts.bank_locked')]);
+            }
+
+            UserPayoutAccount::rememberBank(
+                $user,
+                $data['bank_name'] ?? null,
+                $data['account_name'] ?? null,
+                $data['account_number'] ?? null,
+            );
+
+            return back()->with('status', __('member.payout_accounts.saved'));
         }
 
-        $user = auth()->user();
+        abort_unless(filled($data['crypto_currency'] ?? null) && filled($data['crypto_network'] ?? null) && filled($data['crypto_address'] ?? null), 422);
 
         if ($request->boolean('is_default')) {
             $user->payoutAccounts()->update(['is_default' => false]);
@@ -53,6 +68,7 @@ class PayoutAccountController extends Controller
     public function destroy(UserPayoutAccount $payoutAccount): RedirectResponse
     {
         abort_unless($payoutAccount->user_id === auth()->id(), 403);
+        abort_if($payoutAccount->type === UserPayoutAccount::TYPE_BANK, 403);
         $payoutAccount->delete();
 
         return back()->with('status', __('member.payout_accounts.deleted'));

@@ -17,7 +17,7 @@
             oldBankAccountName: @js(old('bank_account_name')),
             oldBankName: @js(old('bank_name')),
             oldBankAccountNumber: @js(old('bank_account_number')),
-            savedAccounts: @js($savedBankAccounts),
+            savedBank: @js($savedBank),
         })"
         class="min-h-[var(--app-height,100dvh)] bg-gray-50 pb-[calc(6rem+env(safe-area-inset-bottom))]"
     >
@@ -92,23 +92,16 @@
 
                     <template x-if="selectedMethod?.type === 'bank'">
                         <div>
-                            <div x-show="savedAccounts.length" class="border-b border-gray-100 py-3.5">
-                                <p class="mb-2 text-base font-bold text-gray-900">{{ __('member.wallet.saved_account') }}</p>
-                                <select class="portal-plain-input" x-model="selectedAccountId" @change="pickSavedAccount(selectedAccountId)">
-                                    <option value="">{{ __('member.wallet.saved_account_new') }}</option>
-                                    <template x-for="account in savedAccounts" :key="account.id">
-                                        <option :value="String(account.id)" x-text="account.bank_name + ' · ' + account.account_number"></option>
-                                    </template>
-                                </select>
-                            </div>
+                            <p x-show="bankLocked" class="border-b border-gray-100 py-3 text-sm text-gray-500">{{ __('member.wallet.bank_locked_hint') }}</p>
 
                             <x-member.form-field :label="__('member.wallet.bank_account_name')">
                                 <input
                                     type="text"
                                     name="bank_account_name"
                                     x-model="bankAccountName"
+                                    :readonly="bankLocked"
                                     placeholder="{{ __('member.wallet.bank_account_name_placeholder') }}"
-                                    class="portal-plain-input"
+                                    class="portal-plain-input read-only:bg-gray-50 read-only:text-gray-500"
                                 >
                             </x-member.form-field>
 
@@ -117,8 +110,9 @@
                                     type="text"
                                     name="bank_name"
                                     x-model="bankName"
+                                    :readonly="bankLocked"
                                     placeholder="{{ __('member.wallet.bank_name_placeholder') }}"
-                                    class="portal-plain-input"
+                                    class="portal-plain-input read-only:bg-gray-50 read-only:text-gray-500"
                                 >
                             </x-member.form-field>
 
@@ -127,8 +121,9 @@
                                     type="text"
                                     name="bank_account_number"
                                     x-model="bankAccountNumber"
+                                    :readonly="bankLocked"
                                     placeholder="{{ __('member.wallet.bank_account_number_placeholder') }}"
-                                    class="portal-plain-input"
+                                    class="portal-plain-input read-only:bg-gray-50 read-only:text-gray-500"
                                 >
                             </x-member.form-field>
                         </div>
@@ -227,11 +222,11 @@ function withdrawalForm(config) {
         currencyValue: config.oldCurrency || '',
         networkValue: config.oldNetwork || '',
         cryptoAddress: config.oldCryptoAddress || '',
-        bankAccountName: config.oldBankAccountName || '',
-        bankName: config.oldBankName || '',
-        bankAccountNumber: config.oldBankAccountNumber || '',
-        savedAccounts: config.savedAccounts || [],
-        selectedAccountId: '',
+        savedBank: config.savedBank,
+        bankLocked: Boolean(config.savedBank),
+        bankAccountName: (config.savedBank && config.savedBank.account_name) || config.oldBankAccountName || '',
+        bankName: (config.savedBank && config.savedBank.bank_name) || config.oldBankName || '',
+        bankAccountNumber: (config.savedBank && config.savedBank.account_number) || config.oldBankAccountNumber || '',
         amount: config.oldAmount || '',
         paymentPassword: '',
         methodSheetOpen: false,
@@ -243,37 +238,18 @@ function withdrawalForm(config) {
                 if (this.selectedMethod?.type === 'bank' && !this.currencyValue) {
                     this.currencyValue = this.selectedMethod.currency || 'VND';
                 }
-                if (this.selectedMethod?.type === 'bank' && !this.bankAccountNumber) {
-                    this.applyDefaultAccount();
+                if (this.selectedMethod?.type === 'bank') {
+                    this.applySavedBank();
                 }
             }
         },
-        defaultSavedAccount() {
-            return this.savedAccounts.find((account) => account.is_default) || this.savedAccounts[0] || null;
-        },
-        applySavedAccount(account) {
-            if (!account) {
-                this.selectedAccountId = '';
+        applySavedBank() {
+            if (!this.savedBank) {
                 return;
             }
-            this.selectedAccountId = String(account.id);
-            this.bankAccountName = account.account_name || '';
-            this.bankName = account.bank_name || '';
-            this.bankAccountNumber = account.account_number || '';
-        },
-        applyDefaultAccount() {
-            this.applySavedAccount(this.defaultSavedAccount());
-        },
-        pickSavedAccount(accountId) {
-            if (!accountId) {
-                this.selectedAccountId = '';
-                this.bankAccountName = '';
-                this.bankName = '';
-                this.bankAccountNumber = '';
-                return;
-            }
-            const account = this.savedAccounts.find((item) => String(item.id) === String(accountId));
-            this.applySavedAccount(account);
+            this.bankAccountName = this.savedBank.account_name || '';
+            this.bankName = this.savedBank.bank_name || '';
+            this.bankAccountNumber = this.savedBank.account_number || '';
         },
         get availableCurrencies() {
             return this.selectedMethod?.currencies || [];
@@ -335,9 +311,8 @@ function withdrawalForm(config) {
             this.bankAccountName = '';
             this.bankName = '';
             this.bankAccountNumber = '';
-            this.selectedAccountId = '';
             if (method.type === 'bank') {
-                this.applyDefaultAccount();
+                this.applySavedBank();
             }
             this.methodSheetOpen = false;
         },

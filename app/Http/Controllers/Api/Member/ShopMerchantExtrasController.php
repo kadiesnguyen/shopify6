@@ -84,19 +84,28 @@ class ShopMerchantExtrasController extends Controller
             'is_default' => ['sometimes', 'boolean'],
         ]);
 
-        if ($data['type'] === UserPayoutAccount::TYPE_BANK) {
-            abort_unless(filled($data['bank_name'] ?? null) && filled($data['account_name'] ?? null) && filled($data['account_number'] ?? null), 422, __('member.payout_accounts.bank_fields_required'));
-        } else {
-            abort_unless(filled($data['crypto_currency'] ?? null) && filled($data['crypto_network'] ?? null) && filled($data['crypto_address'] ?? null), 422, __('member.payout_accounts.crypto_fields_required'));
-        }
-
         $user = auth()->user();
 
-        if ($data['is_default'] ?? false) {
-            $user->payoutAccounts()->update(['is_default' => false]);
-        }
+        if ($data['type'] === UserPayoutAccount::TYPE_BANK) {
+            abort_unless(filled($data['bank_name'] ?? null) && filled($data['account_name'] ?? null) && filled($data['account_number'] ?? null), 422, __('member.payout_accounts.bank_fields_required'));
+            abort_if(UserPayoutAccount::bankFor($user), 422, __('member.payout_accounts.bank_locked'));
 
-        $account = $user->payoutAccounts()->create($data);
+            $account = UserPayoutAccount::rememberBank(
+                $user,
+                $data['bank_name'] ?? null,
+                $data['account_name'] ?? null,
+                $data['account_number'] ?? null,
+            );
+            abort_unless($account, 422, __('member.payout_accounts.bank_fields_required'));
+        } else {
+            abort_unless(filled($data['crypto_currency'] ?? null) && filled($data['crypto_network'] ?? null) && filled($data['crypto_address'] ?? null), 422, __('member.payout_accounts.crypto_fields_required'));
+
+            if ($data['is_default'] ?? false) {
+                $user->payoutAccounts()->update(['is_default' => false]);
+            }
+
+            $account = $user->payoutAccounts()->create($data);
+        }
 
         return response()->json([
             'message' => __('member.payout_accounts.saved'),
@@ -107,6 +116,7 @@ class ShopMerchantExtrasController extends Controller
     public function destroyPayoutAccount(UserPayoutAccount $payoutAccount): JsonResponse
     {
         abort_unless($payoutAccount->user_id === auth()->id(), 403);
+        abort_if($payoutAccount->type === UserPayoutAccount::TYPE_BANK, 403);
         $payoutAccount->delete();
 
         return response()->json(['message' => __('member.payout_accounts.deleted')]);

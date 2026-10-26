@@ -36,6 +36,78 @@ class UserPayoutAccount extends Model
         return $this->belongsTo(User::class);
     }
 
+    public static function bankFor(User $user): ?self
+    {
+        return $user->payoutAccounts()
+            ->where('type', self::TYPE_BANK)
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->first();
+    }
+
+    public static function rememberBank(User $user, ?string $bankName, ?string $accountName, ?string $accountNumber): ?self
+    {
+        $existing = self::bankFor($user);
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $bankName = trim((string) $bankName);
+        $accountName = trim((string) $accountName);
+        $accountNumber = trim((string) $accountNumber);
+
+        if ($bankName === '' || $accountName === '' || $accountNumber === '') {
+            return null;
+        }
+
+        return $user->payoutAccounts()->create([
+            'type' => self::TYPE_BANK,
+            'bank_name' => $bankName,
+            'account_name' => $accountName,
+            'account_number' => $accountNumber,
+            'is_default' => true,
+        ]);
+    }
+
+    public static function replaceBank(User $user, string $bankName, string $accountName, string $accountNumber): self
+    {
+        $existing = self::bankFor($user);
+
+        $user->payoutAccounts()
+            ->where('type', self::TYPE_BANK)
+            ->when($existing, fn ($query, self $account) => $query->whereKeyNot($account->id))
+            ->delete();
+
+        if ($existing) {
+            $existing->update([
+                'bank_name' => trim($bankName),
+                'account_name' => trim($accountName),
+                'account_number' => trim($accountNumber),
+                'is_default' => true,
+            ]);
+
+            return $existing->refresh();
+        }
+
+        return $user->payoutAccounts()->create([
+            'type' => self::TYPE_BANK,
+            'bank_name' => trim($bankName),
+            'account_name' => trim($accountName),
+            'account_number' => trim($accountNumber),
+            'is_default' => true,
+        ]);
+    }
+
+    public function bankAddress(): string
+    {
+        return implode(' · ', array_filter([
+            $this->account_name,
+            $this->bank_name,
+            $this->account_number,
+        ]));
+    }
+
     /** @return array<string, mixed> */
     public function toPayoutDetails(): array
     {
