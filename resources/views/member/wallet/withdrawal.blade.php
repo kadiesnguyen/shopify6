@@ -246,7 +246,22 @@ function withdrawalForm(config) {
                 if (this.selectedMethod?.type === 'bank' && !this.bankAccountNumber) {
                     this.applyDefaultAccount();
                 }
+                return;
             }
+
+            if (this.bankAccountNumber) {
+                return;
+            }
+
+            const account = this.defaultSavedAccount();
+            const bankMethod = this.methods.find((method) => method.type === 'bank');
+            if (!account || !bankMethod) {
+                return;
+            }
+
+            this.selectedMethod = bankMethod;
+            this.currencyValue = bankMethod.currency || 'VND';
+            this.applySavedAccount(account);
         },
         defaultSavedAccount() {
             return this.savedAccounts.find((account) => account.is_default) || this.savedAccounts[0] || null;

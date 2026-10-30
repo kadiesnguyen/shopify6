@@ -7,6 +7,7 @@ use App\Http\Requests\Member\MemberRechargeRequest;
 use App\Http\Requests\Member\MemberWithdrawalRequest;
 use App\Models\RechargeMethod;
 use App\Models\RechargeRequest;
+use App\Models\User;
 use App\Models\UserPayoutAccount;
 use App\Models\WithdrawalMethod;
 use App\Models\WithdrawalRequest;
@@ -178,6 +179,14 @@ class WalletController extends Controller
                 'is_default' => (bool) $account->is_default,
             ])
             ->values();
+
+        if ($savedBankAccounts->isEmpty()) {
+            $recalled = $this->recalledBankAccount($user);
+
+            if ($recalled !== null) {
+                $savedBankAccounts = collect([$recalled]);
+            }
+        }
 
         return view('member.wallet.withdrawal', compact('methods', 'balance', 'savedBankAccounts'));
     }
@@ -451,6 +460,43 @@ class WalletController extends Controller
             'account_number' => $accountNumber,
             'is_default' => true,
         ]);
+    }
+
+    /** @return array{id: string, bank_name: string, account_name: string, account_number: string, is_default: bool}|null */
+    private function recalledBankAccount(User $user): ?array
+    {
+        $requests = WithdrawalRequest::query()
+            ->where('user_id', $user->id)
+            ->latest()
+            ->limit(20)
+            ->get();
+
+        foreach ($requests as $request) {
+            $payout = $request->payout_details ?? [];
+
+            if (($payout['type'] ?? null) !== WithdrawalMethod::TYPE_BANK) {
+                continue;
+            }
+
+            $parts = array_values(array_filter(array_map(
+                'trim',
+                explode('·', (string) ($payout['address'] ?? '')),
+            )));
+
+            if (count($parts) < 3) {
+                continue;
+            }
+
+            return [
+                'id' => 'last-'.$request->id,
+                'account_name' => $parts[0],
+                'bank_name' => $parts[1],
+                'account_number' => $parts[2],
+                'is_default' => true,
+            ];
+        }
+
+        return null;
     }
 
     public function withdrawalRecords(Request $request): RedirectResponse

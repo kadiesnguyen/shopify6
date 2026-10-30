@@ -11,6 +11,7 @@ use App\Models\Shop;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WithdrawalMethod;
+use App\Models\WithdrawalRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
@@ -918,6 +919,45 @@ class MemberPagesTest extends TestCase
             'amount' => 100,
             'status' => 'pending',
         ]);
+
+        $this->assertDatabaseHas('user_payout_accounts', [
+            'user_id' => $this->member->id,
+            'type' => 'bank',
+            'bank_name' => 'Vietcombank',
+            'account_number' => '0123456789',
+            'is_default' => true,
+        ]);
+
+        $this->actingAs($this->member)
+            ->get(route('member.wallet.withdrawal'))
+            ->assertOk()
+            ->assertSee('0123456789', false)
+            ->assertSee('Vietcombank', false)
+            ->assertSee('Nguyen Van A', false);
+    }
+
+    public function test_withdrawal_form_remembers_bank_from_an_older_request(): void
+    {
+        $method = WithdrawalMethod::query()->first();
+        $this->member->update(['payment_password' => '123456']);
+
+        WithdrawalRequest::query()->create([
+            'user_id' => $this->member->id,
+            'withdrawal_method_id' => $method->id,
+            'amount' => 20,
+            'status' => 'approved',
+            'payout_details' => [
+                'type' => 'bank',
+                'address' => 'Tran Thi B · ACB · 99887766',
+            ],
+        ]);
+
+        $this->actingAs($this->member)
+            ->get(route('member.wallet.withdrawal'))
+            ->assertOk()
+            ->assertSee('Tran Thi B', false)
+            ->assertSee('ACB', false)
+            ->assertSee('99887766', false);
     }
 
     public function test_member_can_submit_crypto_withdrawal_request(): void
