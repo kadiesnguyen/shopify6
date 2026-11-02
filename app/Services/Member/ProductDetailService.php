@@ -46,7 +46,7 @@ class ProductDetailService
             'purchase_price' => $purchasePrice,
             'selling_price' => $sellingPrice,
             'market_price' => $marketPrice,
-            'show_market_price' => $distribution !== null && $sellingPrice + 0.001 < $marketPrice,
+            'show_market_price' => $marketPrice > 0,
             'profit' => $profit,
             'stock' => (int) $product->stock,
             'is_recommended' => $distributions->isNotEmpty(),

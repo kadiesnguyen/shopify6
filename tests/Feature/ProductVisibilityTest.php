@@ -263,7 +263,7 @@ class ProductVisibilityTest extends TestCase
             ->assertOk()
             ->assertSee('$70.12', false)
             ->assertSee('$74.42', false)
-            ->assertSee(__('member.products.old_price'));
+            ->assertSee(__('member.products.market_price'));
     }
 
     public function test_home_card_shows_edited_selling_price_and_links_shop_detail(): void
@@ -311,7 +311,7 @@ class ProductVisibilityTest extends TestCase
             ->assertOk()
             ->assertSee('$268.00', false)
             ->assertSee('$270.00', false)
-            ->assertSee(__('member.products.old_price'))
+            ->assertSee(__('member.products.market_price'))
             ->assertSee('Cửa hàng đồ gia dụng chính hãng')
             ->assertDontSee(__('member.products.trusted_quality'));
     }
