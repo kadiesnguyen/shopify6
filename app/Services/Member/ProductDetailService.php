@@ -22,6 +22,7 @@ class ProductDetailService
         string $sourceUrl = 'https://sieummo.vn',
         ?int $displayShopId = null,
         ?int $shopOwnerUserId = null,
+        bool $catalogPrices = false,
     ): array {
         $product->loadMissing(['category', 'shop', 'images'])->loadCount('orderItems');
 
@@ -29,7 +30,9 @@ class ProductDetailService
             ->available()
             ->with(['user.shop'])
             ->get();
-        $distribution = $this->pickDisplayDistribution($distributions, $displayShopId, $shopOwnerUserId);
+        $distribution = $catalogPrices
+            ? null
+            : $this->pickDisplayDistribution($distributions, $displayShopId, $shopOwnerUserId);
         $marketPrice = (float) $product->selling_price;
         $purchasePrice = (float) ($distribution?->purchase_price ?? $product->purchase_price);
         $sellingPrice = (float) ($distribution?->selling_price ?? $marketPrice);

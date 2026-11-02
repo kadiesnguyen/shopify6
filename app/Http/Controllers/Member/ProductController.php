@@ -83,6 +83,7 @@ class ProductController extends Controller
             'https://sieummo.vn',
             $request->integer('shop_id'),
             $shopOwnerUserId,
+            catalogPrices: $from === 'distribution',
         );
         $product = $detail['product'];
 
