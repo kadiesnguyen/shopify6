@@ -46,25 +46,25 @@
                     'tall' => true,
                 ])
 
-                <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div class="grid grid-cols-2 gap-3 md:grid-cols-4" data-product-price-fields>
                     <div>
                         <label class="mb-1 block text-sm font-medium">{{ __('admin.columns.selling_price') }} *</label>
-                        <input type="number" step="0.01" min="0" name="selling_price" value="{{ old('selling_price', $product->selling_price) }}" required class="w-full rounded-lg border-slate-300 text-sm">
+                        <input type="number" step="0.01" min="0" name="selling_price" value="{{ old('selling_price', $product->selling_price) }}" required data-selling-price class="w-full rounded-lg border-slate-300 text-sm">
                     </div>
                     <div>
                         <label class="mb-1 block text-sm font-medium">{{ __('admin.columns.purchase_price') }}</label>
-                        <input type="number" step="0.01" min="0" name="purchase_price" value="{{ old('purchase_price', $product->purchase_price) }}" required class="w-full rounded-lg border-slate-300 text-sm">
+                        <input type="number" step="0.01" min="0" name="purchase_price" value="{{ old('purchase_price', $product->purchase_price) }}" required readonly tabindex="-1" data-purchase-price class="w-full rounded-lg border-slate-300 bg-slate-50 text-sm text-slate-600">
                     </div>
                     <div>
                         <label class="mb-1 block text-sm font-medium">{{ __('admin.products.commission_type') }}</label>
-                        <select name="commission_type" class="w-full rounded-lg border-slate-300 text-sm">
-                            <option value="fixed" @selected(old('commission_type', $product->commission_type ?? 'fixed') === 'fixed')>{{ __('admin.users.distributions.commission_type_fixed') }}</option>
-                            <option value="percent" @selected(old('commission_type', $product->commission_type ?? 'fixed') === 'percent')>{{ __('admin.users.distributions.commission_type_percent') }}</option>
+                        <input type="hidden" name="commission_type" value="fixed">
+                        <select disabled class="w-full rounded-lg border-slate-300 bg-slate-50 text-sm text-slate-600">
+                            <option value="fixed" selected>{{ __('admin.users.distributions.commission_type_fixed') }}</option>
                         </select>
                     </div>
                     <div>
                         <label class="mb-1 block text-sm font-medium">{{ __('admin.columns.commission') }}</label>
-                        <input type="number" step="0.01" min="0" name="commission" value="{{ old('commission', $product->commission) }}" required class="w-full rounded-lg border-slate-300 text-sm">
+                        <input type="number" step="0.01" min="0" name="commission" value="{{ old('commission', $product->commission) }}" required readonly tabindex="-1" data-commission class="w-full rounded-lg border-slate-300 bg-slate-50 text-sm text-slate-600">
                     </div>
                 </div>
 
@@ -122,3 +122,34 @@
         </form>
     </div>
 </div>
+
+<script>
+    (function () {
+        const root = document.querySelector('[data-product-price-fields]');
+        if (!root) {
+            return;
+        }
+
+        const selling = root.querySelector('[data-selling-price]');
+        const purchase = root.querySelector('[data-purchase-price]');
+        const commission = root.querySelector('[data-commission]');
+
+        const sync = function () {
+            if (selling.value === '') {
+                return;
+            }
+
+            const price = Number(selling.value);
+            if (!Number.isFinite(price) || price < 0) {
+                return;
+            }
+
+            const commissionAmount = Math.round(price * 30) / 100;
+            purchase.value = (Math.round((price - commissionAmount) * 100) / 100).toFixed(2);
+            commission.value = commissionAmount.toFixed(2);
+        };
+
+        selling.addEventListener('input', sync);
+        sync();
+    })();
+</script>

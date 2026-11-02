@@ -33,4 +33,21 @@ class ProductRequest extends FormRequest
             'remove_gallery_ids.*' => ['integer', 'exists:product_images,id'],
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        if (! is_numeric($this->input('selling_price'))) {
+            return;
+        }
+
+        $selling = round((float) $this->input('selling_price'), 2);
+        $commission = round($selling * 0.30, 2);
+
+        $this->merge([
+            'selling_price' => $selling,
+            'commission' => $commission,
+            'purchase_price' => round($selling - $commission, 2),
+            'commission_type' => 'fixed',
+        ]);
+    }
 }
