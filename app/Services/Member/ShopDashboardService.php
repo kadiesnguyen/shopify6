@@ -5,6 +5,7 @@ namespace App\Services\Member;
 use App\Models\Order;
 use App\Models\ProductReview;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class ShopDashboardService
 {
@@ -25,7 +26,7 @@ class ShopDashboardService
         $today = now()->startOfDay();
 
         $totalOrders = (clone $activeOrders)->count();
-        $totalSales = (float) (clone $completedOrders)->sum('total');
+        $totalSales = (float) (clone $activeOrders)->sum(DB::raw('purchase_cost + commission'));
         $spendableBalance = (float) ($user->wallet?->spendableBalance() ?? 0);
         $frozenBalance = (float) ($user->wallet?->frozenBalance() ?? 0);
         $availableBalance = (float) ($user->wallet?->totalBalance() ?? 0);

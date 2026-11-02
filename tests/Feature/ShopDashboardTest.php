@@ -136,6 +136,41 @@ class ShopDashboardTest extends TestCase
         $this->assertArrayHasKey('monthly_chart_labels', $stats);
     }
 
+    public function test_total_revenue_adds_cost_and_profit_of_every_order_that_was_not_cancelled(): void
+    {
+        $shop = Shop::query()->create([
+            'user_id' => $this->member->id,
+            'name' => 'Revenue Shop',
+            'slug' => 'revenue-shop',
+            'status' => 'active',
+        ]);
+        $buyer = User::factory()->create(['status' => 'active']);
+
+        foreach ([
+            ['ORD-REV-001', Order::STATUS_COMPLETED, 60, 10],
+            ['ORD-REV-002', Order::STATUS_SHIPPED, 150, 40],
+            ['ORD-REV-003', Order::STATUS_PENDING_PAYMENT, 20, 5],
+            ['ORD-REV-004', Order::STATUS_CANCELLED, 500, 100],
+        ] as [$orderNo, $status, $cost, $profit]) {
+            Order::query()->create([
+                'user_id' => $buyer->id,
+                'shop_id' => $shop->id,
+                'seller_id' => $this->member->id,
+                'order_no' => $orderNo,
+                'total' => $cost + $profit,
+                'commission' => $profit,
+                'purchase_cost' => $cost,
+                'status' => $status,
+                'payment_method' => 'wallet',
+            ]);
+        }
+
+        $stats = app(\App\Services\Member\ShopDashboardService::class)->statsFor($this->member->fresh());
+
+        $this->assertSame(285.0, $stats['total_sales']);
+        $this->assertSame(3, $stats['total_orders']);
+    }
+
     public function test_shop_hub_available_balance_includes_frozen_with_breakdown(): void
     {
         Role::findOrCreate('shop');
