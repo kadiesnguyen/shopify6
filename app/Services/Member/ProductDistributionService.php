@@ -56,18 +56,27 @@ class ProductDistributionService
 
     public function distribute(User $shopUser, Product $product): ProductDistribution
     {
-        $marketPrice = (float) $product->selling_price;
-        $purchasePrice = (float) $product->purchase_price;
-        $sellingPrice = self::suggestedSellingPrice($marketPrice, $purchasePrice);
+        $marketPrice = round((float) $product->selling_price, 2);
+        $purchasePrice = round((float) $product->purchase_price, 2);
 
         return ProductDistribution::query()->create([
             'user_id' => $shopUser->id,
             'product_id' => $product->id,
-            'selling_price' => $sellingPrice,
+            'selling_price' => $marketPrice,
             'purchase_price' => $purchasePrice,
-            'commission' => max(0, $sellingPrice - $purchasePrice),
+            'commission' => max(0, round($marketPrice - $purchasePrice, 2)),
             'commission_type' => ProductDistribution::COMMISSION_FIXED,
             'status' => ProductDistribution::STATUS_AVAILABLE,
+        ]);
+    }
+
+    public function syncListedPrices(Product $product): void
+    {
+        $product->distributions()->update([
+            'selling_price' => $product->selling_price,
+            'purchase_price' => $product->purchase_price,
+            'commission' => $product->commission,
+            'commission_type' => ProductDistribution::COMMISSION_FIXED,
         ]);
     }
 

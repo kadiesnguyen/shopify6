@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\ProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Shop;
+use App\Services\Member\ProductDistributionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -66,6 +67,7 @@ class ProductController extends Controller
         unset($data['image_file'], $data['gallery_files'], $data['remove_gallery_ids']);
 
         $product = Product::query()->create($data);
+        app(ProductDistributionService::class)->syncListedPrices($product);
         $this->syncGalleryImages($product, $request);
 
         return redirect()->route('admin.products.index')->with('status', __('admin.products.created'));
@@ -91,6 +93,7 @@ class ProductController extends Controller
         unset($data['image_file'], $data['gallery_files'], $data['remove_gallery_ids']);
 
         $product->update($data);
+        app(ProductDistributionService::class)->syncListedPrices($product->fresh());
         $this->syncGalleryImages($product, $request);
 
         return redirect()->route('admin.products.index')->with('status', __('admin.products.updated'));
