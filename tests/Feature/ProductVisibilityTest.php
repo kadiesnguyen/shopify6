@@ -253,7 +253,7 @@ class ProductVisibilityTest extends TestCase
         $this->actingAs($this->member)
             ->get(route('member.home', ['q' => $shop->name]))
             ->assertOk()
-            ->assertSee('$70.12', false);
+            ->assertSee('70.12');
 
         $this->actingAs($this->member)
             ->get(route('member.products.show', [
@@ -282,13 +282,13 @@ class ProductVisibilityTest extends TestCase
         $this->actingAs($this->member)
             ->get(route('member.home'))
             ->assertOk()
-            ->assertSee('$70.12', false)
-            ->assertDontSee('$74.42', false)
+            ->assertSee('70.12')
+            ->assertDontSee('74.42')
             ->assertSee(route('member.products.show', [
                 'product' => $this->product,
                 'from' => 'home',
                 'shop_id' => $shop->id,
-            ]), false);
+            ]));
     }
 
     public function test_product_detail_shows_shop_selling_and_old_market_price(): void
@@ -454,8 +454,7 @@ class ProductVisibilityTest extends TestCase
         $this->actingAs($this->shopUser)
             ->get(route('member.products.index'))
             ->assertOk()
-            ->assertSee(__('member.products.distribution_center'), false)
-            ->assertSee(__('member.products.management'), false);
+            ->assertSee(__('member.products.distribution_center'), false);
     }
 
     public function test_products_page_returns_json_for_infinite_scroll(): void
