@@ -56,14 +56,22 @@ class ProductDistributionService
         ]);
     }
 
-    public function syncListedPrices(Product $product): void
+    public function syncListedPrices(Product $product, ?float $previousSellingPrice = null): void
     {
-        $product->distributions()->update([
-            'selling_price' => $product->selling_price,
-            'purchase_price' => $product->purchase_price,
-            'commission' => $product->commission,
-            'commission_type' => ProductDistribution::COMMISSION_FIXED,
-        ]);
+        if ($previousSellingPrice === null) {
+            return;
+        }
+
+        // Listings a shop already repriced keep that price. Only listings still
+        // on the previous catalog price follow an admin price change.
+        $product->distributions()
+            ->where('selling_price', $previousSellingPrice)
+            ->update([
+                'selling_price' => $product->selling_price,
+                'purchase_price' => $product->purchase_price,
+                'commission' => $product->commission,
+                'commission_type' => ProductDistribution::COMMISSION_FIXED,
+            ]);
     }
 
     public function resolveForOrder(Product $product, ?int $displayShopId = null, ?int $excludeSellerUserId = null): ?ProductDistribution

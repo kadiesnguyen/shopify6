@@ -92,8 +92,9 @@ class ProductController extends Controller
 
         unset($data['image_file'], $data['gallery_files'], $data['remove_gallery_ids']);
 
+        $previousSellingPrice = (float) $product->selling_price;
         $product->update($data);
-        app(ProductDistributionService::class)->syncListedPrices($product->fresh());
+        app(ProductDistributionService::class)->syncListedPrices($product->fresh(), $previousSellingPrice);
         $this->syncGalleryImages($product, $request);
 
         return redirect()->route('admin.products.index')->with('status', __('admin.products.updated'));

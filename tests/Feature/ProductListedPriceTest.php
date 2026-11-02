@@ -43,6 +43,16 @@ class ProductListedPriceTest extends TestCase
             'commission_type' => 'fixed',
             'status' => ProductDistribution::STATUS_AVAILABLE,
         ]);
+        $catalogShop = User::factory()->create(['status' => 'active']);
+        ProductDistribution::query()->create([
+            'user_id' => $catalogShop->id,
+            'product_id' => $product->id,
+            'selling_price' => 100,
+            'purchase_price' => 80,
+            'commission' => 20,
+            'commission_type' => 'fixed',
+            'status' => ProductDistribution::STATUS_AVAILABLE,
+        ]);
 
         $product->update([
             'selling_price' => 200,
@@ -50,12 +60,17 @@ class ProductListedPriceTest extends TestCase
             'commission' => 60,
             'commission_type' => 'fixed',
         ]);
-        app(ProductDistributionService::class)->syncListedPrices($product->fresh());
+        app(ProductDistributionService::class)->syncListedPrices($product->fresh(), 100);
 
-        $detail = app(ProductDetailService::class)->resolve($product->fresh());
+        $shopPrice = ProductDistribution::query()->where('user_id', $seller->id)->firstOrFail();
+        $this->assertSame('90.00', (string) $shopPrice->selling_price);
 
-        $this->assertSame(200.0, $detail['selling_price']);
-        $this->assertSame(140.0, $detail['purchase_price']);
-        $this->assertSame(60.0, $detail['profit']);
+        $catalogPrice = ProductDistribution::query()->where('user_id', $catalogShop->id)->firstOrFail();
+        $this->assertSame('200.00', (string) $catalogPrice->selling_price);
+        $this->assertSame('140.00', (string) $catalogPrice->purchase_price);
+
+        $detail = app(ProductDetailService::class)->resolve($product->fresh(), shopOwnerUserId: $seller->id);
+        $this->assertSame(90.0, $detail['selling_price']);
+        $this->assertSame(200.0, $detail['market_price']);
     }
 }
