@@ -15,7 +15,7 @@ class RepriceProductsCommandTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_reprice_sets_tiered_cost_for_products_distributions_and_open_orders(): void
+    public function test_reprice_sets_thirty_percent_commission_for_products_distributions_and_open_orders(): void
     {
         $category = Category::query()->create([
             'name' => 'Cat',
@@ -73,14 +73,52 @@ class RepriceProductsCommandTest extends TestCase
 
         $this->artisan('products:reprice')->assertSuccessful();
 
-        // 6300 / 1.30 = 4846.15, profit = 1453.85 (30% of cost).
-        $this->assertSame('4846.15', (string) $product->fresh()->purchase_price);
-        $this->assertSame('4846.15', (string) $distribution->fresh()->purchase_price);
+        // 30% of 6300 = 1890 commission, leaving 4410 cost.
+        $this->assertSame('4410.00', (string) $product->fresh()->purchase_price);
+        $this->assertSame('1890.00', (string) $product->fresh()->commission);
+        $this->assertSame('4410.00', (string) $distribution->fresh()->purchase_price);
+        $this->assertSame('1890.00', (string) $distribution->fresh()->commission);
 
         $order->refresh();
-        $this->assertSame('4846.15', (string) $order->purchase_cost);
-        $this->assertSame('1453.85', (string) $order->commission);
+        $this->assertSame('4410.00', (string) $order->purchase_cost);
+        $this->assertSame('1890.00', (string) $order->commission);
         $this->assertSame('6300.00', (string) $order->total);
+    }
+
+    public function test_reprice_can_leave_open_orders_at_their_placed_cost(): void
+    {
+        $category = Category::query()->create(['name' => 'C', 'slug' => 'c', 'status' => 'active']);
+        $seller = User::factory()->create(['status' => 'active']);
+        $buyer = User::factory()->create(['status' => 'active']);
+
+        $product = Product::query()->create([
+            'category_id' => $category->id,
+            'user_id' => $seller->id,
+            'name' => 'Knife Set',
+            'slug' => 'knife-set',
+            'selling_price' => 66,
+            'purchase_price' => 60,
+            'commission' => 6,
+            'stock' => 5,
+            'status' => 'active',
+        ]);
+
+        $order = Order::query()->create([
+            'user_id' => $buyer->id,
+            'seller_id' => $seller->id,
+            'order_no' => 'ORD-OPEN-1',
+            'total' => 66,
+            'commission' => 6,
+            'purchase_cost' => 60,
+            'status' => Order::STATUS_PENDING_PAYMENT,
+            'payment_method' => 'wallet',
+        ]);
+
+        $this->artisan('products:reprice', ['--skip-orders' => true])->assertSuccessful();
+
+        $this->assertSame('46.20', (string) $product->fresh()->purchase_price);
+        $this->assertSame('19.80', (string) $product->fresh()->commission);
+        $this->assertSame('60.00', (string) $order->fresh()->purchase_cost);
     }
 
     public function test_reprice_leaves_settled_orders_untouched(): void

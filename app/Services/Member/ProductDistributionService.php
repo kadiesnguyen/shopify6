@@ -9,25 +9,11 @@ use RuntimeException;
 
 class ProductDistributionService
 {
-    /**
-     * Seller profit rate tiered by price (USD): cheap goods earn a thinner
-     * margin, expensive goods a fatter one.
-     */
-    public static function profitRateForPrice(float $price): float
-    {
-        if ($price >= 2000.0) {
-            return 0.30;
-        }
-
-        if ($price >= 1000.0) {
-            return 0.25;
-        }
-
-        return 0.10;
-    }
+    /** Seller commission as a share of the selling price. */
+    public const COMMISSION_RATE = 0.30;
 
     /**
-     * Cost/giá gốc such that profit = rate% of cost, i.e. price = cost * (1 + rate).
+     * Cost/giá gốc: the selling price minus the seller's commission.
      */
     public static function costPriceForPrice(float $price): float
     {
@@ -37,7 +23,7 @@ class ProductDistributionService
             return 0.0;
         }
 
-        return round($price / (1 + self::profitRateForPrice($price)), 2);
+        return round($price - round($price * self::COMMISSION_RATE, 2), 2);
     }
 
     public static function suggestedSellingPrice(float $marketPrice, float $purchasePrice): float

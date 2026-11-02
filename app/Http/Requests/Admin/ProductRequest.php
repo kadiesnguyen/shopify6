@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Services\Member\ProductDistributionService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ProductRequest extends FormRequest
@@ -41,12 +42,12 @@ class ProductRequest extends FormRequest
         }
 
         $selling = round((float) $this->input('selling_price'), 2);
-        $commission = round($selling * 0.30, 2);
+        $purchase = ProductDistributionService::costPriceForPrice($selling);
 
         $this->merge([
             'selling_price' => $selling,
-            'commission' => $commission,
-            'purchase_price' => round($selling - $commission, 2),
+            'commission' => round($selling - $purchase, 2),
+            'purchase_price' => $purchase,
             'commission_type' => 'fixed',
         ]);
     }
