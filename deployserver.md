@@ -1,4 +1,4 @@
-# Deploy lên server (shopjfy6.com)
+# Deploy lên server (shopify84.com)
 
 Quy trình chuẩn: **export DB local → push Git → pull trên server → migrate/build → import DB**.
 
@@ -98,7 +98,7 @@ php artisan shops:sync-roles --no-interaction
 
 | Mục | Giá trị |
 |-----|---------|
-| Domain | https://shopjfy6.com |
+| Domain | https://shopify84.com (shopjfy6.com chuyển tiếp 301 về đây) |
 | Path | `/www/wwwroot/shopjfy6.com` |
 | SSH | `Host ServerSand` → `14.225.253.8` |
 | DB | Xem `info.md` (local, không commit) |
@@ -118,8 +118,8 @@ Production dùng Redis (predis, không cần ext php-redis): `CACHE_STORE=redis`
 ## Kiểm tra sau deploy
 
 ```bash
-curl -sI https://shopjfy6.com/up | head -1
-curl -sI https://shopjfy6.com/admin/login | head -1
+curl -sI https://shopify84.com/up | head -1
+curl -sI https://shopify84.com/admin/login | head -1
 ```
 
 ## Bảo toàn dữ liệu (user, giao dịch, sản phẩm)

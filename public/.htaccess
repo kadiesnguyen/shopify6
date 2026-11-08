@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    # Old domain stays as a forward to the current site.
+    RewriteCond %{HTTP_HOST} ^(www\.)?shopjfy6\.com$ [NC]
+    RewriteRule ^ https://shopify84.com%{REQUEST_URI} [R=301,L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

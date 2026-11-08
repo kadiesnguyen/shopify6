@@ -192,7 +192,7 @@ main() {
     import_db_on_server
     sync_storage_to_server
     log "=== Deploy done ==="
-    log "Site: https://shopjfy6.com"
+    log "Site: https://shopify84.com"
 }
 
 main "$@"
