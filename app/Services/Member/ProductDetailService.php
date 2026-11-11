@@ -3,6 +3,8 @@
 namespace App\Services\Member;
 
 use App\Jobs\FetchProductDescriptionJob;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductDistribution;
 use App\Models\Shop;
@@ -24,7 +26,7 @@ class ProductDetailService
         ?int $shopOwnerUserId = null,
         bool $catalogPrices = false,
     ): array {
-        $product->loadMissing(['category', 'shop', 'images'])->loadCount('orderItems');
+        $product->loadMissing(['category', 'shop', 'images']);
 
         $distributions = $product->distributions()
             ->available()
@@ -38,6 +40,7 @@ class ProductDetailService
         $sellingPrice = (float) ($distribution?->selling_price ?? $marketPrice);
         $profit = max(0, $sellingPrice - $purchasePrice);
         $description = $this->stripDescriptionImages($this->resolveDescription($product, $sourceUrl));
+        $displayShop = $this->resolveDisplayShop($product, $distributions, $displayShopId);
 
         return [
             'product' => $product,
@@ -53,9 +56,9 @@ class ProductDetailService
             'profit' => $profit,
             'stock' => (int) $product->stock,
             'is_recommended' => $distributions->isNotEmpty(),
-            'sales_count' => (int) $product->order_items_count,
+            'sales_count' => $this->salesCountForSeller($product, $displayShop['user_id'] ?? null),
             'category' => $product->category?->name,
-            'shop' => $this->resolveDisplayShop($product, $distributions, $displayShopId),
+            'shop' => $displayShop,
         ];
     }
 
@@ -166,6 +169,20 @@ class ProductDetailService
             $distribution->featured_at?->getTimestamp() ?? 0,
             $distribution->created_at?->getTimestamp() ?? 0,
         ];
+    }
+
+    private function salesCountForSeller(Product $product, ?int $sellerId): int
+    {
+        if (! $sellerId) {
+            return 0;
+        }
+
+        return (int) OrderItem::query()
+            ->where('product_id', $product->id)
+            ->whereHas('order', fn ($query) => $query
+                ->where('seller_id', $sellerId)
+                ->where('status', '!=', Order::STATUS_CANCELLED))
+            ->sum('qty');
     }
 
     /** @return array{id: int, user_id: int, name: string, description: ?string, logo_url: ?string, products_url: string} */
