@@ -118,5 +118,26 @@ class MemberAuthTest extends TestCase
         ])->assertRedirect(route('member.home'));
 
         $this->assertDatabaseMissing('sessions', ['id' => $firstSessionId]);
+        $this->assertNotSame($firstSessionId, $user->fresh()->active_session_id);
+        $this->assertSame(session()->getId(), $user->fresh()->active_session_id);
+    }
+
+    public function test_shop_page_logs_out_a_session_replaced_by_another_browser(): void
+    {
+        $user = User::factory()->create(['email' => 'member@shopefy.test']);
+        $user->assignRole('member');
+
+        $this->post(route('auth.login'), [
+            'login' => 'member@shopefy.test',
+            'password' => 'password',
+        ])->assertRedirect(route('member.home'));
+
+        $user->forceFill(['active_session_id' => 'safari-session'])->save();
+
+        $this->get(route('member.home'))
+            ->assertRedirect(route('auth.login'))
+            ->assertSessionHasErrors('login');
+
+        $this->assertGuest();
     }
 }

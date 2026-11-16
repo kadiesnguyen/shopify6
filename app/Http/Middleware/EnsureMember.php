@@ -33,8 +33,31 @@ class EnsureMember
             ]);
         }
 
+        if ($this->sessionWasReplaced($request, $user)) {
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('auth.login')->withErrors([
+                'login' => __('auth.session_replaced'),
+            ]);
+        }
+
         Paginator::defaultView('vendor.pagination.member');
 
         return $next($request);
+    }
+
+    private function sessionWasReplaced(Request $request, User $user): bool
+    {
+        $sessionId = $request->session()->getId();
+
+        if (! filled($user->active_session_id)) {
+            $user->forceFill(['active_session_id' => $sessionId])->save();
+
+            return false;
+        }
+
+        return ! hash_equals($user->active_session_id, $sessionId);
     }
 }

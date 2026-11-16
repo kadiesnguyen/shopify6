@@ -21,6 +21,10 @@ class PersistentLogin
 
     public static function finalize(Request $request, User $user): void
     {
+        $user->forceFill([
+            'active_session_id' => $request->session()->getId(),
+        ])->save();
+
         self::logoutOtherSessions($request, $user);
     }
 

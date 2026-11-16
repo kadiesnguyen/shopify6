@@ -42,6 +42,7 @@ class AuthenticatedUserResolver
             PersistentLogin::configureRememberDuration();
             Auth::login($dbUser, true);
             $request->session()->regenerate();
+            PersistentLogin::finalize($request, $dbUser);
         }
 
         return $dbUser;
