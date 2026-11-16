@@ -68,8 +68,7 @@ class CategoryBrowseController extends Controller
                 ->whereIn('category_id', $allowedIds)
                 ->when($activeCategory, fn ($query) => $query->where('category_id', $activeCategory->id))
                 ->when($keyword !== '', fn ($query) => $query->where('name', 'like', "%{$keyword}%"))
-                ->orderBy('id')
-                ->limit(48)
+                ->latest('id')
                 ->get();
         } elseif ($activeCategory) {
             $products = ProductBuyableQuery::forPortal()

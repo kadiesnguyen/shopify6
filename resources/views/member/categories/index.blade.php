@@ -88,7 +88,7 @@
                                 >
                                 <span class="size-16 shrink-0 overflow-hidden rounded-md bg-gray-100">
                                     @if ($product->imageUrl())
-                                        <img src="{{ $product->imageUrl() }}" alt="" class="size-full object-cover">
+                                        <img src="{{ $product->imageUrl() }}" alt="" class="size-full object-cover" loading="lazy">
                                     @endif
                                 </span>
                                 <span class="min-w-0 flex-1">

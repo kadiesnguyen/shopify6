@@ -139,6 +139,44 @@ class ProductDistributionBalanceTest extends TestCase
             ->assertSee(__('member.products.edit'));
     }
 
+    public function test_distribute_mode_shows_products_added_after_the_old_first_page(): void
+    {
+        $categoryId = (int) $this->product->category_id;
+
+        for ($i = 0; $i < 48; $i++) {
+            Product::query()->create([
+                'category_id' => $categoryId,
+                'name' => 'Older Catalog Item '.$i,
+                'slug' => 'older-catalog-item-'.$i,
+                'selling_price' => 100,
+                'purchase_price' => 70,
+                'commission' => 30,
+                'stock' => 5,
+                'status' => 'active',
+            ]);
+        }
+
+        $newest = Product::query()->create([
+            'category_id' => $categoryId,
+            'name' => 'Newest Admin Product',
+            'slug' => 'newest-admin-product',
+            'selling_price' => 7193.11,
+            'purchase_price' => 5035.18,
+            'commission' => 2157.93,
+            'stock' => 969,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($this->shopUser)
+            ->get(route('member.categories.index', [
+                'mode' => 'distribute',
+                'category' => $categoryId,
+            ]))
+            ->assertOk()
+            ->assertSeeInOrder([$newest->name, $this->product->name])
+            ->assertSee(__('member.products.confirm_distribution'));
+    }
+
     public function test_distribute_mode_search_stays_inside_selected_category(): void
     {
         $otherCategory = Category::query()->create([
