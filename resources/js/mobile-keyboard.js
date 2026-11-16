@@ -22,17 +22,7 @@ function pinOpenSheet() {
     const viewport = window.visualViewport;
 
     document.querySelectorAll('.portal-keyboard-sheet').forEach((element) => {
-        if (element !== sheet || !viewport) {
-            element.style.top = '';
-            element.style.height = '';
-            element.style.bottom = '';
-
-            return;
-        }
-
-        element.style.top = `${viewport.offsetTop}px`;
-        element.style.height = `${viewport.height}px`;
-        element.style.bottom = 'auto';
+        element.style.top = element === sheet && viewport ? `${viewport.offsetTop}px` : '';
     });
 }
 
@@ -68,7 +58,7 @@ function initMobileKeyboardFix() {
     }
 
     window.addEventListener('resize', () => {
-        if (document.documentElement.classList.contains('keyboard-open')) {
+        if (document.documentElement.classList.contains('keyboard-open') || sheetOf(document.activeElement)) {
             return;
         }
 
@@ -82,10 +72,10 @@ function initMobileKeyboardFix() {
                 return;
             }
 
-            // A price sheet is pinned to the visible screen. Locking the page
-            // height here is what shoves that sheet under the keyboard.
+            // A price sheet sits at the top of the screen, so the keyboard never
+            // has to scroll the page to reach it. Leave the page behind it as is:
+            // locking its height drops the list back to the top.
             if (sheetOf(event.target)) {
-                document.documentElement.classList.add('keyboard-open');
                 pinOpenSheet();
 
                 return;

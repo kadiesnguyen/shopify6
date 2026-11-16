@@ -103,7 +103,7 @@
                             <div
                                 x-show="editing"
                                 x-cloak
-                                class="portal-keyboard-sheet fixed inset-0 z-[80] flex items-end justify-center bg-black/40 p-4 sm:items-center"
+                                class="portal-keyboard-sheet fixed inset-0 z-[80] flex items-start justify-center bg-black/40 p-4 pt-[calc(1rem+env(safe-area-inset-top))] sm:items-center"
                                 @keydown.escape.window="editing = false"
                             >
                                 <form
