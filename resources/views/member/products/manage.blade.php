@@ -103,13 +103,13 @@
                             <div
                                 x-show="editing"
                                 x-cloak
-                                class="fixed inset-0 z-30 flex items-end justify-center bg-black/40 p-4 sm:items-center"
+                                class="portal-keyboard-sheet fixed inset-0 z-[80] flex items-end justify-center bg-black/40 p-4 sm:items-center"
                                 @keydown.escape.window="editing = false"
                             >
                                 <form
                                     method="POST"
                                     action="{{ route('member.products.manage.update', $distribution) }}"
-                                    class="w-full max-w-md rounded-xl bg-white p-4 shadow-xl"
+                                    class="max-h-full w-full max-w-md overflow-y-auto rounded-xl bg-white p-4 shadow-xl"
                                     @submit.prevent="
                                         saving = true;
                                         error = '';

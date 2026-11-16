@@ -13,6 +13,29 @@ function syncAppHeight() {
     document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
 }
 
+function sheetOf(element) {
+    return element instanceof HTMLElement ? element.closest('.portal-keyboard-sheet') : null;
+}
+
+function pinOpenSheet() {
+    const sheet = sheetOf(document.activeElement);
+    const viewport = window.visualViewport;
+
+    document.querySelectorAll('.portal-keyboard-sheet').forEach((element) => {
+        if (element !== sheet || !viewport) {
+            element.style.top = '';
+            element.style.height = '';
+            element.style.bottom = '';
+
+            return;
+        }
+
+        element.style.top = `${viewport.offsetTop}px`;
+        element.style.height = `${viewport.height}px`;
+        element.style.bottom = 'auto';
+    });
+}
+
 function lockLayoutHeight() {
     if (!document.documentElement.dataset.lockedHeight) {
         document.documentElement.dataset.lockedHeight = String(window.innerHeight);
@@ -28,6 +51,7 @@ function lockLayoutHeight() {
 function unlockLayoutHeight() {
     delete document.documentElement.dataset.lockedHeight;
     document.documentElement.classList.remove('keyboard-open');
+    pinOpenSheet();
     syncAppHeight();
 }
 
@@ -37,6 +61,11 @@ function initMobileKeyboardFix() {
     }
 
     syncAppHeight();
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', pinOpenSheet);
+        window.visualViewport.addEventListener('scroll', pinOpenSheet);
+    }
 
     window.addEventListener('resize', () => {
         if (document.documentElement.classList.contains('keyboard-open')) {
@@ -50,6 +79,15 @@ function initMobileKeyboardFix() {
         'focusin',
         (event) => {
             if (!isMobileViewport() || !isField(event.target)) {
+                return;
+            }
+
+            // A price sheet is pinned to the visible screen. Locking the page
+            // height here is what shoves that sheet under the keyboard.
+            if (sheetOf(event.target)) {
+                document.documentElement.classList.add('keyboard-open');
+                pinOpenSheet();
+
                 return;
             }
 
