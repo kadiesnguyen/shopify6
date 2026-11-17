@@ -141,6 +141,7 @@
                                 inputmode="decimal"
                                 name="amount"
                                 x-model="amount"
+                                @input="amount = normalizeAmount($event.target.value)"
                                 placeholder="{{ __('member.wallet.amount_placeholder') }}"
                                 class="portal-plain-input flex-1"
                             >
@@ -314,13 +315,25 @@ function withdrawalForm(config) {
             }
             return Number(this.selectedMethod.fee_percent || 0);
         },
+        normalizeAmount(value) {
+            let text = String(value ?? '').replace(/,/g, '.');
+            text = text.replace(/[^\d.-]/g, '');
+            const pieces = text.split('.');
+
+            if (pieces.length > 2) {
+                text = pieces.slice(0, -1).join('') + '.' + pieces.at(-1);
+            }
+
+            return text;
+        },
+        amountValue() {
+            return parseFloat(this.normalizeAmount(this.amount)) || 0;
+        },
         get feeAmount() {
-            const amount = parseFloat(this.amount) || 0;
-            return amount * this.feePercent / 100;
+            return this.amountValue() * this.feePercent / 100;
         },
         get netAmount() {
-            const amount = parseFloat(this.amount) || 0;
-            return Math.max(0, amount - this.feeAmount);
+            return Math.max(0, this.amountValue() - this.feeAmount);
         },
         get feeDisplay() {
             if (this.feePercent <= 0 || this.feeAmount <= 0) {
@@ -329,7 +342,7 @@ function withdrawalForm(config) {
             return this.money(this.feeAmount);
         },
         get canSubmit() {
-            if (!this.selectedMethod || !this.selectedMethodId || (parseFloat(this.amount) || 0) <= 0 || this.paymentPassword.length !== 6) {
+            if (!this.selectedMethod || !this.selectedMethodId || this.amountValue() <= 0 || this.paymentPassword.length !== 6) {
                 return false;
             }
 

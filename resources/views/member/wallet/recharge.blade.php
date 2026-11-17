@@ -121,6 +121,7 @@
                             inputmode="decimal"
                             name="amount"
                             x-model="amount"
+                            @input="amount = normalizeAmount($event.target.value)"
                             placeholder="{{ __('member.wallet.amount_placeholder') }}"
                             class="portal-plain-input"
                         >
@@ -208,8 +209,19 @@ function rechargeForm(config) {
             const network = this.availableNetworks.find((item) => item.label === this.networkValue);
             return network?.wallet_address || '';
         },
+        normalizeAmount(value) {
+            let text = String(value ?? '').replace(/,/g, '.');
+            text = text.replace(/[^\d.-]/g, '');
+            const pieces = text.split('.');
+
+            if (pieces.length > 2) {
+                text = pieces.slice(0, -1).join('') + '.' + pieces.at(-1);
+            }
+
+            return text;
+        },
         get canSubmit() {
-            const amount = (parseFloat(this.amount) || 0) > 0;
+            const amount = (parseFloat(this.normalizeAmount(this.amount)) || 0) > 0;
             if (!this.selectedMethod || !amount || !this.selectedMethodId) {
                 return false;
             }

@@ -995,6 +995,29 @@ class MemberPagesTest extends TestCase
         ]);
     }
 
+    public function test_member_withdrawal_accepts_comma_or_dot_as_decimal(): void
+    {
+        $method = WithdrawalMethod::query()->first();
+        $this->member->update(['payment_password' => '123456']);
+
+        $this->actingAs($this->member)
+            ->post('/home/withdrawal', [
+                'withdrawal_method_id' => $method->id,
+                'amount' => '22,02',
+                'bank_account_name' => 'Nguyen Van A',
+                'bank_name' => 'Vietcombank',
+                'bank_account_number' => '0123456789',
+                'payment_password' => '123456',
+            ])
+            ->assertRedirect(route('member.wallet.fund-records', ['type' => 'withdrawal']))
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('withdrawal_requests', [
+            'user_id' => $this->member->id,
+            'amount' => 22.02,
+        ]);
+    }
+
     public function test_member_withdrawal_rejects_insufficient_balance(): void
     {
         $method = WithdrawalMethod::query()->first();

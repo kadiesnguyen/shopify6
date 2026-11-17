@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Member;
 
 use App\Models\WithdrawalMethod;
+use App\Support\DecimalInput;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Validator;
@@ -12,6 +13,13 @@ class MemberWithdrawalRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->exists('amount')) {
+            $this->merge(['amount' => DecimalInput::normalize($this->input('amount'))]);
+        }
     }
 
     public function rules(): array

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Member;
 
 use App\Models\RechargeMethod;
+use App\Support\DecimalInput;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -11,6 +12,13 @@ class MemberRechargeRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->exists('amount')) {
+            $this->merge(['amount' => DecimalInput::normalize($this->input('amount'))]);
+        }
     }
 
     public function rules(): array

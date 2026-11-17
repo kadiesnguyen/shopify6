@@ -9,6 +9,7 @@ use App\Models\RechargeRequest;
 use App\Models\WithdrawalMethod;
 use App\Models\WithdrawalRequest;
 use App\Services\Member\WithdrawalQuoteService;
+use App\Support\DecimalInput;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -49,6 +50,10 @@ class WalletController extends Controller
 
     public function recharge(Request $request): JsonResponse
     {
+        if ($request->exists('amount')) {
+            $request->merge(['amount' => DecimalInput::normalize($request->input('amount'))]);
+        }
+
         $data = $request->validate([
             'recharge_method_id' => ['required', 'exists:recharge_methods,id'],
             'amount' => ['required', 'numeric', 'min:1'],
